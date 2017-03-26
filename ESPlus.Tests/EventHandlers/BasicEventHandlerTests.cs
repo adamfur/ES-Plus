@@ -1,0 +1,90 @@
+using System;
+using System.Linq;
+using ESPlus.EventHandlers;
+using NSubstitute;
+using Xunit;
+
+namespace ESPlus.Tests.EventHandlers
+{
+    public class BasicEventHandlerTests
+    {
+        public class DummyEvent
+        {
+        }
+
+        public class DummyEmitEvent
+        {
+
+        }
+
+        public class DummyEventHandler : BasicEventHandler<IEventHandlerContext>,
+            IHandleEvent<DummyEvent>,
+            IHandleEvent<DummyEmitEvent>
+        {
+            public bool Called { get; set; } = false;
+
+            public DummyEventHandler(IEventHandlerContext context)
+                : base(context)
+            {
+            }
+
+            public void Apply(DummyEvent @event)
+            {
+                Called = true;
+            }
+
+            public void Apply(DummyEmitEvent @event)
+            {
+                Emit(new object());
+            }
+        }
+
+        private IEventHandlerContext _context;
+
+        public BasicEventHandlerTests()
+        {
+            _context = Substitute.For<IEventHandlerContext>();
+        }
+
+        [Fact]
+        public void Flush_ContextIsAlsoFlushed_Once()
+        {
+            var eventHandler = new BasicEventHandler<IEventHandlerContext>(_context);
+
+            eventHandler.Flush();
+
+            _context.Received(1).Flush();
+        }
+
+        [Fact]
+        public void DispatchEvent_EventIsRouterTotheCorrectFunction_Once()
+        {
+            var eventHandler = new DummyEventHandler(_context);
+
+            eventHandler.DispatchEvent(new DummyEvent());
+
+            Assert.True(eventHandler.Called);
+        }
+
+        [Fact]
+        public void DispatchEvent_NoRoute_Ignore()
+        {
+            var eventHandler = new DummyEventHandler(_context);
+
+            eventHandler.DispatchEvent(new DummyEvent());
+        }
+
+        [Fact]
+        public void TakeEmittedEvents_EmptyAfterUse_Empty()
+        {
+            var eventHandler = new DummyEventHandler(_context);
+
+            eventHandler.DispatchEvent(new DummyEmitEvent());
+            var pass1 = eventHandler.TakeEmittedEvents().ToList();
+            var pass2 = eventHandler.TakeEmittedEvents().ToList();
+
+            Assert.Equal(1, pass1.Count());
+            Assert.Equal(0, pass2.Count());
+        }
+    }
+}

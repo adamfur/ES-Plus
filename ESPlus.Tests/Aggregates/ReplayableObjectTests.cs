@@ -6,6 +6,34 @@ using Xunit;
 
 namespace ESPlus.Tests.Aggregates
 {
+    public class DummyEvent
+    {
+        public string Text { get; set; }
+    }
+
+    public class DummyAggreagate : ReplayableObject
+    {
+        public string Text { get; set; }
+
+        public DummyAggreagate(string id)
+            : base(id)
+        {
+        }
+
+        public void Trigger(string text)
+        {
+            ApplyChange(new DummyEvent
+            {
+                Text = text
+            });
+        }
+
+        private void Apply(DummyEvent @event)
+        {
+            Text = @event.Text;
+        }
+    }
+
     public class ReplayableObjectTests
     {
         private readonly string _id;
@@ -68,5 +96,16 @@ namespace ESPlus.Tests.Aggregates
 
             Assert.Equal(0, events.Count());
         }
+
+        [Fact]
+        public void ApplyChange_TriggerEvent_DoSomething()
+        {
+            var aggregate = new DummyAggreagate(_id);
+            var text = Guid.NewGuid().ToString();
+
+            aggregate.Trigger(text);
+
+            Assert.Equal(text, aggregate.Text);
+        }        
     }
 }
