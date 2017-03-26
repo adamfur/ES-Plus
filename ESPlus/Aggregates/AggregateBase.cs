@@ -4,7 +4,6 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Aggregates
 {
-
     public abstract class AggregateBase : IAggregate
     {
         private readonly LinkedList<object> _uncommitedEvents = new LinkedList<object>();

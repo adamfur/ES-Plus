@@ -14,12 +14,16 @@ namespace ESPlus.Tests.EventHandlers
 
         public class DummyEmitEvent
         {
+        }
 
+        public class DummyEmitSubmitEvent
+        {
         }
 
         public class DummyEventHandler : BasicEventHandler<IEventHandlerContext>,
             IHandleEvent<DummyEvent>,
-            IHandleEvent<DummyEmitEvent>
+            IHandleEvent<DummyEmitEvent>,
+            IHandleEvent<DummyEmitSubmitEvent>
         {
             public bool Called { get; set; } = false;
 
@@ -36,6 +40,11 @@ namespace ESPlus.Tests.EventHandlers
             public void Apply(DummyEmitEvent @event)
             {
                 Emit(new object());
+            }
+
+            public void Apply(DummyEmitSubmitEvent @event)
+            {
+                EmitOnSubmit("abc", "def");
             }
         }
 
@@ -86,5 +95,19 @@ namespace ESPlus.Tests.EventHandlers
             Assert.Equal(1, pass1.Count());
             Assert.Equal(0, pass2.Count());
         }
+
+        [Fact]
+        public void TakeEmittedOnSubmitEvents_EmptyAfterUse_Empty()
+        {
+            var eventHandler = new DummyEventHandler(_context);
+
+            eventHandler.DispatchEvent(new DummyEmitSubmitEvent());
+
+            var pass1 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
+            var pass2 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
+
+            Assert.Equal(1, pass1.Count());
+            Assert.Equal(0, pass2.Count());
+        }        
     }
 }

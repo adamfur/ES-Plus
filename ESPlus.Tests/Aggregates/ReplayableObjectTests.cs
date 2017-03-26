@@ -6,36 +6,36 @@ using Xunit;
 
 namespace ESPlus.Tests.Aggregates
 {
-    public class DummyEvent
-    {
-        public string Text { get; set; }
-    }
-
-    public class DummyAggreagate : ReplayableObject
-    {
-        public string Text { get; set; }
-
-        public DummyAggreagate(string id)
-            : base(id)
-        {
-        }
-
-        public void Trigger(string text)
-        {
-            ApplyChange(new DummyEvent
-            {
-                Text = text
-            });
-        }
-
-        private void Apply(DummyEvent @event)
-        {
-            Text = @event.Text;
-        }
-    }
-
     public class ReplayableObjectTests
     {
+        public class DummyEvent
+        {
+            public string Text { get; set; }
+        }
+
+        public class DummyAggreagate : ReplayableObject
+        {
+            public string Text { get; set; }
+
+            public DummyAggreagate(string id)
+                : base(id)
+            {
+            }
+
+            public void Trigger(string text)
+            {
+                ApplyChange(new DummyEvent
+                {
+                    Text = text
+                });
+            }
+
+            private void Apply(DummyEvent @event)
+            {
+                Text = @event.Text;
+            }
+        }
+
         private readonly string _id;
 
         public ReplayableObjectTests()
@@ -64,7 +64,7 @@ namespace ESPlus.Tests.Aggregates
         {
             var aggregate = new ReplayableObject(_id);
 
-            ((IAggregate) aggregate).ApplyChange(new object());
+            ((IAggregate)aggregate).ApplyChange(new object());
             Assert.Equal(1, aggregate.Version);
         }
 
@@ -106,6 +106,6 @@ namespace ESPlus.Tests.Aggregates
             aggregate.Trigger(text);
 
             Assert.Equal(text, aggregate.Text);
-        }        
+        }
     }
 }
