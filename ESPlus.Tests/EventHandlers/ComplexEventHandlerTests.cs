@@ -1,4 +1,3 @@
-using System;
 using ESPlus.EventHandlers;
 using NSubstitute;
 using Xunit;
