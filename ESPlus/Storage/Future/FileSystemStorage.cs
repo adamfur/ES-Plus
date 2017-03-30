@@ -25,14 +25,14 @@ namespace ESPlus.Storage
             }
         }
 
-        public T Get<T>(string path)
+        public object Get(string path)
         {
             if (_cache.ContainsKey(path))
             {
-                return (T) _cache[path];
+                return _cache[path];
             }
 
-            return (T) (object) File.ReadAllText(path);
+            return (object) File.ReadAllText(path);
         }
 
         public void Put(string path, object item)

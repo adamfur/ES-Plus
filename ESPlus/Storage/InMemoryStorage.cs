@@ -5,24 +5,24 @@ namespace ESPlus.Storage
 {
     public class InMemoryStorage : IStorage
     {
-        private readonly Dictionary<string, object> _cache = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> _data = new Dictionary<string, object>();
 
         public void Flush()
         {
         }
 
-        public T Get<T>(string path)
+        public object Get(string path)
         {
-            if (_cache.ContainsKey(path))
+            if (_data.ContainsKey(path))
             {
-                return (T) _cache[path];
+                return _data[path];
             }
-            return default (T);
+            return null;
         }
 
         public void Put(string path, object item)
         {
-            _cache[path] = item;
+            _data[path] = item;
         }
     }
 }

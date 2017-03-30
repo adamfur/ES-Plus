@@ -18,8 +18,8 @@ namespace ESPlus.Storage
             {
                 return;
             }
-            action();
             _executed = true;
+            action();
         }
     }
 }
