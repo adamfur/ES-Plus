@@ -12,8 +12,6 @@ namespace ESPlus.Storage
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         protected readonly Dictionary<string, object> _cache = new Dictionary<string, object>();
         protected readonly Dictionary<string, object> _writeCache = new Dictionary<string, object>();
-        protected readonly Dictionary<string, object> _stageCache = new Dictionary<string, object>();
-        protected readonly Dictionary<string, string> _map = new Dictionary<string, string>();
         public long Checkpoint { get; set; } = 0L;
         protected bool _changed = false;
 
@@ -44,14 +42,12 @@ namespace ESPlus.Storage
         protected abstract void PlayJournal(JournalLog journal);
         public abstract void Flush();
 
-        public void Put(string destination, object item)
+        public virtual void Put(string destination, object item)
         {
-            var source = $"Journal/{Checkpoint}/{destination}";
 
             _cache[destination] = item;
             _writeCache[destination] = item;
-            _stageCache[source] = item;
-            _map[source] = destination;
+
             _changed = true;
         }
 
@@ -96,14 +92,14 @@ namespace ESPlus.Storage
             storage.Flush();
         }        
 
-        protected void Clean()
+        protected virtual void Clean()
         {
             if (_changed == false)
             {
                 return;
             }
+            
             _writeCache.Clear();
-            _map.Clear();
             _changed = false;
         }
     }
