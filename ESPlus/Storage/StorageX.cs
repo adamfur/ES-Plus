@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ESPlus.Storage
 {
@@ -6,6 +7,7 @@ namespace ESPlus.Storage
     {
         private IJournaled _journal;
         private string _namespace;
+        private Dictionary<Type, int> _shardMap = new Dictionary<Type, int>();
 
         public StorageX(IJournaled journal, string @namespace)
         {
@@ -13,7 +15,12 @@ namespace ESPlus.Storage
             _namespace = @namespace;
         }
 
-        public void Update<T>(string path, Action<T> action)
+        public void ShardOn<T>(int parts)
+        {
+            _shardMap[typeof (T)] = parts;
+        }
+
+        public void Patch<T>(string path, Action<T> action)
             where T : new()
         {
             var graph = Get<T>(path);

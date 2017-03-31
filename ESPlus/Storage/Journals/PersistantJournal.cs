@@ -12,8 +12,10 @@ namespace ESPlus.Storage
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         protected readonly Dictionary<string, object> _cache = new Dictionary<string, object>();
         protected readonly Dictionary<string, object> _writeCache = new Dictionary<string, object>();
+        protected readonly Dictionary<string, object> _stageCache = new Dictionary<string, object>();
         protected readonly Dictionary<string, string> _map = new Dictionary<string, string>();
         public long Checkpoint { get; set; } = 0L;
+        protected bool _changed = false;
 
         public PersistantJournal(IStorage metadataStorage, IStorage dataStorage)
         {
@@ -36,6 +38,7 @@ namespace ESPlus.Storage
                 SubscriptionMode = SubscriptionMode.Replay;
             }
             PlayJournal(journal);
+            _changed = false;
         }
 
         protected abstract void PlayJournal(JournalLog journal);
@@ -45,8 +48,11 @@ namespace ESPlus.Storage
         {
             var source = $"Journal/{Checkpoint}/{destination}";
 
-            _cache[destination] = _writeCache[destination] = item;
-            _map[destination] = destination;
+            _cache[destination] = item;
+            _writeCache[destination] = item;
+            _stageCache[source] = item;
+            _map[source] = destination;
+            _changed = true;
         }
 
         public object Get(string path)
@@ -61,10 +67,13 @@ namespace ESPlus.Storage
                 return null;
             }
 
-            return _dataStorage.Get(path);
+            var data = _dataStorage.Get(path);
+
+            _cache[path] = data;
+            return data;
         }
 
-        protected void PutJournal(Dictionary<string, string> map)
+        protected void WriteJournal(Dictionary<string, string> map)
         {
             var journal = new JournalLog
             {
@@ -75,7 +84,7 @@ namespace ESPlus.Storage
             _metadataStorage.Flush();
         }
 
-        protected void WriteTo(IStorage storage)
+        protected void WriteTo(IStorage storage, Dictionary<string, object> cache)
         {
             foreach (var item in _writeCache)
             {
@@ -89,8 +98,13 @@ namespace ESPlus.Storage
 
         protected void Clean()
         {
+            if (_changed == false)
+            {
+                return;
+            }
             _writeCache.Clear();
             _map.Clear();
+            _changed = false;
         }
     }
 }

@@ -12,8 +12,13 @@ namespace ESPlus.Storage
 
         public override void Flush()
         {
-            WriteTo(_dataStorage);
-            PutJournal(new Dictionary<string, string>());
+            if (!_changed)
+            {
+                return;
+            }
+            
+            WriteTo(_dataStorage, _writeCache);
+            WriteJournal(new Dictionary<string, string>());
             Clean();
         }
 

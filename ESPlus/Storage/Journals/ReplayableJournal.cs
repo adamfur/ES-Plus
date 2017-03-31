@@ -14,9 +14,14 @@ namespace ESPlus.Storage
 
         public override void Flush()
         {
-            WriteTo(_stageStorage);
-            PutJournal(_map);
-            WriteTo(_dataStorage);
+            if (!_changed)
+            {
+                return;
+            }
+            
+            WriteTo(_stageStorage, _stageCache);
+            WriteJournal(_map);
+            WriteTo(_dataStorage, _writeCache);
             Clean();
         }
 
