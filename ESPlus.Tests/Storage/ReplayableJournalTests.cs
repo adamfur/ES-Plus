@@ -213,6 +213,23 @@ namespace ESPlus.Tests.Storage
             _journal.Flush();
 
             _metadataStorage.Received(1).Flush();
-        }              
+        }  
+
+
+
+        /********************************/
+        [Fact]
+        public void TEMPTEMPTEMP()
+        {
+            var meta = new FileSystemStorage("meta");
+            var stage = new FileSystemStorage("stage");
+            var storage = new FileSystemStorage("storage");
+            var journal = new ReplayableJournal(meta, stage, storage);
+            var path1 = "path/1";
+            
+            journal.Checkpoint = 13L;
+            journal.Put(path1, _payload);
+            journal.Flush();
+        }                     
     }
 }

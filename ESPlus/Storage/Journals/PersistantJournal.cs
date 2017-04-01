@@ -6,7 +6,7 @@ namespace ESPlus.Storage
 {
     public abstract class PersistantJournal : IJournaled
     {
-        public const string JournalPath = "Journal/Journal.json";
+        public const string JournalPath = "000Journal/000Journal.json";
         protected readonly IStorage _metadataStorage;
         protected readonly IStorage _dataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
@@ -57,7 +57,7 @@ namespace ESPlus.Storage
         {
             _cache[destination] = item;
             _dataWriteCache[destination] = item;
-            _changed = true; // NOT TESTED
+            _changed = true;
         }
 
         public object Get(string path)

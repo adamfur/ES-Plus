@@ -15,24 +15,24 @@ namespace ESPlus.Storage
             _namespace = @namespace;
         }
 
-        public void ShardOn<T>(int parts)
-        {
-            _shardMap[typeof (T)] = parts;
-        }
+        // public void ShardOn<T>(int parts)
+        // {
+        //     _shardMap[typeof (T)] = parts;
+        // }
 
-        public void Patch<T>(string path, Action<T> action)
-            where T : new()
-        {
-            var graph = Get<T>(path);
+        // public void Patch<T>(string path, Action<T> action)
+        //     where T : new()
+        // {
+        //     var graph = Get<T>(path);
 
-            if (graph == null)
-            {
-                graph = new T();
-            }
+        //     if (graph == null)
+        //     {
+        //         graph = new T();
+        //     }
 
-            action(graph);
-            Put<T>(path, graph);
-        }
+        //     action(graph);
+        //     Put<T>(path, graph);
+        // }
 
         public T Get<T>(string path)
             where T : new()
