@@ -8,4 +8,4 @@ namespace ESPlus.Subscribers
         Low = 1,
         Idle = 0
     }
-    }
+}
