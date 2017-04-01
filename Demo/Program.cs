@@ -9,7 +9,7 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            var eventFetcher = new EventFetcher();
+            var eventFetcher = new DummyEventFetcher();
             var manager = new SubscriptionManager(eventFetcher, 3);
 
             var client1 = manager.Subscribe(0L);
