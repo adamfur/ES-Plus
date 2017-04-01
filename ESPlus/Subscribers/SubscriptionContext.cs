@@ -68,12 +68,12 @@ namespace ESPlus.Subscribers
 
         public IEnumerable<object> Take()
         {
-            lock (this)
+            lock (_queue)
             {
                 while (_queue.Count == 0)
                 {
                     RequestStatus = RequestStatus.Waiting;
-                    Monitor.Wait(this);
+                    Monitor.Wait(_queue);
                 }
 
                 var events = _queue.Dequeue();
@@ -85,10 +85,10 @@ namespace ESPlus.Subscribers
 
         public void Put(IEnumerable<object> events)
         {
-            lock (this)
+            lock (_queue)
             {
                 _queue.Enqueue(events);
-                Monitor.Pulse(this);
+                Monitor.Pulse(_queue);
             }
         }
     }
