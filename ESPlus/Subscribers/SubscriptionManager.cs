@@ -51,7 +51,7 @@ namespace ESPlus.Subscribers
 
                 lock (mutex)
                 {
-                    while (contexts.All(x => x.RequestStatus == RequestStatus.Waiting) || !contexts.Any())
+                    while (!contexts.Any(x => x.RequestStatus == RequestStatus.Waiting))
                     {
                         Monitor.Wait(mutex);
                     }
