@@ -73,7 +73,7 @@ namespace ESPlus.Subscribers
             {
                 while (_queue.Count == 0)
                 {
-                    Manager.Trigger(this);
+                    Manager.TriggerContext(this);
                     Monitor.Wait(_queue);
                 }
 

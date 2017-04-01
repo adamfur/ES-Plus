@@ -44,24 +44,31 @@ namespace ESPlus.Subscribers
             return new SubscriptionClient(context);
         }
 
-        public void Trigger(SubscriptionContext subscriptionContext)
+        public void TriggerContext(SubscriptionContext subscriptionContext)
         {
             lock (_mutex)
             {
                 subscriptionContext.RequestStatus = RequestStatus.Waiting;
-                Monitor.PulseAll(_mutex);
+                Monitor.Pulse(_mutex);
+            }
+        }
+
+        public void TriggerSubscription()
+        {
+            lock (_mutex)
+            {
+                // new event from subscription!!!
+                Monitor.Pulse(_mutex);
             }
         }
 
         private static void WorkerThread(Barrier barrier, List<SubscriptionContext> contexts, object mutex, IEventFetcher eventFetcher)
         {
-            Console.WriteLine("WorkerThread.Barrier");
             barrier.SignalAndWait();
-            Console.WriteLine("WorkerThread.Barrier.Release");
 
             while (true)
             {
-                SubscriptionContext ctx;
+                SubscriptionContext subscriptionContext;
 
                 lock (mutex)
                 {
@@ -74,16 +81,16 @@ namespace ESPlus.Subscribers
 
                     waiting.Sort();
                     waiting.ForEach(x => ++x.StarvedCycles);
-                    ctx = waiting.First();
-                    ctx.RequestStatus = RequestStatus.Fetching;
+                    subscriptionContext = waiting.First();
+                    subscriptionContext.RequestStatus = RequestStatus.Fetching;
                 }
 
-                var events = eventFetcher.GetFromPosition(ctx.Position);
+                var events = eventFetcher.GetFromPosition(subscriptionContext.Position);
 
                 lock (mutex)
                 {
-                    ctx.Put(events);
-                    ctx.RequestStatus = RequestStatus.Busy;
+                    subscriptionContext.Put(events);
+                    subscriptionContext.RequestStatus = RequestStatus.Busy;
                 }
             }
         }
