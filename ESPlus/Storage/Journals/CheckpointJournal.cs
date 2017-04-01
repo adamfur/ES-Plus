@@ -10,20 +10,10 @@ namespace ESPlus.Storage
         {
         }
 
-        public override void Flush()
+        protected override void DoFlush()
         {
-            if (!_changed)
-            {
-                return;
-            }
-            
-            WriteTo(_dataStorage, _writeCache);
+            WriteTo(_dataStorage, _dataWriteCache);
             WriteJournal(new Dictionary<string, string>());
-            Clean();
-        }
-
-        protected override void PlayJournal(JournalLog journal)
-        {
         }
     }
 }

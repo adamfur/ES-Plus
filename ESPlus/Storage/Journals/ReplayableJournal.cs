@@ -6,7 +6,7 @@ namespace ESPlus.Storage
     public class ReplayableJournal : PersistantJournal
     {
         private readonly IStorage _stageStorage;
-        protected readonly Dictionary<string, object> _stageCache = new Dictionary<string, object>();
+        protected readonly Dictionary<string, object> _dataStageCache = new Dictionary<string, object>();
         protected readonly Dictionary<string, string> _map = new Dictionary<string, string>();
 
         public ReplayableJournal(IStorage metadataStorage, IStorage stageStorage, IStorage dataStorage)
@@ -15,37 +15,26 @@ namespace ESPlus.Storage
             _stageStorage = stageStorage;
         }
 
-        public override void Flush()
+        protected override void DoFlush()
         {
-            if (!_changed)
-            {
-                return;
-            }
-            
-            WriteTo(_stageStorage, _stageCache);
+            WriteTo(_stageStorage, _dataStageCache);
             WriteJournal(_map);
-            WriteTo(_dataStorage, _writeCache);
-            Clean();
+            WriteTo(_dataStorage, _dataWriteCache);
         }
 
-        public override void Put(string destination, object item)
+        public override void Put(string destinationPath, object item)
         {
-            var source = $"Journal/{Checkpoint}/{destination}";
+            var stagePath = $"Journal/{Checkpoint}/{destinationPath}";
 
-            _stageCache[source] = item;
-            _map[source] = destination;
-            base.Put(destination, item);
+            _dataStageCache[stagePath] = item;
+            _map[stagePath] = destinationPath;
+            base.Put(destinationPath, item);
         }        
 
-        protected override void Clean()
+        protected override void DoClean()
         {
-            if (_changed == false)
-            {
-                return;
-            }
-
-            base.Clean();
             _map.Clear();
+            _dataStageCache.Clear();
         }        
 
         protected override void PlayJournal(JournalLog journal)

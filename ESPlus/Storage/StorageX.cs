@@ -37,16 +37,17 @@ namespace ESPlus.Storage
         public T Get<T>(string path)
             where T : new()
         {
-            return new T();
+            return (T) _journal.Get(path);
         }
 
         public void Put<T>(string path, T graph)
         {
+            _journal.Put(path, graph);
         }
 
         public void Flush()
         {
-            throw new NotImplementedException();
+            _journal.Flush();
         }
     }
 }
