@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -10,12 +11,18 @@ namespace ESPlus.Subscribers
         private Barrier _barrier;
         private object _mutex = new object();
         private IEventFetcher _eventFetcher;
+        private int _workerThreads;
 
-        public SubscriptionManager(IEventFetcher eventFetcher, int workerThreads = 1)
+        public SubscriptionManager(IEventFetcher eventFetcher, int workerThreads)
         {
+            _workerThreads = workerThreads;
             _barrier = new Barrier(workerThreads);
             _eventFetcher = eventFetcher;
-            foreach (var i in Enumerable.Range(0, workerThreads))
+        }
+
+        public void Start()
+        {
+            foreach (var i in Enumerable.Range(0, _workerThreads))
             {
                 var thread = new Thread(() => WorkerThread(_barrier, _contexts, _mutex, _eventFetcher));
                 thread.Start();
@@ -27,23 +34,30 @@ namespace ESPlus.Subscribers
             var context = new SubscriptionContext
             {
                 Priority = priority,
-                NextPosition = position,
+                Position = position,
                 RequestStatus = RequestStatus.Waiting,
-                StarvedCycles = 0
+                StarvedCycles = 0,
+                Manager = this
             };
 
             _contexts.Add(context);
             return new SubscriptionClient(context);
         }
 
-        public void Trigger()
+        public void Trigger(SubscriptionContext subscriptionContext)
         {
-            Monitor.PulseAll(_mutex);
+            lock (_mutex)
+            {
+                subscriptionContext.RequestStatus = RequestStatus.Waiting;
+                Monitor.PulseAll(_mutex);
+            }
         }
 
         private static void WorkerThread(Barrier barrier, List<SubscriptionContext> contexts, object mutex, IEventFetcher eventFetcher)
         {
+            Console.WriteLine("WorkerThread.Barrier");
             barrier.SignalAndWait();
+            Console.WriteLine("WorkerThread.Barrier.Release");
 
             while (true)
             {
@@ -64,9 +78,13 @@ namespace ESPlus.Subscribers
                     ctx.RequestStatus = RequestStatus.Fetching;
                 }
 
-                var events = eventFetcher.GetFromPosition(ctx.NextPosition);
-                ctx.Put(events);
-                ctx.RequestStatus = RequestStatus.Received;
+                var events = eventFetcher.GetFromPosition(ctx.Position);
+
+                lock (mutex)
+                {
+                    ctx.Put(events);
+                    ctx.RequestStatus = RequestStatus.Busy;
+                }
             }
         }
     }

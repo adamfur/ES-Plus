@@ -11,7 +11,7 @@ namespace ESPlus.Subscribers
             _concrete = concrete;
         }
 
-        public IEnumerable<object> GetFromPosition(long position)
+        public IEnumerable<Event> GetFromPosition(long position)
         {
             return _concrete.GetFromPosition(position);
         }

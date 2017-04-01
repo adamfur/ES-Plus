@@ -4,6 +4,6 @@ namespace ESPlus.Subscribers
 {
     public interface IEventFetcher
     {
-        IEnumerable<object> GetFromPosition(long position);
+        IEnumerable<Event> GetFromPosition(long position);
     }
 }

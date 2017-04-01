@@ -12,7 +12,7 @@ namespace ESPlus.Subscribers
             _subscriptionContext = subscriptionContext;
         }
 
-        public IEnumerator<object> GetEnumerator()
+        public IEnumerator<Event> GetEnumerator()
         {
             while (true)
             {
@@ -21,6 +21,7 @@ namespace ESPlus.Subscribers
                 foreach (var @event in list)
                 {
                     yield return @event;
+                    _subscriptionContext.Position = @event.Position;
                 }
             }
         }

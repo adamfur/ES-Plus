@@ -6,11 +6,12 @@ namespace ESPlus.Subscribers
 {
     public class SubscriptionContext : IComparable<SubscriptionContext>
     {
-        private Queue<IEnumerable<object>> _queue = new Queue<IEnumerable<object>>();
+        private Queue<IEnumerable<Event>> _queue = new Queue<IEnumerable<Event>>();
         public Priority Priority { get; set; }
         public RequestStatus RequestStatus { get; set; }
         public long StarvedCycles { get; set; }
-        public long NextPosition { get; set; }
+        public long Position { get; set; }
+        public SubscriptionManager Manager { get; internal set; }
 
         public long Score
         {
@@ -66,24 +67,23 @@ namespace ESPlus.Subscribers
             return other.Score.CompareTo(Score);
         }
 
-        public IEnumerable<object> Take()
+        public IEnumerable<Event> Take()
         {
             lock (_queue)
             {
                 while (_queue.Count == 0)
                 {
-                    RequestStatus = RequestStatus.Waiting;
+                    Manager.Trigger(this);
                     Monitor.Wait(_queue);
                 }
 
                 var events = _queue.Dequeue();
 
-                RequestStatus = RequestStatus.Busy;
                 return events;
             }
         }
 
-        public void Put(IEnumerable<object> events)
+        public void Put(IEnumerable<Event> events)
         {
             lock (_queue)
             {
