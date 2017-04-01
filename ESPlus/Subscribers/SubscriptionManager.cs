@@ -65,7 +65,7 @@ namespace ESPlus.Subscribers
                 }
 
                 var events = eventFetcher.GetFromPosition(ctx.NextPosition);
-                ctx.Put(null);
+                ctx.Put(events);
                 ctx.RequestStatus = RequestStatus.Received;
             }
         }
