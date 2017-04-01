@@ -10,7 +10,7 @@ namespace ESPlus.Subscribers
         public Priority Priority { get; set; }
         public RequestStatus RequestStatus { get; set; }
         public long StarvedCycles { get; set; }
-        public long Position { get; set; }
+        public long NextPosition { get; set; }
 
         public long Score
         {
@@ -88,6 +88,7 @@ namespace ESPlus.Subscribers
             lock (_queue)
             {
                 _queue.Enqueue(events);
+                StarvedCycles = 0;
                 Monitor.Pulse(_queue);
             }
         }

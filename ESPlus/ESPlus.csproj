@@ -6,6 +6,7 @@
 
     <ItemGroup>
     <PackageReference Include="CoreCompat.Newtonsoft.Json" Version="9.0.2-beta001" />
+    <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
 
     
   </ItemGroup>

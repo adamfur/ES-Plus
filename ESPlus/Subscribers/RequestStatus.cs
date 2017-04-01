@@ -3,6 +3,8 @@ namespace ESPlus.Subscribers
     public enum RequestStatus
     {
         Busy,
-        Waiting
+        Waiting,
+        Fetching,
+        Received
     }
 }
