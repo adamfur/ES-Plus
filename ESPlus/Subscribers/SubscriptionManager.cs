@@ -21,7 +21,7 @@ namespace ESPlus.Subscribers
 
         public void Start()
         {
-            foreach (var i in Enumerable.Range(0, _workerThreads))
+            for (int i = 0; i < _workerThreads; ++i)
             {
                 var thread = new Thread(() => WorkerThread(_barrier, _contexts, _mutex, _eventFetcher));
                 thread.Start();
@@ -39,7 +39,11 @@ namespace ESPlus.Subscribers
                 Manager = this
             };
 
-            _contexts.Add(context);
+            lock (_mutex)
+            {
+                _contexts.Add(context);
+                Monitor.Pulse(_mutex);
+            }
             return new SubscriptionClient(context);
         }
 
