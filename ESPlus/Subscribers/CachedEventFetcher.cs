@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,22 +16,34 @@ namespace ESPlus.Subscribers
             _concrete = eventFetcher;
         }
 
+        private IEnumerable<Event> GetFromCache(long position)
+        {
+            foreach (var row in _cache)
+            {
+                if (row.Within(position + 1))
+                {
+                    var events = row.Select(position).ToList();
+
+                    if (events.Count != 0)
+                    {
+                        return events;
+                    }
+                    return new List<Event>();
+                }
+            }
+
+            return new List<Event>();
+        }
+
         public IEnumerable<Event> GetFromPosition(long position)
         {
             lock (_mutex)
             {
-                foreach (var row in _cache)
-                {
-                    if (row.Within(position + 1))
-                    {
-                        var events = row.Select(position).ToList();
+                var events = GetFromCache(position);
 
-                        if (events.Count != 0)
-                        {
-                            return events;
-                        }
-                        break;
-                    }
+                if (events != null)
+                {
+                    return events;
                 }
             }
 
@@ -40,10 +51,16 @@ namespace ESPlus.Subscribers
 
             lock (position.ToString())
             {
-                data = _concrete.GetFromPosition(position).ToList();
                 lock (_mutex)
                 {
+                    var events = GetFromCache(position);
+
+                    if (events != null)
+                    {
+                        return events;
+                    }
                 }
+                data = _concrete.GetFromPosition(position).ToList();
             }
 
             lock (_mutex)

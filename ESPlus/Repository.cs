@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using ESPlus.Aggregates;
 using ESPlus.Interfaces;
@@ -53,6 +54,12 @@ namespace ESPlus
         private readonly IEventSerializer _eventSerializer;
         private static int ReadPageSize = 512;
         private static int WritePageSize = 512;
+        private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
+
+        public static void Register<Type>()
+        {
+            _types[typeof (Type).FullName] = typeof (Type);
+        }
 
         public GetEventStoreRepository(IEventStoreConnection eventStoreConnection, IEventSerializer eventSerializer)
         {
@@ -121,7 +128,7 @@ namespace ESPlus
             }
 
             var streamName = StreamName<TAggregate>(id);
-            var aggregate = ConstructAggregate<TAggregate>();
+            var aggregate = ConstructAggregate<TAggregate>(streamName);
             var applyAggregate = (IAggregate)aggregate;
 
             var sliceStart = 0L; //Ignores $StreamCreated--
@@ -147,9 +154,9 @@ namespace ESPlus
 
                 foreach (var evnt in currentSlice.Events)
                 {
-                    // var type = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).First(x => x.FullName == evnt.Event.EventType);
+                    var type = _types.Values.First(x => x.FullName == evnt.Event.EventType);
 
-                    // applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.OriginalEvent.Data));
+                    applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.OriginalEvent.Data));
                 }
 
             } while (version >= currentSlice.NextEventNumber && !currentSlice.IsEndOfStream);
@@ -162,9 +169,9 @@ namespace ESPlus
             return aggregate;
         }
 
-        private static TAggregate ConstructAggregate<TAggregate>()
+        private static TAggregate ConstructAggregate<TAggregate>(string id)
         {
-            return (TAggregate)Activator.CreateInstance(typeof(TAggregate), true);
+            return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
 
         private string StreamName<TAggregate>(string id)

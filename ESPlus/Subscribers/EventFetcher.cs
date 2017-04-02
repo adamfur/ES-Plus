@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using EventStore.ClientAPI;
@@ -21,8 +22,11 @@ namespace ESPlus.Subscribers
         public IEnumerable<Event> GetFromPosition(long position)
         {
             //position.ToPosition()
-            return _eventStoreConnection.ReadAllEventsForwardAsync(Position.Start, _blockSize, false/*, _userCredentials*/).Result
-                .Events
+            var events = _eventStoreConnection.ReadAllEventsForwardAsync(3251344L.ToPosition(), _blockSize, false/*, _userCredentials*/).Result;
+
+            // Console.WriteLine(string.Join(", ", events.Events.Select(x => x.OriginalPosition.Value.CommitPosition)));
+
+            return events.Events
                 .Select(e => new Event() { Position = e.OriginalPosition.Value.CommitPosition });
         }
     }
