@@ -77,7 +77,7 @@ namespace ESPlus.Tests.Aggregates
 
             ((IAggregate)aggregate).ApplyChange(event1);
             ((IAggregate)aggregate).ApplyChange(event2);
-            var events = ((IAggregate)aggregate).TakeUncommitedEvents().ToList();
+            var events = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
 
             Assert.Equal(2, events.Count);
             Assert.Equal(event1, events[0]);
@@ -91,8 +91,8 @@ namespace ESPlus.Tests.Aggregates
             var @event = new object();
 
             ((IAggregate)aggregate).ApplyChange(@event);
-            ((IAggregate)aggregate).TakeUncommitedEvents();
-            var events = ((IAggregate)aggregate).TakeUncommitedEvents();
+            ((IAggregate)aggregate).TakeUncommittedEvents();
+            var events = ((IAggregate)aggregate).TakeUncommittedEvents();
 
             Assert.Equal(0, events.Count());
         }

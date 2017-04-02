@@ -35,7 +35,7 @@ namespace ESPlus.Aggregates
             ((IAggregate) this).ApplyChange(@event);
         }
 
-        public IEnumerable<object> TakeUncommitedEvents()
+        public IEnumerable<object> TakeUncommittedEvents()
         {
             var result = _uncommitedEvents.ToList();
 

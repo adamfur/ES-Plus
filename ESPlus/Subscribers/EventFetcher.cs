@@ -11,16 +11,17 @@ namespace ESPlus.Subscribers
         private readonly UserCredentials _userCredentials;
         private readonly int _blockSize;
 
-        public EventFetcher(IEventStoreConnection eventStoreConnection, UserCredentials userCredentials, int blockSize = 512)
+        public EventFetcher(IEventStoreConnection eventStoreConnection/*, UserCredentials userCredentials*/, int blockSize = 512)
         {
             _eventStoreConnection = eventStoreConnection;
-            _userCredentials = new UserCredentials("admin", "changeit");
+            //_userCredentials = new UserCredentials("admin", "changeit");
             _blockSize = blockSize;
         }
 
         public IEnumerable<Event> GetFromPosition(long position)
         {
-            return _eventStoreConnection.ReadAllEventsForwardAsync(position.ToPosition(), _blockSize, false, _userCredentials).Result
+            //position.ToPosition()
+            return _eventStoreConnection.ReadAllEventsForwardAsync(Position.Start, _blockSize, false/*, _userCredentials*/).Result
                 .Events
                 .Select(e => new Event() { Position = e.OriginalPosition.Value.CommitPosition });
         }

@@ -2,6 +2,8 @@
 using ESPlus;
 using System.Threading;
 using ESPlus.Subscribers;
+using System.Net;
+using EventStore.ClientAPI;
 
 namespace Demo
 {
@@ -9,7 +11,12 @@ namespace Demo
     {
         static void Main(string[] args)
         {
-            var eventFetcher = new DummyEventFetcher();
+            var connectionString = "ConnectTo=tcp://admin:changeit@localhost:1113; HeartBeatTimeout=500";
+            //var _eventStoreConnection = EventStoreConnection.Create(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1113));
+            var eventStoreConnection = EventStoreConnection.Create(connectionString);
+            eventStoreConnection.ConnectAsync().Wait();
+            //var eventFetcher = new CachedEventFetcher(new DummyEventFetcher());
+            var eventFetcher = new CachedEventFetcher(new EventFetcher(eventStoreConnection));
             var manager = new SubscriptionManager(eventFetcher, 3);
 
             var client1 = manager.Subscribe(0L);

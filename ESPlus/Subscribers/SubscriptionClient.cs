@@ -20,8 +20,8 @@ namespace ESPlus.Subscribers
 
                 foreach (var @event in list)
                 {
-                    yield return @event;
                     _subscriptionContext.Position = @event.Position;
+                    yield return @event;
                 }
             }
         }

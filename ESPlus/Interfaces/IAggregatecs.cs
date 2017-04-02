@@ -7,6 +7,6 @@ namespace ESPlus.Interfaces
         int Version { get; }
         string Id { get; }
         void ApplyChange(object @event);
-        IEnumerable<object> TakeUncommitedEvents();
+        IEnumerable<object> TakeUncommittedEvents();
     }
 }

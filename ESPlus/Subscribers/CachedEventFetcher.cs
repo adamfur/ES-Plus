@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,6 +10,7 @@ namespace ESPlus.Subscribers
         private readonly LinkedList<EventFetcherCacheRow> _cache = new LinkedList<EventFetcherCacheRow>();
         private int _cachedItems = 0;
         private const int CacheLimit = 40960;
+        private object _mutex = new object();
 
         public CachedEventFetcher(IEventFetcher eventFetcher)
         {
@@ -17,28 +19,48 @@ namespace ESPlus.Subscribers
 
         public IEnumerable<Event> GetFromPosition(long position)
         {
-            foreach (var row in _cache)
+            lock (_mutex)
             {
-                if (row.Within(position))
+                foreach (var row in _cache)
                 {
-                    return row.Select(position);
+                    if (row.Within(position + 1))
+                    {
+                        var events = row.Select(position).ToList();
+
+                        if (events.Count != 0)
+                        {
+                            return events;
+                        }
+                        break;
+                    }
                 }
             }
 
-            var data = _concrete.GetFromPosition(position).ToList();
-            
-            _cachedItems += data.Count;
-            _cache.AddFirst(new EventFetcherCacheRow(position, data.Last().Position, data));
+            List<Event> data;
 
-            while (_cachedItems > CacheLimit)
+            lock (position.ToString())
             {
-                var items = _cache.Last().Select(0).Count();
-
-                _cache.RemoveLast();
-                _cachedItems -= items;
+                data = _concrete.GetFromPosition(position).ToList();
+                lock (_mutex)
+                {
+                }
             }
 
-            return data;
+            lock (_mutex)
+            {
+                _cachedItems += data.Count;
+                _cache.AddFirst(new EventFetcherCacheRow(position, data.Last().Position, data));
+
+                while (_cachedItems > CacheLimit)
+                {
+                    var items = _cache.Last().Select(0).Count();
+
+                    _cache.RemoveLast();
+                    _cachedItems -= items;
+                }
+
+                return data;
+            }
         }
     }
 }
