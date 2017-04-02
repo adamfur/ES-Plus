@@ -85,13 +85,12 @@ namespace ESPlus.IntegrationTests
             _repository.Save(_aggregate);
             _aggregate.TriggerEvent();
             _repository.Save(_aggregate);
-        }    
+        }
 
         [Fact]
         public void GetById_LoadSaveAggregate_ReplayedToPreviousState()
         {
-            _aggregate.TriggerEvent();
-            _aggregate.TriggerEvent();
+            Repeat(() => _aggregate.TriggerEvent(), times: 1024);
             var checksum = _aggregate.Checksum;
             var version = _aggregate.Version;
 
@@ -100,7 +99,7 @@ namespace ESPlus.IntegrationTests
 
             Assert.Equal(checksum, result.Checksum);
             Assert.Equal(version, result.Version);
-        }     
+        }
 
         [Fact]
         public void Save_ReloadAggregateAndResave_Pass()
@@ -111,6 +110,14 @@ namespace ESPlus.IntegrationTests
             var aggregate = _repository.GetById<ChecksumAggregate>(_id);
             aggregate.TriggerEvent();
             _repository.Save(aggregate);
-        }                               
+        }
+
+        private void Repeat(Action action, int times)
+        {
+            for (var i = 0; i < times; ++i)
+            {
+                action();
+            }
+        }
     }
 }
