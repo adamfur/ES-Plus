@@ -93,9 +93,6 @@ namespace ESPlus.Tests.Subscribers
 
             list.Sort();
 
-            Console.WriteLine($"Score _normal: {_normal.Score}");
-            Console.WriteLine($"Score _high:  {_high.Score}");
-
             Assert.True(list.First() == (breakOrder ? _normal : _high));
         }
     }
