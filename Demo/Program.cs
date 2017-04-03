@@ -33,7 +33,7 @@ namespace Demo
         {
             foreach (var @event in client)
             {
-                Console.WriteLine($"{clientName}: {@event.Position}");
+                //Console.WriteLine($"{clientName}: {@event.Position}");
             }
         }
     }
