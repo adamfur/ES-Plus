@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +25,7 @@ namespace ESPlus.Subscribers
                 {
                     var events = row.Select(position).ToList();
 
-                    if (events.Count != 0)
+                    if (events.Any())
                     {
                         return events;
                     }
@@ -41,8 +42,9 @@ namespace ESPlus.Subscribers
             {
                 var events = GetFromCache(position);
 
-                if (events != null)
+                if (events.Any())
                 {
+                    // Console.WriteLine($"1Request: {position}, ({string.Join(", ", events.Select(x => x.Position))})");
                     return events;
                 }
             }
@@ -55,29 +57,46 @@ namespace ESPlus.Subscribers
                 {
                     var events = GetFromCache(position);
 
-                    if (events != null)
+                    if (events.Any())
                     {
+                        // Console.WriteLine($"4Request: {position}, ({string.Join(", ", events.Select(x => x.Position))})");
                         return events;
                     }
                 }
+
                 data = _concrete.GetFromPosition(position).ToList();
+
+                if (!data.Any())
+                {
+                    // Console.WriteLine($"2Request: {position}, ({string.Join(", ", data.Select(x => x.Position))})");
+                    return new List<Event>();
+                }
             }
 
             lock (_mutex)
             {
-                _cachedItems += data.Count;
-                _cache.AddFirst(new EventFetcherCacheRow(position, data.Last().Position, data));
-
-                while (_cachedItems > CacheLimit)
-                {
-                    var items = _cache.Last().Select(0).Count();
-
-                    _cache.RemoveLast();
-                    _cachedItems -= items;
-                }
-
+                AddToCache(position, data);
+                ExpireCache();
+                // Console.WriteLine($"3Request: {position}, ({string.Join(", ", data.Select(x => x.Position))})");
                 return data;
             }
+        }
+
+        private void ExpireCache()
+        {
+            while (_cachedItems > CacheLimit)
+            {
+                var items = _cache.Last().Select(0).Count();
+
+                _cache.RemoveLast();
+                _cachedItems -= items;
+            }
+        }
+
+        private void AddToCache(long position, List<Event> data)
+        {
+            _cachedItems += data.Count;
+            _cache.AddFirst(new EventFetcherCacheRow(position, data.Last().Position, data));
         }
     }
 }

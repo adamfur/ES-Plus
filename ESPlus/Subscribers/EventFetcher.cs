@@ -17,17 +17,22 @@ namespace ESPlus.Subscribers
             _eventStoreConnection = eventStoreConnection;
             //_userCredentials = new UserCredentials("admin", "changeit");
             _blockSize = blockSize;
+            _blockSize = 4;
         }
 
         public IEnumerable<Event> GetFromPosition(long position)
         {
-            //position.ToPosition()
-            var events = _eventStoreConnection.ReadAllEventsForwardAsync(3251344L.ToPosition(), _blockSize, false/*, _userCredentials*/).Result;
+            Console.WriteLine($"GetFromPosition(long position = {position})");
+            var pos = position == -1L ? Position.Start : position.ToPosition();
 
-            // Console.WriteLine(string.Join(", ", events.Events.Select(x => x.OriginalPosition.Value.CommitPosition)));
+            var events = _eventStoreConnection.ReadAllEventsForwardAsync(pos, _blockSize, false/*, _userCredentials*/).Result;
 
-            return events.Events
-                .Select(e => new Event() { Position = e.OriginalPosition.Value.CommitPosition });
+            return new EventStream
+            {
+                NextPosition = events.NextPosition.CommitPosition,
+                IsEndOfStream = events.IsEndOfStream,
+                Events = events.Events.Select(e => new Event() { Position = e.OriginalPosition.Value.CommitPosition }).ToList(),
+            }.Events;
         }
     }
 }
