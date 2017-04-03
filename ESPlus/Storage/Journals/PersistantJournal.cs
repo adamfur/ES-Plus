@@ -12,7 +12,7 @@ namespace ESPlus.Storage
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         protected readonly Dictionary<string, object> _cache = new Dictionary<string, object>();
         protected readonly Dictionary<string, object> _dataWriteCache = new Dictionary<string, object>();
-        public long Checkpoint { get; set; } = 0L;
+        public string Checkpoint { get; set; }
         private bool _changed = false;
 
         public PersistantJournal(IStorage metadataStorage, IStorage dataStorage)
@@ -31,7 +31,7 @@ namespace ESPlus.Storage
             var journal = (JournalLog)_metadataStorage.Get(JournalPath) ?? new JournalLog();
 
             Checkpoint = journal.Checkpoint;
-            if (journal.Checkpoint == 0L)
+            if (journal.Checkpoint == null)
             {
                 SubscriptionMode = SubscriptionMode.Replay;
             }
