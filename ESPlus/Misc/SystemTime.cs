@@ -2,13 +2,13 @@ using System;
 
 namespace ESPlus
 {
-    public class SystemTime
+    public class SystemTime : AmbientSytemTimeBase
     {
         public static DateTime UtcNow
         {
             get
             {
-                var asyncLocal = AmbientSystemTimeScope.AsyncLocal;
+                var asyncLocal = AmbientSytemTimeBase.AsyncLocal;
 
                 if (asyncLocal.Value != null)
                 {

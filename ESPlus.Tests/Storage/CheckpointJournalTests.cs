@@ -23,7 +23,7 @@ namespace ESPlus.Tests.Storage
 
             // Act
             _journal.Initialize();
-            _journal.Checkpoint = 12;
+            _journal.Checkpoint = "12";
             _journal.Put(destination, payload);
             _journal.Flush();
 

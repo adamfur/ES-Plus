@@ -29,28 +29,28 @@ namespace ESPlus.Tests.Storage
         public void Create_NoJournal_InitializeJournalToZero()
         {
             _journal.Initialize();
-            Assert.Equal(0L, _journal.Checkpoint);
+            Assert.Equal("0", _journal.Checkpoint);
         }
 
         [Fact]
         public void Create_HasJournalWithCheckpoint_RealTimeMode()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = 57L });
+            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = "57" });
 
             _journal.Initialize();
 
-            Assert.Equal(57L, _journal.Checkpoint);
+            Assert.Equal("57", _journal.Checkpoint);
             Assert.Equal(SubscriptionMode.RealTime, _journal.SubscriptionMode);
         }
 
         [Fact]
         public void Create_HasJournalWithCheckpoint_ReplayMode()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = 0L });
+            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = "0" });
 
             _journal.Initialize();
 
-            Assert.Equal(0L, _journal.Checkpoint);
+            Assert.Equal("0", _journal.Checkpoint);
             Assert.Equal(SubscriptionMode.Replay, _journal.SubscriptionMode);
         }
 
@@ -60,12 +60,12 @@ namespace ESPlus.Tests.Storage
             var payload = new object();
 
             _journal.Initialize();
-            _journal.Checkpoint = 13L;
+            _journal.Checkpoint = "13";
             _journal.Flush();
 
             Received.InOrder(() =>
             {
-                _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 13L));
+                _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == "13"));
                 _metadataStorage.Received().Flush();
             });
         }

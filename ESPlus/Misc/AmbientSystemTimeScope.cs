@@ -1,11 +1,9 @@
 using System;
-using System.Threading;
 
 namespace ESPlus
 {
-    public class AmbientSystemTimeScope : IDisposable
+    public class AmbientSystemTimeScope : AmbientSytemTimeBase, IDisposable
     {
-        internal static readonly AsyncLocal<Func<DateTime>> AsyncLocal = new AsyncLocal<Func<DateTime>>();
         private Func<DateTime> _previous;
 
         public AmbientSystemTimeScope(Func<DateTime> method)

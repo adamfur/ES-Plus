@@ -23,7 +23,7 @@ namespace ESPlus.Tests.Storage
             var payload = new object();
             var replayLog = new JournalLog
             {
-                Checkpoint = 0L,
+                Checkpoint = "0",
                 Map = new Dictionary<string, string>
                 {
                     [source] = destination
@@ -57,7 +57,7 @@ namespace ESPlus.Tests.Storage
 
             // Act
             _journal.Initialize();
-            _journal.Checkpoint = 12;
+            _journal.Checkpoint = "12";
             _journal.Put(destination, payload);
             _journal.Flush();
 
@@ -82,12 +82,12 @@ namespace ESPlus.Tests.Storage
 
             // Act
             _journal.Initialize();
-            _journal.Checkpoint = 12L;
+            _journal.Checkpoint = "12";
             _journal.Put(destination, payload);
             _journal.Flush();
 
             // Assert
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 12L
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == "12"
                 && p.Map.Count == 1
                 && p.Map.First().Key == "Journal/12/" + destination
                 && p.Map.First().Value == destination));
@@ -132,7 +132,7 @@ namespace ESPlus.Tests.Storage
         [Fact]
         public void Get_ReplayMode_UnlessInCacheReturnNewT()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = 0L });
+            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = "0" });
 
             var path = "path/1";
             _dataStorage.Get(path).Returns(_payload);
@@ -149,15 +149,15 @@ namespace ESPlus.Tests.Storage
             var path1 = "path/1";
             var path2 = "path/2";
             
-            _journal.Checkpoint = 12L;
+            _journal.Checkpoint = "12";
             _journal.Put(path1, _payload);
             _journal.Flush();
-            _journal.Checkpoint = 13L;
+            _journal.Checkpoint = "13";
             _journal.Put(path2, _payload);
             _journal.Flush();
 
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 12L && p.Map.Count == 1));
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 13L && p.Map.Count == 1));
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == "12" && p.Map.Count == 1));
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == "13" && p.Map.Count == 1));
         }
 
         [Fact]
@@ -166,10 +166,10 @@ namespace ESPlus.Tests.Storage
             var path1 = "path/1";
             var path2 = "path/2";
             
-            _journal.Checkpoint = 12L;
+            _journal.Checkpoint = "12";
             _journal.Put(path1, _payload);
             _journal.Flush();
-            _journal.Checkpoint = 13L;
+            _journal.Checkpoint = "13";
             _journal.Put(path2, _payload);
             _journal.Flush();
 
@@ -183,10 +183,10 @@ namespace ESPlus.Tests.Storage
             var path1 = "path/1";
             var path2 = "path/2";
             
-            _journal.Checkpoint = 12L;
+            _journal.Checkpoint = "12";
             _journal.Put(path1, _payload);
             _journal.Flush();
-            _journal.Checkpoint = 13L;
+            _journal.Checkpoint = "13";
             _journal.Put(path2, _payload);
             _journal.Flush();
 
@@ -207,7 +207,7 @@ namespace ESPlus.Tests.Storage
         {
             var path = "path/1";
             
-            _journal.Checkpoint = 12L;
+            _journal.Checkpoint = "12";
             _journal.Put(path, _payload);            
             _journal.Flush();
             _journal.Flush();
@@ -227,7 +227,7 @@ namespace ESPlus.Tests.Storage
             var journal = new ReplayableJournal(meta, stage, storage);
             var path1 = "path/1";
             
-            journal.Checkpoint = 13L;
+            journal.Checkpoint = "13";
             journal.Put(path1, _payload);
             journal.Flush();
         }                     
