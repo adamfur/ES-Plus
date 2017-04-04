@@ -22,7 +22,7 @@ namespace ESPlus.Subscribers
 
         public IEnumerable<Event> GetFromPosition(long position)
         {
-            //Console.WriteLine($"GetFromPosition(long position = {position})");
+            Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromPosition(long position = {position})");
             var pos = position == -1L ? Position.Start : position.ToPosition();
             var events = _eventStoreConnection.ReadAllEventsForwardAsync(pos, _blockSize, false).Result;
 

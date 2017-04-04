@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -51,6 +52,7 @@ namespace ESPlus.Subscribers
         {
             lock (_mutex)
             {
+                Console.WriteLine("public void TriggerContext(SubscriptionContext subscriptionContext)");
                 subscriptionContext.RequestStatus = RequestStatus.Waiting;
                 Monitor.Pulse(_mutex);
             }
@@ -85,6 +87,10 @@ namespace ESPlus.Subscribers
                     waiting.Sort();
                     waiting.ForEach(x => ++x.StarvedCycles);
                     subscriptionContext = waiting.First();
+
+                    Console.WriteLine($"{subscriptionContext.RequestStatus}");
+
+
                     subscriptionContext.RequestStatus = RequestStatus.Fetching;
                 }
 
@@ -94,12 +100,14 @@ namespace ESPlus.Subscribers
                 {
                     if (events.Any())
                     {
+                        Console.WriteLine($"Put {events.Count()}");
                         subscriptionContext.RequestStatus = RequestStatus.Busy;
                         subscriptionContext.Put(events);
                     }
                     else
                     {
-                        //subscriptionContext.RequestStatus = RequestStatus.Ahead;
+                        Console.WriteLine($"!Put");
+                        subscriptionContext.RequestStatus = RequestStatus.Ahead;
                     }
                 }
             }
