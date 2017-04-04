@@ -1,8 +1,6 @@
 ﻿using System;
-using ESPlus;
 using System.Threading;
 using ESPlus.Subscribers;
-using System.Net;
 using EventStore.ClientAPI;
 
 namespace Demo

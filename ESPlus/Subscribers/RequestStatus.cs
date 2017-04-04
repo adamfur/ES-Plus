@@ -4,6 +4,7 @@ namespace ESPlus.Subscribers
     {
         Busy,
         Waiting,
-        Fetching
+        Fetching,
+        Ahead
     }
 }

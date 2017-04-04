@@ -27,6 +27,7 @@ namespace ESPlus.Subscribers
             //Console.WriteLine($"GetFromPosition(long position = {position})");
             var pos = position == -1L ? Position.Start : position.ToPosition();
 
+            //Console.WriteLine("Trigger event store");
             var events = _eventStoreConnection.ReadAllEventsForwardAsync(pos, _blockSize, false/*, _userCredentials*/).Result;
 
             //Console.WriteLine($"events.IsEndOfStream: {position} {events.IsEndOfStream}, Next: {events.NextPosition}");
@@ -46,10 +47,12 @@ namespace ESPlus.Subscribers
         private void InitializeSubscription()
         {
             Console.WriteLine("InitializeSubscription()");
-            _eventStoreConnection.SubscribeToAllAsync(false, EventAppeared, userCredentials: _userCredentials).Wait();
+            var settings = new CatchUpSubscriptionSettings(_blockSize, _blockSize, false, false);
+
+            _eventStoreConnection.SubscribeToAllFrom(Position.Start, settings, EventAppeared, userCredentials: _userCredentials);
         }
 
-        private void EventAppeared(EventStoreSubscription eventStoreSubscription, ResolvedEvent resolvedEvent)
+        private void EventAppeared(EventStoreCatchUpSubscription eventStoreSubscription, ResolvedEvent resolvedEvent)
         {
             Console.WriteLine($"Pos: {resolvedEvent.OriginalPosition}, Type: {resolvedEvent.Event.EventType}");
         }        

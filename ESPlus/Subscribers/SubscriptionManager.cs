@@ -92,8 +92,15 @@ namespace ESPlus.Subscribers
 
                 lock (mutex)
                 {
-                    subscriptionContext.Put(events);
-                    subscriptionContext.RequestStatus = RequestStatus.Busy;
+                    if (events.Any())
+                    {
+                        subscriptionContext.RequestStatus = RequestStatus.Busy;
+                        subscriptionContext.Put(events);
+                    }
+                    else
+                    {
+                        //subscriptionContext.RequestStatus = RequestStatus.Ahead;
+                    }
                 }
             }
         }
