@@ -61,7 +61,7 @@ namespace ESPlus.Subscribers
             lock (_mutex)
             {
                 AddToCache(position, data);
-                //ExpireCache();
+                ExpireCache();
                 if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
                 return data;
             }

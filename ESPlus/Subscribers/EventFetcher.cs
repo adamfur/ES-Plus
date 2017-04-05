@@ -18,7 +18,8 @@ namespace ESPlus.Subscribers
 
         public EventStream GetFromPosition(Position position)
         {
-            if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
+            //if (position.CommitPosition == 183654176L)
+                Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
 
             var events = _eventStoreConnection.ReadAllEventsForwardAsync(position, _blockSize, false).Result;
 
@@ -38,10 +39,10 @@ namespace ESPlus.Subscribers
 
         private void InitializeSubscription(Position position)
         {
-            //Console.WriteLine($"SubscribeToAllFrom({position})");
-            //var settings = new CatchUpSubscriptionSettings(_blockSize, _blockSize, false, false);
+            Console.WriteLine($"SubscribeToAllFrom({position})");
+            var settings = new CatchUpSubscriptionSettings(_blockSize, _blockSize, false, false);
 
-            //_eventStoreConnection.SubscribeToAllFrom(Position.Start, settings, EventAppeared);
+            _eventStoreConnection.SubscribeToAllFrom(Position.Start, settings, EventAppeared);
         }
 
         private void EventAppeared(EventStoreCatchUpSubscription eventStoreSubscription, ResolvedEvent resolvedEvent)
