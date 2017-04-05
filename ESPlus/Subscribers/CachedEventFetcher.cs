@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using EventStore.ClientAPI;
@@ -10,8 +11,9 @@ namespace ESPlus.Subscribers
         private readonly IEventFetcher _concrete;
         private readonly LinkedList<EventFetcherCacheRow> _cache = new LinkedList<EventFetcherCacheRow>();
         private int _cachedItems = 0;
-        private const int CacheLimit = 409600;
+        private const int CacheLimit = 40960;
         private object _mutex = new object();
+        private static readonly ConcurrentDictionary<string, object> _locks = new ConcurrentDictionary<string, object>();
 
         public CachedEventFetcher(IEventFetcher eventFetcher)
         {
@@ -33,7 +35,8 @@ namespace ESPlus.Subscribers
 
             EventStream data;
 
-            lock (position.ToString())
+            //@TODO: replace with string.Intern() when net core 2.0 is out
+            lock(_locks.GetOrAdd(position.ToString(), s => new object()))
             {
                 lock (_mutex)
                 {

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers

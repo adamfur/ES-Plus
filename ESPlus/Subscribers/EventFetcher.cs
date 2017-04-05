@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
@@ -19,7 +20,7 @@ namespace ESPlus.Subscribers
         public EventStream GetFromPosition(Position position)
         {
             //if (position.CommitPosition == 183654176L)
-                Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
+                Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} {this.GetHashCode()} {DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
 
             var events = _eventStoreConnection.ReadAllEventsForwardAsync(position, _blockSize, false).Result;
 

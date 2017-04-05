@@ -15,14 +15,14 @@ namespace Demo
             eventStoreConnection.ConnectAsync().Wait();
             IEventFetcher eventFetcher = new EventFetcher(eventStoreConnection);
             eventFetcher = new CachedEventFetcher(eventFetcher);
-            var manager = new SubscriptionManager(eventFetcher, workerThreads: 1);
+            var manager = new SubscriptionManager(eventFetcher, workerThreads: 2);
 
             var client1 = manager.Subscribe(Position.Start);
             var client2 = manager.Subscribe(Position.Start);
-            var client3 = manager.Subscribe(116508733L.ToPosition());
+            //var client3 = manager.Subscribe(116508733L.ToPosition());
             new Thread(() => Client("Client1", client1)).Start();
             new Thread(() => Client("Client2", client2)).Start();
-            new Thread(() => Client("Client3", client3)).Start();
+            // new Thread(() => Client("Client3", client3)).Start();
             manager.Start();
             Console.ReadLine();
         }
