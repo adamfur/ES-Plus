@@ -19,7 +19,7 @@ namespace ESPlus.Subscribers
 
         public bool Within(Position position)
         {
-            return From <= position && position <= To;
+            return From <= position && position < To;
         }
 /*
         public void Merge(IEnumerable<Event> events)

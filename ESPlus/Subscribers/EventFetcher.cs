@@ -1,14 +1,12 @@
 using System;
 using System.Linq;
 using EventStore.ClientAPI;
-using EventStore.ClientAPI.SystemData;
 
 namespace ESPlus.Subscribers
 {
     public class EventFetcher : IEventFetcher
     {
         private readonly IEventStoreConnection _eventStoreConnection;
-        private readonly UserCredentials _userCredentials;
         private readonly int _blockSize;
         private bool _subscriptionOnline = false;
 
@@ -20,7 +18,8 @@ namespace ESPlus.Subscribers
 
         public EventStream GetFromPosition(Position position)
         {
-            Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(long position = {position.CommitPosition})");
+            if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
+
             var events = _eventStoreConnection.ReadAllEventsForwardAsync(position, _blockSize, false).Result;
 
             if (!_subscriptionOnline && events.Events.Count() != _blockSize)
@@ -39,10 +38,10 @@ namespace ESPlus.Subscribers
 
         private void InitializeSubscription(Position position)
         {
-            Console.WriteLine($"SubscribeToAllFrom({position})");
-            var settings = new CatchUpSubscriptionSettings(_blockSize, _blockSize, false, false);
+            //Console.WriteLine($"SubscribeToAllFrom({position})");
+            //var settings = new CatchUpSubscriptionSettings(_blockSize, _blockSize, false, false);
 
-            _eventStoreConnection.SubscribeToAllFrom(Position.Start, settings, EventAppeared);
+            //_eventStoreConnection.SubscribeToAllFrom(Position.Start, settings, EventAppeared);
         }
 
         private void EventAppeared(EventStoreCatchUpSubscription eventStoreSubscription, ResolvedEvent resolvedEvent)

@@ -10,7 +10,7 @@ namespace ESPlus.Subscribers
         private readonly IEventFetcher _concrete;
         private readonly LinkedList<EventFetcherCacheRow> _cache = new LinkedList<EventFetcherCacheRow>();
         private int _cachedItems = 0;
-        private const int CacheLimit = 40960;
+        private const int CacheLimit = 409600;
         private object _mutex = new object();
 
         public CachedEventFetcher(IEventFetcher eventFetcher)
@@ -26,7 +26,7 @@ namespace ESPlus.Subscribers
 
                 if (events.Events.Any())
                 {
-                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {events.NextPosition}");
+                    if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {events.NextPosition}");
                     return events;
                 }
             }
@@ -41,7 +41,7 @@ namespace ESPlus.Subscribers
 
                     if (stream.Events.Any())
                     {
-                        Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {stream.NextPosition}");
+                        if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {stream.NextPosition}");
                         return stream;
                     }
                 }
@@ -50,7 +50,7 @@ namespace ESPlus.Subscribers
 
                 if (!data.Events.Any())
                 {
-                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
+                    if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
                     return new EventStream
                     {
                         NextPosition = position
@@ -61,21 +61,21 @@ namespace ESPlus.Subscribers
             lock (_mutex)
             {
                 AddToCache(position, data);
-                ExpireCache();
-                Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
+                //ExpireCache();
+                if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
                 return data;
             }
         }
 
         private EventStream GetFromCache(Position position)
         {
-
             foreach (var row in _cache)
             {
                 if (row.Within(position))
                 {
                     var stream = row.Select(position);
 
+                    if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: InCache(long position = {position.CommitPosition}) ={stream.Events.Any()}");
                     if (stream.Events.Any())
                     {
                         return stream;
@@ -107,6 +107,7 @@ namespace ESPlus.Subscribers
 
         private void AddToCache(Position position, EventStream stream)
         {
+            if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: AddToCache(long position = {position.CommitPosition})");
             _cachedItems += stream.Events.Count;
             _cache.AddFirst(new EventFetcherCacheRow(position, stream.NextPosition, stream));
         }
