@@ -16,13 +16,14 @@ namespace ESPlus.Subscribers
         {
             while (true)
             {
-                var list = _subscriptionContext.Take();
+                var stream = _subscriptionContext.Take();
 
-                foreach (var @event in list)
+                foreach (var @event in stream.Events)
                 {
                     _subscriptionContext.Position = @event.Position;
                     yield return @event;
                 }
+                _subscriptionContext.Position = stream.NextPosition;
             }
         }
 

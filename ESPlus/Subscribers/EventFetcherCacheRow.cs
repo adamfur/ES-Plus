@@ -1,26 +1,27 @@
 using System.Collections.Generic;
 using System.Linq;
+using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
 {
     public class EventFetcherCacheRow
     {
-        private List<Event> _events = new List<Event>();
-        public long From { get; set; }
-        public long To { get; set; }
+        private EventStream _events;
+        public Position From { get; set; }
+        public Position To { get; set; }
 
-        public EventFetcherCacheRow(long from, long to, IEnumerable<Event> events)
+        public EventFetcherCacheRow(Position from, Position to, EventStream events)
         {
             From = from;
             To = to;
-            _events = new List<Event>(events);
+            _events = events;
         }
 
-        public bool Within(long position)
+        public bool Within(Position position)
         {
             return From <= position && position <= To;
         }
-
+/*
         public void Merge(IEnumerable<Event> events)
         {
             _events = _events.Concat(events)
@@ -30,10 +31,14 @@ namespace ESPlus.Subscribers
 
             To = _events.Last().Position;
         }
-
-        public IEnumerable<Event> Select(long position)
+*/
+        public EventStream Select(Position position)
         {
-            return _events.Where(e => e.Position >= position); // CORRECT?
+            return new EventStream 
+            {
+                Events = _events.Events.Where(e => e.Position >= position).ToList(),
+                NextPosition = _events.NextPosition
+            };
         }
     }
 }

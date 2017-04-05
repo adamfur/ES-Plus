@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
 {
     public class SubscriptionContext : IComparable<SubscriptionContext>
     {
-        private Queue<IEnumerable<Event>> _queue = new Queue<IEnumerable<Event>>();
+        private Queue<EventStream> _queue = new Queue<EventStream>();
         public Priority Priority { get; set; }
         public RequestStatus RequestStatus { get; set; }
         public long StarvedCycles { get; set; }
-        public long Position { get; set; }
+        public Position Position { get; set; }
         public SubscriptionManager Manager { get; internal set; }
 
         public long Score
@@ -67,7 +68,7 @@ namespace ESPlus.Subscribers
             return other.Score.CompareTo(Score);
         }
 
-        public IEnumerable<Event> Take()
+        public EventStream Take()
         {
             lock (_queue)
             {
@@ -83,7 +84,7 @@ namespace ESPlus.Subscribers
             }
         }
 
-        public void Put(IEnumerable<Event> events)
+        public void Put(EventStream events)
         {
             lock (_queue)
             {

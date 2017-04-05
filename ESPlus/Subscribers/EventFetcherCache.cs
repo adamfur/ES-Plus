@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
 {
@@ -11,7 +11,7 @@ namespace ESPlus.Subscribers
             _concrete = concrete;
         }
 
-        public IEnumerable<Event> GetFromPosition(long position)
+        public EventStream GetFromPosition(Position position)
         {
             return _concrete.GetFromPosition(position);
         }

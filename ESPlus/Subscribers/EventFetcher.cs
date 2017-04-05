@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using ESPlus.Storage;
 using EventStore.ClientAPI;
 using EventStore.ClientAPI.SystemData;
 
@@ -20,11 +18,10 @@ namespace ESPlus.Subscribers
             _blockSize = blockSize;
         }
 
-        public IEnumerable<Event> GetFromPosition(long position)
+        public EventStream GetFromPosition(Position position)
         {
-            Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromPosition(long position = {position})");
-            var pos = position == -1L ? Position.Start : position.ToPosition();
-            var events = _eventStoreConnection.ReadAllEventsForwardAsync(pos, _blockSize, false).Result;
+            Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(long position = {position.CommitPosition})");
+            var events = _eventStoreConnection.ReadAllEventsForwardAsync(position, _blockSize, false).Result;
 
             if (!_subscriptionOnline && events.Events.Count() != _blockSize)
             {
@@ -32,8 +29,12 @@ namespace ESPlus.Subscribers
                 InitializeSubscription(events.NextPosition);
             }
 
-            //var  NextPosition = events.NextPosition.CommitPosition;
-            return events.Events.Select(e => new Event() { Position = e.OriginalPosition.Value.CommitPosition });
+            //Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromPosition(long position = {position}), next: {events.NextPosition}");
+            return new EventStream
+            {
+                Events = events.Events.Select(e => new Event() { Position = e.OriginalPosition.Value }).ToList(),
+                NextPosition = events.NextPosition
+            };
         }
 
         private void InitializeSubscription(Position position)
@@ -46,7 +47,7 @@ namespace ESPlus.Subscribers
 
         private void EventAppeared(EventStoreCatchUpSubscription eventStoreSubscription, ResolvedEvent resolvedEvent)
         {
-            Console.WriteLine($"PosX: {resolvedEvent.OriginalPosition}, Type: {resolvedEvent.Event.EventType}");
+            //Console.WriteLine($"PosX: {resolvedEvent.OriginalPosition}, Type: {resolvedEvent.Event.EventType}");
         }        
     }
 }

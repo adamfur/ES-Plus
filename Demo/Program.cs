@@ -17,9 +17,9 @@ namespace Demo
             eventFetcher = new CachedEventFetcher(eventFetcher);
             var manager = new SubscriptionManager(eventFetcher, workerThreads: 1);
 
-            var client1 = manager.Subscribe(-1L);
-            var client2 = manager.Subscribe(8078189L);
-            var client3 = manager.Subscribe(8110420L);
+            var client1 = manager.Subscribe(Position.Start);
+            var client2 = manager.Subscribe(Position.Start); //manager.Subscribe(new Position(8078189L, 8078189L));
+            var client3 = manager.Subscribe(new Position(8110420L, 8110420L));
             new Thread(() => Client("Client1", client1)).Start();
             new Thread(() => Client("Client2", client2)).Start();
             new Thread(() => Client("Client3", client3)).Start();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
 {
@@ -17,59 +18,43 @@ namespace ESPlus.Subscribers
             _concrete = eventFetcher;
         }
 
-        private IEnumerable<Event> GetFromCache(long position)
-        {
-            foreach (var row in _cache)
-            {
-                if (row.Within(position + 1))
-                {
-                    var events = row.Select(position).ToList();
-
-                    if (events.Any())
-                    {
-                        return events;
-                    }
-                    return new List<Event>();
-                }
-            }
-
-            return new List<Event>();
-        }
-
-        public IEnumerable<Event> GetFromPosition(long position)
+        public EventStream GetFromPosition(Position position)
         {
             lock (_mutex)
             {
                 var events = GetFromCache(position);
 
-                if (events.Any())
+                if (events.Events.Any())
                 {
-                    // Console.WriteLine($"1Request: {position}, ({string.Join(", ", events.Select(x => x.Position))})");
+                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {events.NextPosition}");
                     return events;
                 }
             }
 
-            List<Event> data;
+            EventStream data;
 
             lock (position.ToString())
             {
                 lock (_mutex)
                 {
-                    var events = GetFromCache(position);
+                    var stream = GetFromCache(position);
 
-                    if (events.Any())
+                    if (stream.Events.Any())
                     {
-                        // Console.WriteLine($"4Request: {position}, ({string.Join(", ", events.Select(x => x.Position))})");
-                        return events;
+                        Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {stream.NextPosition}");
+                        return stream;
                     }
                 }
 
-                data = _concrete.GetFromPosition(position).ToList();
+                data = _concrete.GetFromPosition(position);
 
-                if (!data.Any())
+                if (!data.Events.Any())
                 {
-                    // Console.WriteLine($"2Request: {position}, ({string.Join(", ", data.Select(x => x.Position))})");
-                    return new List<Event>();
+                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
+                    return new EventStream
+                    {
+                        NextPosition = position
+                    };
                 }
             }
 
@@ -77,26 +62,53 @@ namespace ESPlus.Subscribers
             {
                 AddToCache(position, data);
                 ExpireCache();
-                // Console.WriteLine($"3Request: {position}, ({string.Join(", ", data.Select(x => x.Position))})");
+                Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
                 return data;
             }
+        }
+
+        private EventStream GetFromCache(Position position)
+        {
+
+            foreach (var row in _cache)
+            {
+                if (row.Within(position))
+                {
+                    var stream = row.Select(position);
+
+                    if (stream.Events.Any())
+                    {
+                        return stream;
+                    }
+
+                    return new EventStream
+                    {
+                        NextPosition = position
+                    };
+                }
+            }
+
+            return new EventStream
+            {
+                NextPosition = position
+            };
         }
 
         private void ExpireCache()
         {
             while (_cachedItems > CacheLimit)
             {
-                var items = _cache.Last().Select(0).Count();
+                var itemCount = _cache.Last().Select(Position.Start).Events.Count();
 
                 _cache.RemoveLast();
-                _cachedItems -= items;
+                _cachedItems -= itemCount;
             }
         }
 
-        private void AddToCache(long position, List<Event> data)
+        private void AddToCache(Position position, EventStream stream)
         {
-            _cachedItems += data.Count;
-            _cache.AddFirst(new EventFetcherCacheRow(position, data.Last().Position, data));
+            _cachedItems += stream.Events.Count;
+            _cache.AddFirst(new EventFetcherCacheRow(position, stream.NextPosition, stream));
         }
     }
 }

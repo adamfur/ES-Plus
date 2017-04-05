@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
 {
@@ -29,7 +30,7 @@ namespace ESPlus.Subscribers
             }
         }
 
-        public ISubscriptionClient Subscribe(long position, Priority priority = Priority.Normal)
+        public ISubscriptionClient Subscribe(Position position, Priority priority = Priority.Normal)
         {
             var context = new SubscriptionContext
             {
@@ -52,7 +53,6 @@ namespace ESPlus.Subscribers
         {
             lock (_mutex)
             {
-                Console.WriteLine("public void TriggerContext(SubscriptionContext subscriptionContext)");
                 subscriptionContext.RequestStatus = RequestStatus.Waiting;
                 Monitor.Pulse(_mutex);
             }
@@ -87,10 +87,6 @@ namespace ESPlus.Subscribers
                     waiting.Sort();
                     waiting.ForEach(x => ++x.StarvedCycles);
                     subscriptionContext = waiting.First();
-
-                    Console.WriteLine($"{subscriptionContext.RequestStatus}");
-
-
                     subscriptionContext.RequestStatus = RequestStatus.Fetching;
                 }
 
@@ -98,15 +94,16 @@ namespace ESPlus.Subscribers
 
                 lock (mutex)
                 {
-                    if (events.Any())
+                    /*
+                    Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: WorkerThread(long position = {subscriptionContext.Position.CommitPosition}), next: {events.NextPosition.CommitPosition}");
+                    */
+                    if (events.Events.Any())
                     {
-                        Console.WriteLine($"Put {events.Count()}");
                         subscriptionContext.RequestStatus = RequestStatus.Busy;
                         subscriptionContext.Put(events);
                     }
                     else
                     {
-                        Console.WriteLine($"!Put");
                         subscriptionContext.RequestStatus = RequestStatus.Ahead;
                     }
                 }

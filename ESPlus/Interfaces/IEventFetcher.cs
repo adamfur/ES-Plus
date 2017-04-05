@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
 {
     public interface IEventFetcher
     {
-        IEnumerable<Event> GetFromPosition(long position);
+        EventStream GetFromPosition(Position position);
     }
 }
