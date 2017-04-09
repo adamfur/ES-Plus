@@ -5,6 +5,28 @@ using EventStore.ClientAPI;
 
 namespace Demo
 {
+    public interface IFoo  
+    {  
+        int GetNum();  
+        string GetDay();  
+        int Buz { get; set; }
+    }  
+
+    // public class Foo : IFoo
+    // {
+    //     public int GetNum()
+    //     {
+    //         return -1;
+    //     }
+
+    //     public string GetDay()
+    //     {
+    //         return "abc";
+    //     }
+
+    //     public int Buz { get; set; }
+    // }
+
     class Program
     {
         static void Main(string[] args)

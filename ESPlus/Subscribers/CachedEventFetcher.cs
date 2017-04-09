@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using ESPlus.Misc;
 using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
@@ -13,7 +13,6 @@ namespace ESPlus.Subscribers
         private int _cachedItems = 0;
         private const int CacheLimit = 40960;
         private object _mutex = new object();
-        private static readonly ConcurrentDictionary<string, object> _locks = new ConcurrentDictionary<string, object>();
 
         public CachedEventFetcher(IEventFetcher eventFetcher)
         {
@@ -28,15 +27,16 @@ namespace ESPlus.Subscribers
 
                 if (events.Events.Any())
                 {
-                    if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {events.NextPosition}");
+                    //Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {events.NextPosition}");
                     return events;
                 }
             }
 
             EventStream data;
 
-            //@TODO: replace with string.Intern() when net core 2.0 is out
-            lock(_locks.GetOrAdd(position.ToString(), s => new object()))
+            //https://github.com/IronLanguages/main/issues/1381
+            //@TODO: replace with string.Intern() when net standard 2.0 is out
+            lock (StringEx.Intern(position.ToString()))
             {
                 lock (_mutex)
                 {
@@ -44,7 +44,7 @@ namespace ESPlus.Subscribers
 
                     if (stream.Events.Any())
                     {
-                        if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {stream.NextPosition}");
+                        //Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {stream.NextPosition}");
                         return stream;
                     }
                 }
@@ -53,7 +53,7 @@ namespace ESPlus.Subscribers
 
                 if (!data.Events.Any())
                 {
-                    if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
+                    //Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
                     return new EventStream
                     {
                         NextPosition = position
@@ -65,7 +65,7 @@ namespace ESPlus.Subscribers
             {
                 AddToCache(position, data);
                 ExpireCache();
-                if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
+                //Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromCache(long position = {position.CommitPosition}), next: {data.NextPosition}");
                 return data;
             }
         }
@@ -78,7 +78,7 @@ namespace ESPlus.Subscribers
                 {
                     var stream = row.Select(position);
 
-                    if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: InCache(long position = {position.CommitPosition}) ={stream.Events.Any()}");
+                    //Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: InCache(long position = {position.CommitPosition}) ={stream.Events.Any()}");
                     if (stream.Events.Any())
                     {
                         return stream;
@@ -110,9 +110,14 @@ namespace ESPlus.Subscribers
 
         private void AddToCache(Position position, EventStream stream)
         {
-            if (position.CommitPosition == 183654176L) Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: AddToCache(long position = {position.CommitPosition})");
+            //Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: AddToCache(long position = {position.CommitPosition})");
             _cachedItems += stream.Events.Count;
             _cache.AddFirst(new EventFetcherCacheRow(position, stream.NextPosition, stream));
+        }
+
+        public void OnEventReceived(Action action)
+        {
+            _concrete.OnEventReceived(action);
         }
     }
 }

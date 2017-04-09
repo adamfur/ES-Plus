@@ -1,3 +1,4 @@
+using System;
 using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
@@ -5,5 +6,6 @@ namespace ESPlus.Subscribers
     public interface IEventFetcher
     {
         EventStream GetFromPosition(Position position);
+        void OnEventReceived(Action action);
     }
 }

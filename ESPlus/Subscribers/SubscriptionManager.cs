@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -18,6 +19,18 @@ namespace ESPlus.Subscribers
             _workerThreads = workerThreads;
             _barrier = new Barrier(workerThreads);
             _eventFetcher = eventFetcher;
+            eventFetcher.OnEventReceived(() => TriggerNewEvent());
+        }
+
+        public void TriggerNewEvent()
+        {
+            //Console.WriteLine("TriggerNewEvent");
+            lock (_mutex)
+            {
+                _contexts.Where(x => x.RequestStatus == RequestStatus.Ahead).ToList()
+                    .ForEach(x => x.RequestStatus = RequestStatus.Waiting);
+                Monitor.Pulse(_mutex);
+            }
         }
 
         public void Start()
@@ -61,7 +74,6 @@ namespace ESPlus.Subscribers
         {
             lock (_mutex)
             {
-                // new event from subscription!!!
                 Monitor.Pulse(_mutex);
             }
         }
@@ -104,6 +116,7 @@ namespace ESPlus.Subscribers
                     else
                     {
                         subscriptionContext.RequestStatus = RequestStatus.Ahead;
+                        //Console.WriteLine("Ahead");
                     }
                 }
             }

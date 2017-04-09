@@ -10,6 +10,7 @@ namespace ESPlus.Subscribers
         private readonly IEventStoreConnection _eventStoreConnection;
         private readonly int _blockSize;
         private bool _subscriptionOnline = false;
+        private Action _eventReceivedTrigger = () => {};
 
         public EventFetcher(IEventStoreConnection eventStoreConnection, int blockSize = 512)
         {
@@ -17,10 +18,15 @@ namespace ESPlus.Subscribers
             _blockSize = blockSize;
         }
 
+        public void OnEventReceived(Action action)
+        {
+            _eventReceivedTrigger = action;
+        }
+
         public EventStream GetFromPosition(Position position)
         {
             //if (position.CommitPosition == 183654176L)
-                Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} {this.GetHashCode()} {DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
+                Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} {DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
 
             var events = _eventStoreConnection.ReadAllEventsForwardAsync(position, _blockSize, false).Result;
 
@@ -40,14 +46,16 @@ namespace ESPlus.Subscribers
 
         private void InitializeSubscription(Position position)
         {
-            Console.WriteLine($"SubscribeToAllFrom({position})");
+            //Console.WriteLine($"SubscribeToAllFrom({position})");
             var settings = new CatchUpSubscriptionSettings(_blockSize, _blockSize, false, false);
 
-            _eventStoreConnection.SubscribeToAllFrom(Position.Start, settings, EventAppeared);
+            _eventStoreConnection.SubscribeToAllFrom(position, settings, EventAppeared);
         }
 
         private void EventAppeared(EventStoreCatchUpSubscription eventStoreSubscription, ResolvedEvent resolvedEvent)
         {
+            //Console.WriteLine($"EventAppeared Position: {resolvedEvent.OriginalPosition}");
+            _eventReceivedTrigger();
             //Console.WriteLine($"PosX: {resolvedEvent.OriginalPosition}, Type: {resolvedEvent.Event.EventType}");
         }        
     }
