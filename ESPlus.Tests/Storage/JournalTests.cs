@@ -1,6 +1,8 @@
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using ESPlus.Storage;
+using ESPlus.Subscribers;
+using EventStore.ClientAPI;
 using NSubstitute;
 using Xunit;
 
@@ -29,28 +31,28 @@ namespace ESPlus.Tests.Storage
         public void Create_NoJournal_InitializeJournalToZero()
         {
             _journal.Initialize();
-            Assert.Equal("0", _journal.Checkpoint);
+            Assert.Equal(0L.ToPosition(), _journal.Checkpoint);
         }
 
         [Fact]
         public void Create_HasJournalWithCheckpoint_RealTimeMode()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = "57" });
+            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = 57L.ToPosition() });
 
             _journal.Initialize();
 
-            Assert.Equal("57", _journal.Checkpoint);
+            Assert.Equal(57L.ToPosition(), _journal.Checkpoint);
             Assert.Equal(SubscriptionMode.RealTime, _journal.SubscriptionMode);
         }
 
         [Fact]
         public void Create_HasJournalWithCheckpoint_ReplayMode()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = "0" });
+            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
 
             _journal.Initialize();
 
-            Assert.Equal("0", _journal.Checkpoint);
+            Assert.Equal(Position.Start, _journal.Checkpoint);
             Assert.Equal(SubscriptionMode.Replay, _journal.SubscriptionMode);
         }
 
@@ -60,12 +62,12 @@ namespace ESPlus.Tests.Storage
             var payload = new object();
 
             _journal.Initialize();
-            _journal.Checkpoint = "13";
+            _journal.Checkpoint = 13L.ToPosition();
             _journal.Flush();
 
             Received.InOrder(() =>
             {
-                _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == "13"));
+                _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 13L.ToPosition()));
                 _metadataStorage.Received().Flush();
             });
         }

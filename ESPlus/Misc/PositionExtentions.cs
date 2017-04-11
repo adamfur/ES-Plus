@@ -6,7 +6,7 @@ namespace ESPlus.Subscribers
     {
         public static Position ToPosition(this long value)
         {
-            return new Position(value, value);
+            return new Position(value, 0);
         }
     }
 }

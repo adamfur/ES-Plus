@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
+using EventStore.ClientAPI;
 
 namespace ESPlus.Storage
 {
@@ -12,7 +13,7 @@ namespace ESPlus.Storage
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         protected readonly Dictionary<string, object> _cache = new Dictionary<string, object>();
         protected readonly Dictionary<string, object> _dataWriteCache = new Dictionary<string, object>();
-        public string Checkpoint { get; set; }
+        public Position Checkpoint { get; set; }
         private bool _changed = false;
 
         public PersistantJournal(IStorage metadataStorage, IStorage dataStorage)
@@ -31,7 +32,7 @@ namespace ESPlus.Storage
             var journal = (JournalLog)_metadataStorage.Get(JournalPath) ?? new JournalLog();
 
             Checkpoint = journal.Checkpoint;
-            if (journal.Checkpoint == null)
+            if (journal.Checkpoint == Position.Start)
             {
                 SubscriptionMode = SubscriptionMode.Replay;
             }

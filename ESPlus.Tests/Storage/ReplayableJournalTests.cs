@@ -3,7 +3,8 @@ using ESPlus.Storage;
 using NSubstitute;
 using Xunit;
 using System.Linq;
-using System;
+using ESPlus.Subscribers;
+using EventStore.ClientAPI;
 
 namespace ESPlus.Tests.Storage
 {
@@ -23,7 +24,7 @@ namespace ESPlus.Tests.Storage
             var payload = new object();
             var replayLog = new JournalLog
             {
-                Checkpoint = "0",
+                Checkpoint = 0L.ToPosition(),
                 Map = new Dictionary<string, string>
                 {
                     [source] = destination
@@ -57,14 +58,14 @@ namespace ESPlus.Tests.Storage
 
             // Act
             _journal.Initialize();
-            _journal.Checkpoint = "12";
+            _journal.Checkpoint = 12L.ToPosition();
             _journal.Put(destination, payload);
             _journal.Flush();
 
             // Assert
             Received.InOrder(() =>
             {
-                _stageStorage.Received().Put(Arg.Is<string>(p => p == "Journal/12/prod/file1"), payload);
+                _stageStorage.Received().Put(Arg.Is<string>(p => p == "Journal/12/0/prod/file1"), payload);
                 _stageStorage.Received().Flush();
                 _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => true));
                 _metadataStorage.Received().Flush();
@@ -82,14 +83,14 @@ namespace ESPlus.Tests.Storage
 
             // Act
             _journal.Initialize();
-            _journal.Checkpoint = "12";
+            _journal.Checkpoint = 12L.ToPosition();
             _journal.Put(destination, payload);
             _journal.Flush();
 
             // Assert
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == "12"
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 12L.ToPosition()
                 && p.Map.Count == 1
-                && p.Map.First().Key == "Journal/12/" + destination
+                && p.Map.First().Key == "Journal/12/0/" + destination
                 && p.Map.First().Value == destination));
         }
 
@@ -132,7 +133,7 @@ namespace ESPlus.Tests.Storage
         [Fact]
         public void Get_ReplayMode_UnlessInCacheReturnNewT()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = "0" });
+            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
 
             var path = "path/1";
             _dataStorage.Get(path).Returns(_payload);
@@ -149,15 +150,15 @@ namespace ESPlus.Tests.Storage
             var path1 = "path/1";
             var path2 = "path/2";
             
-            _journal.Checkpoint = "12";
+            _journal.Checkpoint = 12L.ToPosition();
             _journal.Put(path1, _payload);
             _journal.Flush();
-            _journal.Checkpoint = "13";
+            _journal.Checkpoint = 13L.ToPosition();
             _journal.Put(path2, _payload);
             _journal.Flush();
 
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == "12" && p.Map.Count == 1));
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == "13" && p.Map.Count == 1));
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 12L.ToPosition() && p.Map.Count == 1));
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 13L.ToPosition() && p.Map.Count == 1));
         }
 
         [Fact]
@@ -166,10 +167,10 @@ namespace ESPlus.Tests.Storage
             var path1 = "path/1";
             var path2 = "path/2";
             
-            _journal.Checkpoint = "12";
+            _journal.Checkpoint = 12L.ToPosition();
             _journal.Put(path1, _payload);
             _journal.Flush();
-            _journal.Checkpoint = "13";
+            _journal.Checkpoint = 13L.ToPosition();
             _journal.Put(path2, _payload);
             _journal.Flush();
 
@@ -183,15 +184,15 @@ namespace ESPlus.Tests.Storage
             var path1 = "path/1";
             var path2 = "path/2";
             
-            _journal.Checkpoint = "12";
+            _journal.Checkpoint = 12L.ToPosition();
             _journal.Put(path1, _payload);
             _journal.Flush();
-            _journal.Checkpoint = "13";
+            _journal.Checkpoint = 13L.ToPosition();
             _journal.Put(path2, _payload);
             _journal.Flush();
 
-            _stageStorage.Received(1).Put("Journal/12/" + path1, Arg.Any<object>());
-            _stageStorage.Received(1).Put("Journal/13/" + path2, Arg.Any<object>());
+            _stageStorage.Received(1).Put("Journal/12/0/" + path1, Arg.Any<object>());
+            _stageStorage.Received(1).Put("Journal/13/0/" + path2, Arg.Any<object>());
         } 
 
         [Fact]
@@ -207,7 +208,7 @@ namespace ESPlus.Tests.Storage
         {
             var path = "path/1";
             
-            _journal.Checkpoint = "12";
+            _journal.Checkpoint = 12L.ToPosition();
             _journal.Put(path, _payload);            
             _journal.Flush();
             _journal.Flush();
@@ -216,9 +217,6 @@ namespace ESPlus.Tests.Storage
         }  
 
 
-
-        /********************************/
-        [Fact]
         public void TEMPTEMPTEMP()
         {
             var meta = new FileSystemStorage("meta");
@@ -227,7 +225,7 @@ namespace ESPlus.Tests.Storage
             var journal = new ReplayableJournal(meta, stage, storage);
             var path1 = "path/1";
             
-            journal.Checkpoint = "13";
+            journal.Checkpoint = 13L.ToPosition();
             journal.Put(path1, _payload);
             journal.Flush();
         }                     

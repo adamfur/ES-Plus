@@ -12,19 +12,22 @@ namespace ESPlus.Tests.Subscribers
 
         public EventFetcherCacheRowTests()
         {
-            _row = new EventFetcherCacheRow(2, 4, CreateEvents(2, 4));
+            _row = new EventFetcherCacheRow(2L.ToPosition(), 4L.ToPosition(), CreateEvents(2, 4));
         }
 
-        private List<Event> CreateEvents(long from, long to)
+        private EventStream CreateEvents(long from, long to)
         {
             var result = new List<Event>();
 
             for (var i = from; i <= to; ++i)
             {
-                result.Add(new Event { Position = i });
+                result.Add(new Event { Position = i.ToPosition() });
             }
 
-            return result;
+            return new EventStream
+            {
+                Events = result
+            };
         }
 
         [Theory]
@@ -32,13 +35,13 @@ namespace ESPlus.Tests.Subscribers
         [InlineData(3, true)]
         [InlineData(4, true)]
         [InlineData(6, true)]
-        [InlineData(7, true)]
+        [InlineData(7, false)]
         [InlineData(8, false)]
-        public void Within_Theory_AsExcepted(int digit, bool inRange)
+        public void Within_Theory_AsExcepted(long digit, bool inRange)
         {
-            var row = new EventFetcherCacheRow(3, 7, CreateEvents(3, 7));
+            var row = new EventFetcherCacheRow(3L.ToPosition(), 7L.ToPosition(), CreateEvents(3, 7));
 
-            var result = row.Within(digit);
+            var result = row.Within(digit.ToPosition());
 
             Assert.Equal(inRange, result);
         }
@@ -46,18 +49,18 @@ namespace ESPlus.Tests.Subscribers
         [Fact]
         public void Select_Theory_As_Expected()
         {
-            var result = _row.Select(3).ToList();
+            var result = _row.Select(3L.ToPosition()).Events.ToList();
 
-            Assert.Equal(3, result[0].Position);
-            Assert.Equal(4, result[1].Position);
+            Assert.Equal(3L.ToPosition(), result[0].Position);
+            Assert.Equal(4L.ToPosition(), result[1].Position);
         }
 
-        [Fact]
-        public void Merge_adasd_asdasd()
-        {
-            _row.Merge(CreateEvents(3, 5));
+        // [Fact]
+        // public void Merge_adasd_asdasd()
+        // {
+        //     _row.Merge(CreateEvents(3, 5));
 
-            Assert.Equal(4, _row.Select(0).Count());
-        }
+        //     Assert.Equal(4, _row.Select(0).Count());
+        // }
     }
 }

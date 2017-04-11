@@ -1,4 +1,5 @@
 using ESPlus.Storage;
+using ESPlus.Subscribers;
 using NSubstitute;
 using Xunit;
 
@@ -23,7 +24,7 @@ namespace ESPlus.Tests.Storage
 
             // Act
             _journal.Initialize();
-            _journal.Checkpoint = "12";
+            _journal.Checkpoint = 12L.ToPosition();
             _journal.Put(destination, payload);
             _journal.Flush();
 
