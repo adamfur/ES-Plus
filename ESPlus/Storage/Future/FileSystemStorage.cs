@@ -39,7 +39,8 @@ namespace ESPlus.Storage
         {
             /**/
             _writeCache.Values
-                .AsParallel()
+                .AsEnumerable()
+                //.AsParallel()
                 .Select(x => JsonConvert.SerializeObject(x));
             /**/
         }
