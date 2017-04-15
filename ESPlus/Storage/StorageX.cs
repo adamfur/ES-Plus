@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ESPlus.Storage
 {
@@ -18,13 +18,14 @@ namespace ESPlus.Storage
 
         public void ShardOn<T>(int parts)
         {
-            _shardMap[typeof (T)] = parts;
+            _shardMap[typeof(T)] = parts;
         }
 
         public void Patch<T>(string path, Action<T> action)
             where T : new()
         {
-            var graph = Get<T>(Name<T>(path));
+            var shard = Name<T>(path);
+            var graph = Get<T>(shard);
 
             if (graph == null)
             {
@@ -32,53 +33,40 @@ namespace ESPlus.Storage
             }
 
             action(graph);
-            Put<T>(Name<T>(path), graph);
+            Put<T>(shard, graph);
         }
 
         public T Get<T>(string path)
             where T : new()
         {
-            return (T) _journal.Get(Name<T>(path));
+            var shard = Name<T>(path);
+
+            return (T)_journal.Get(shard);
         }
 
         public void Put<T>(string path, T graph)
         {
-            _journal.Put(Name<T>(path), graph);
+            var shard = Name<T>(path);
+
+            _journal.Put(shard, graph);
         }
 
         public void Flush()
         {
             _journal.Flush();
         }
-        
+
         private string Name<T>(string input)
         {
-            if (!_shardMap.ContainsKey(typeof (T)))
+            if (!_shardMap.ContainsKey(typeof(T)))
             {
                 return input;
             }
 
-            var parts = _shardMap[typeof (T)];
-            var bitsPerCharacter = 4;
-            var chars = 0;
-            var hash = Checksum(input);
+            var shards = _shardMap[typeof(T)];
+            var shard = Math.Abs(input.GetHashCode()) % shards;
 
-            while (bitsPerCharacter << chars >= parts)
-            {
-                ++chars;
-            }
-
-            return $"{hash.Substring(chars)}_input";
-        }
-
-        private string Checksum(string input)
-        {
-            using (var provider = System.Security.Cryptography.SHA1.Create())
-            {
-                var bytes = provider.ComputeHash(Encoding.UTF8.GetBytes(input));
-
-                return BitConverter.ToString(bytes).Replace("-", "");
-            }
+            return Regex.Replace(input, "/([^/]*)$", $"/{shard}_$i");
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ESPlus.Interfaces;
 using Newtonsoft.Json;
 
@@ -10,6 +11,7 @@ namespace ESPlus.Storage
         private string BasePath { get; }
         private readonly HashSet<string> _pathExits = new HashSet<string>();
         private string _container;
+        private Dictionary<string, object> _writeCache = new Dictionary<string, object>();
 
         public FileSystemStorage(string container, string basePath = "/tmp/esplus")
         {
@@ -35,6 +37,11 @@ namespace ESPlus.Storage
 
         public void Flush()
         {
+            /**/
+            _writeCache.Values
+                .AsParallel()
+                .Select(x => JsonConvert.SerializeObject(x));
+            /**/
         }
 
         private void CreatePath(string relativePath)
