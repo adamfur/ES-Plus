@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using ESPlus.Interfaces;
 using Newtonsoft.Json;
 
@@ -37,12 +39,38 @@ namespace ESPlus.Storage
 
         public void Flush()
         {
-            /**/
-            _writeCache.Values
-                .AsEnumerable()
-                //.AsParallel()
-                .Select(x => JsonConvert.SerializeObject(x));
-            /**/
+            CreateFolders();
+            WriteFiles();
+            _writeCache.Clear();
+        }
+
+        private void WriteFiles()
+        {
+            var tasks = _writeCache
+                .AsParallel()
+                .Select(x => WriteFile(x.Key, x.Value))
+                .ToArray();
+
+            Task.WaitAll(tasks);
+        }
+
+        private void CreateFolders()
+        {
+            foreach (var path in _writeCache.Keys)
+            {
+                CreatePath(path);
+            }
+        }
+
+        private async Task WriteFile(string path, object payload)
+        {
+            var json = JsonConvert.SerializeObject(payload);
+            var buffer = System.Text.Encoding.UTF8.GetBytes(json);
+
+            using (var fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+            {
+                await fs.WriteAsync(buffer, 0, buffer.Length);
+            }
         }
 
         private void CreatePath(string relativePath)

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using ESPlus.Subscribers;
 using EventStore.ClientAPI;
+using ESPlus.Scheduling;
 
 namespace Demo
 {
@@ -31,6 +33,7 @@ namespace Demo
     {
         static void Main(string[] args)
         {
+/*            
             var connectionString = "ConnectTo=tcp://admin:changeit@localhost:1113; HeartBeatTimeout=500";
             //var _eventStoreConnection = EventStoreConnection.Create(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1113));
             var eventStoreConnection = EventStoreConnection.Create(connectionString);
@@ -47,6 +50,14 @@ namespace Demo
             // new Thread(() => Client("Client3", client3)).Start();
             manager.Start();
             Console.ReadLine();
+*/       
+            var sched = new Scheduler();
+
+            sched.Start();
+            sched.AddTrigger("0 0 * ? * *", () => Console.WriteLine(DateTime.Now));
+            //await sched.AddTrigger("1/2 * * ? * *", () => Console.WriteLine("Hello2"));
+            Console.ReadLine();
+            //sched.AddTrigger("/0.125 * * ? * *", () => Console.WriteLine("pulse"));
         }
 
         private static void Client(string clientName, ISubscriptionClient client)
