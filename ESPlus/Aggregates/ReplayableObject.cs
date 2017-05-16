@@ -2,9 +2,9 @@
 {
     public class ReplayableObject : AggregateBase
     {
-        public ReplayableObject(string id)
+        protected ReplayableObject(string id)
             : base(id)
         {
-        }
+        }     
     }
 }

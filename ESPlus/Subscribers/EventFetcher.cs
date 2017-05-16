@@ -26,7 +26,7 @@ namespace ESPlus.Subscribers
         public EventStream GetFromPosition(Position position)
         {
             //if (position.CommitPosition == 183654176L)
-                Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} {DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
+               // Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} {DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
 
             var events = _eventStoreConnection.ReadAllEventsForwardAsync(position, _blockSize, false).Result;
 

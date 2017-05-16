@@ -46,7 +46,7 @@ namespace ESPlus.Tests.Aggregates
         [Fact]
         public void Version_Initialized_VerionIs0()
         {
-            var aggregate = new ReplayableObject(_id);
+            var aggregate = new DummyAggreagate(_id);
 
             Assert.Equal(0, aggregate.Version);
         }
@@ -54,7 +54,7 @@ namespace ESPlus.Tests.Aggregates
         [Fact]
         public void Id_Initialized_IdIsExpected()
         {
-            var aggregate = new ReplayableObject(_id);
+            var aggregate = new DummyAggreagate(_id);
 
             Assert.Equal(_id, aggregate.Id);
         }
@@ -62,7 +62,7 @@ namespace ESPlus.Tests.Aggregates
         [Fact]
         public void ApplyChange_NewEvent_VersionIsIncreased()
         {
-            var aggregate = new ReplayableObject(_id);
+            var aggregate = new DummyAggreagate(_id);
 
             ((IAggregate)aggregate).ApplyChange(new object());
             Assert.Equal(1, aggregate.Version);
@@ -71,7 +71,7 @@ namespace ESPlus.Tests.Aggregates
         [Fact]
         public void TakeUncommitedEvents_TakeNewEvents_ContainsChangedEvents()
         {
-            var aggregate = new ReplayableObject(_id);
+            var aggregate = new DummyAggreagate(_id);
             var event1 = new object();
             var event2 = new object();
 
@@ -87,7 +87,7 @@ namespace ESPlus.Tests.Aggregates
         [Fact]
         public void TakeUncommitedEvents_TakeTwice_EventListIsEmpty()
         {
-            var aggregate = new ReplayableObject(_id);
+            var aggregate = new DummyAggreagate(_id);
             var @event = new object();
 
             ((IAggregate)aggregate).ApplyChange(@event);

@@ -6,5 +6,9 @@
             : base(id)
         {
         }
+
+        // protected virtual void Invoke(object @event)
+        // {
+        // }        
     }
 }

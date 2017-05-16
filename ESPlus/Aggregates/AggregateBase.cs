@@ -8,15 +8,14 @@ namespace ESPlus.Aggregates
     {
         private readonly LinkedList<object> _uncommitedEvents = new LinkedList<object>();
         private readonly ConventionEventRouter _router = new ConventionEventRouter();
+        public int Version { get; private set; } = 0;
+        public string Id { get; private set; }
 
         protected AggregateBase(string id)
         {
             Id = id;
             _router.Register(this);
         }
-
-        public int Version { get; private set; } = 0;
-        public string Id { get; private set; }
 
         protected virtual void Invoke(object @event)
         {
