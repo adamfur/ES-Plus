@@ -1,68 +1,49 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Threading.Tasks;
-using Quartz;
-using Quartz.Impl;
+using Cron;
+using ESPlus.Misc;
 
 namespace ESPlus.Scheduling
 {
-    public interface IScheduler
-    {
-        void AddTrigger(string cron, Action action);
-        void Start();
-    }
-
     public class Scheduler : IScheduler
     {
-        private Quartz.IScheduler _scheduler;
+        private List<Job> _jobs = new List<Job>();
 
-        public void AddTrigger(string cron, Action action)
+        public void AddTrigger(Guid id, string cron, Action action)
         {
-            var job = JobBuilder.Create<ActionJob>()
-                .WithIdentity(Guid.NewGuid().ToString(), "group1")
-                .SetJobData(new JobDataMap
-                    {
-                        {"action", action}
-                    })
-                .Build();
+            var parser = new CronParser(new MonthLookupFactory());
+            var scheduler = parser.Parse(cron);
 
-            var trigger = TriggerBuilder.Create()
-                .WithIdentity(Guid.NewGuid().ToString(), "group1")
-                .StartNow()
-                .WithCronSchedule(cron)
-                .Build();
-
-            _scheduler.ScheduleJob(job, trigger).Wait();
+            _jobs.Add(new Job
+            {
+                Id = id,
+                Action = action,
+                Scheduler = scheduler,
+                Next = scheduler.Next()
+            });
         }
 
-        public void Start()
+        public void Fire(Guid id)
         {
-            try
-            {
-                var props = new NameValueCollection
-                {
-                    //{ "quartz.serializer.type", "binary" }
-                };
-                var factory = new StdSchedulerFactory(props);
-                _scheduler = factory.GetScheduler().Result;
-
-                // and start it off
-                _scheduler.Start().Wait();
-            }
-            catch (SchedulerException se)
-            {
-                //await Console.Error.WriteLineAsync(se.ToString());
-            }
+            _jobs.Single(x => x.Id == id).Fire();
         }
-    }
 
-    public class ActionJob : IJob
-    {
-        public Task Execute(IJobExecutionContext context)
+        public IEnumerable<Job> Jobs()
         {
-            var action = context.MergedJobDataMap["action"] as Action;
-            action();
-            return Task.WhenAll();
+            return _jobs;
+        }
+
+        public void Remove(Guid id)
+        {
+            _jobs.RemoveAll(j => j.Id == id);
+        }
+
+        public void Stop(Guid id)
+        {
+            _jobs.Single(x => x.Id == id).Stop();
         }
     }
 }

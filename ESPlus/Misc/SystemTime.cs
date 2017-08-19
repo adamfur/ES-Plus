@@ -1,6 +1,6 @@
 using System;
 
-namespace ESPlus
+namespace ESPlus.Misc
 {
     public class SystemTime : AmbientSytemTimeBase
     {

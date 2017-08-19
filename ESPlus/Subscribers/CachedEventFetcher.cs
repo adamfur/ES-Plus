@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESPlus.Misc;
 using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
@@ -34,9 +33,7 @@ namespace ESPlus.Subscribers
 
             EventStream data;
 
-            //https://github.com/IronLanguages/main/issues/1381
-            //@TODO: replace with string.Intern() when net standard 2.0 is out
-            lock (StringEx.Intern(position.ToString()))
+            lock (string.Intern(position.ToString()))
             {
                 lock (_mutex)
                 {

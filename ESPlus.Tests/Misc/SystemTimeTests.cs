@@ -1,4 +1,5 @@
 using System;
+using ESPlus.Misc;
 using Xunit;
 
 namespace ESPlus.Tests.Misc

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
     <ItemGroup>
@@ -9,12 +9,16 @@
     <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
     <PackageReference Include="EventStore.ClientAPI.NetCore" Version="4.0.0-alpha-1" />
     <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
-    <PackageReference Include="Quartz" Version="3.0.0-alpha2" />
+    <!--<PackageReference Include="Quartz" Version="3.0.0-alpha2" />-->
 
     
 
     
   </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Cron\Cron.csproj" />
+    </ItemGroup>
 
 </Project>
 
