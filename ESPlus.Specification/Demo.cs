@@ -2,6 +2,7 @@ using ESPlus.Aggregates;
 
 namespace ESPlus.Specification
 {
+/*    
     public class DummyEvent
     {
         public int Value { get; set; }
@@ -46,4 +47,5 @@ namespace ESPlus.Specification
             //Throws<NotImplementedException>(p => p.Message == "hello");
         }
     }
+*/    
 }
