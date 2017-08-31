@@ -2,52 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using EventStore.ClientAPI;
-using Newtonsoft.Json;
 
 namespace ESPlus
 {
-    public interface ISerializer
-    {
-        string Serialize<T>(T graph);
-        T Deserialize<T>(string buffer);
-    }
-
-    public interface IEventSerializer
-    {
-        byte[] Serialize<T>(T graph);
-        object Deserialize(Type type, byte[] buffer);
-    }
-
-    public class JsonIndentedSerializer : ISerializer
-    {
-        public string Serialize<T>(T graph)
-        {
-            return JsonConvert.SerializeObject(graph, Formatting.Indented);
-        }
-
-        public T Deserialize<T>(string buffer)
-        {
-            return JsonConvert.DeserializeObject<T>(buffer);
-        }
-    }
-
-    public class EventJsonSerializer : IEventSerializer
-    {
-        public byte[] Serialize<T>(T graph)
-        {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(graph));
-        }
-
-        public object Deserialize(Type type, byte[] buffer)
-        {
-            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(buffer), type);
-        }
-    }
-
     public class GetEventStoreRepository : IRepository
     {
         private readonly IEventStoreConnection _eventStoreConnection;
@@ -58,7 +19,7 @@ namespace ESPlus
 
         public static void Register<Type>()
         {
-            _types[typeof (Type).FullName] = typeof (Type);
+            _types[typeof(Type).FullName] = typeof(Type);
         }
 
         public GetEventStoreRepository(IEventStoreConnection eventStoreConnection, IEventSerializer eventSerializer)
@@ -77,50 +38,50 @@ namespace ESPlus
             return new EventData(eventId, typeName, true, data, metadata);
         }
 
-        public void Save<TAggregate>(TAggregate aggregate) where TAggregate : ReplayableObject
+        public Task SaveAsync<TAggregate>(TAggregate aggregate) where TAggregate : ReplayableObject
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var originalVersion = aggregate.Version - newEvents.Count();
             var expectedVersion = originalVersion == 0 ? ExpectedVersion.NoStream : originalVersion;
 
-            SaveAggregate<TAggregate>(aggregate, newEvents, expectedVersion);
+            return SaveAggregate<TAggregate>(aggregate, newEvents, expectedVersion);
         }
 
-        public void Append<TAggregate>(TAggregate aggregate) where TAggregate : AppendableObject
+        public Task AppendAsync<TAggregate>(TAggregate aggregate) where TAggregate : AppendableObject
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
 
-            SaveAggregate<TAggregate>(aggregate, newEvents, expectedVersion);
+            return SaveAggregate<TAggregate>(aggregate, newEvents, expectedVersion);
         }
 
-        private void SaveAggregate<TAggregate>(AggregateBase aggregate, IEnumerable<object> newEvents, long expectedVersion)
+        private async Task SaveAggregate<TAggregate>(AggregateBase aggregate, IEnumerable<object> newEvents, long expectedVersion)
         {
             var streamName = StreamName<TAggregate>(aggregate.Id);
             var eventsToSave = newEvents.Select(e => ToEventData(Guid.NewGuid(), e)).ToList();
 
             if (eventsToSave.Count < WritePageSize)
             {
-                _eventStoreConnection.AppendToStreamAsync(streamName, expectedVersion, eventsToSave).Wait();
+                await _eventStoreConnection.AppendToStreamAsync(streamName, expectedVersion, eventsToSave);
             }
             else
             {
-                var transaction = _eventStoreConnection.StartTransactionAsync(streamName, expectedVersion).Result;
+                var transaction = await _eventStoreConnection.StartTransactionAsync(streamName, expectedVersion);
 
                 var position = 0;
 
                 while (position < eventsToSave.Count)
                 {
                     var pageEvents = eventsToSave.Skip(position).Take(WritePageSize);
-                    transaction.WriteAsync(pageEvents).Wait();
+                    await transaction.WriteAsync(pageEvents);
                     position += WritePageSize;
                 }
 
-                transaction.CommitAsync().Wait();
+                await transaction.CommitAsync();
             }
         }
 
-        public TAggregate GetById<TAggregate>(string id, int version = int.MaxValue) where TAggregate : ReplayableObject
+        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : ReplayableObject
         {
             if (version <= 0)
             {
@@ -130,15 +91,13 @@ namespace ESPlus
             var streamName = StreamName<TAggregate>(id);
             var aggregate = ConstructAggregate<TAggregate>(streamName);
             var applyAggregate = (IAggregate)aggregate;
-
             var sliceStart = 0L; //Ignores $StreamCreated--
             StreamEventsSlice currentSlice;
+            var currentSliceTask = _eventStoreConnection.ReadStreamEventsForwardAsync(streamName, sliceStart, ReadPageSize, false);
 
             do
             {
-                var sliceCount = (int)(sliceStart + ReadPageSize <= version ? ReadPageSize : version - sliceStart + 1);
-
-                currentSlice = _eventStoreConnection.ReadStreamEventsForwardAsync(streamName, sliceStart, sliceCount, false).Result;
+                currentSlice = await currentSliceTask;
 
                 if (currentSlice.Status == SliceReadStatus.StreamNotFound)
                 {
@@ -150,7 +109,9 @@ namespace ESPlus
                     throw new AggregateDeletedException(id, typeof(TAggregate));
                 }
 
+                var sliceCount = (int)(sliceStart + ReadPageSize <= version ? ReadPageSize : version - sliceStart + 1);
                 sliceStart = currentSlice.NextEventNumber;
+                currentSliceTask = _eventStoreConnection.ReadStreamEventsForwardAsync(streamName, sliceStart, sliceCount, false);
 
                 foreach (var evnt in currentSlice.Events)
                 {
@@ -158,7 +119,6 @@ namespace ESPlus
 
                     applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.OriginalEvent.Data));
                 }
-
             } while (version >= currentSlice.NextEventNumber && !currentSlice.IsEndOfStream);
 
             if (aggregate.Version != version && version != Int32.MaxValue)

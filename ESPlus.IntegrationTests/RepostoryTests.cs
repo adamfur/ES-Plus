@@ -68,23 +68,23 @@ namespace ESPlus.IntegrationTests
         [Fact]
         public void Save_NoEvents_Pass()
         {
-            _repository.Save(_aggregate);
+            _repository.SaveAsync(_aggregate);
         }
 
         [Fact]
         public void Save_OneEvent_Pass()
         {
             _aggregate.TriggerEvent();
-            _repository.Save(_aggregate);
+            _repository.SaveAsync(_aggregate);
         }
 
         [Fact(Skip = "Fails for some reason")]
         public void Save_AppendEvents_Pass()
         {
             _aggregate.TriggerEvent();
-            _repository.Save(_aggregate);
+            _repository.SaveAsync(_aggregate);
             _aggregate.TriggerEvent();
-            _repository.Save(_aggregate);
+            _repository.SaveAsync(_aggregate);
         }
 
         [Fact]
@@ -94,8 +94,8 @@ namespace ESPlus.IntegrationTests
             var checksum = _aggregate.Checksum;
             var version = _aggregate.Version;
 
-            _repository.Save(_aggregate);
-            var result = _repository.GetById<ChecksumAggregate>(_id);
+            _repository.SaveAsync(_aggregate);
+            var result = _repository.GetByIdAsync<ChecksumAggregate>(_id);
 
             Assert.Equal(checksum, result.Checksum);
             Assert.Equal(version, result.Version);
@@ -105,11 +105,11 @@ namespace ESPlus.IntegrationTests
         public void Save_ReloadAggregateAndResave_Pass()
         {
             _aggregate.TriggerEvent();
-            _repository.Save(_aggregate);
+            _repository.SaveAsync(_aggregate);
 
-            var aggregate = _repository.GetById<ChecksumAggregate>(_id);
+            var aggregate = _repository.GetByIdAsync<ChecksumAggregate>(_id);
             aggregate.TriggerEvent();
-            _repository.Save(aggregate);
+            _repository.SaveAsync(aggregate);
         }
 
         private void Repeat(Action action, int times)

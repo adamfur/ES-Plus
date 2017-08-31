@@ -10,7 +10,7 @@ namespace ESPlus.Subscribers
         private readonly IEventStoreConnection _eventStoreConnection;
         private readonly int _blockSize;
         private bool _subscriptionOnline = false;
-        private Action _eventReceivedTrigger = () => {};
+        private Action _eventReceivedTrigger = () => { };
 
         public EventFetcher(IEventStoreConnection eventStoreConnection, int blockSize = 512)
         {
@@ -26,7 +26,7 @@ namespace ESPlus.Subscribers
         public EventStream GetFromPosition(Position position)
         {
             //if (position.CommitPosition == 183654176L)
-               // Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} {DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
+            // Console.WriteLine($"{Thread.CurrentThread.ManagedThreadId} {DateTime.Now:yyyy-MM-dd hh:mm:ss}: EventFetcher(Position position = {position})");
 
             var events = _eventStoreConnection.ReadAllEventsForwardAsync(position, _blockSize, false).Result;
 
@@ -39,7 +39,13 @@ namespace ESPlus.Subscribers
             //Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: GetFromPosition(long position = {position}), next: {events.NextPosition}");
             return new EventStream
             {
-                Events = events.Events.Select(e => new Event() { Position = e.OriginalPosition.Value }).ToList(),
+                Events = events.Events.Select(e => new Event()
+                {
+                    Position = e.OriginalPosition.Value,
+                    Payload = e.Event.Data,
+                    Meta = e.Event.Metadata,
+                    EventType = e.Event.EventType
+                }).ToList(),
                 NextPosition = events.NextPosition
             };
         }
@@ -54,9 +60,10 @@ namespace ESPlus.Subscribers
 
         private void EventAppeared(EventStoreCatchUpSubscription eventStoreSubscription, ResolvedEvent resolvedEvent)
         {
+            Console.WriteLine("EventAppeared");
             //Console.WriteLine($"EventAppeared Position: {resolvedEvent.OriginalPosition}");
             _eventReceivedTrigger();
             //Console.WriteLine($"PosX: {resolvedEvent.OriginalPosition}, Type: {resolvedEvent.Event.EventType}");
-        }        
+        }
     }
 }
