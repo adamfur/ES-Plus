@@ -40,7 +40,7 @@ namespace ESPlus.Tests.EventHandlers
             }
         }
 
-        public interface IReceiverDummyEventHandler : IEventHandler<IEventHandlerContext>,
+        public interface IReceiverDummyEventHandler : IEventHandler,
             IHandleEvent<DummyEvent>,
             IHandleEvent<DummyEmitEvent>
         {

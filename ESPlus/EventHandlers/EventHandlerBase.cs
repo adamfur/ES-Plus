@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
 {
-    public abstract class EventHandlerBase<TContext> : IEventHandler<TContext>
+    public abstract class EventHandlerBase<TContext> : IEventHandler
         where TContext : IEventHandlerContext
     {
         protected TContext Context { get; private set; }
@@ -12,7 +13,7 @@ namespace ESPlus.EventHandlers
             Context = context;
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
         }
 
@@ -21,8 +22,9 @@ namespace ESPlus.EventHandlers
             Context.Flush();
         }
 
-        public abstract void DispatchEvent(object @event);
+        public abstract bool DispatchEvent(object @event);
         public abstract IEnumerable<object> TakeEmittedEvents();
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
+        public abstract bool Dispatch(Event @event);
     }
 }

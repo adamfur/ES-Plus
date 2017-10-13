@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EventStore.ClientAPI.NetCore" Version="4.0.0-alpha-1" />
+    <PackageReference Include="EventStore.ClientAPI.NetCore" Version="4.0.2-rc" />
   </ItemGroup>
 
   <ItemGroup>

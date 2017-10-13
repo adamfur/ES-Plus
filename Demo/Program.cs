@@ -55,7 +55,7 @@ namespace Demo
             }
 
             return;
-            var foo = new TypeResolver();
+            var foo = new EventTypeResolver();
 
             foo.RegisterTypes(Assembly.GetExecutingAssembly().GetTypes());
 

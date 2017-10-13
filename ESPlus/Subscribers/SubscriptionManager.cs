@@ -35,10 +35,19 @@ namespace ESPlus.Subscribers
 
         public void Start()
         {
-            for (int i = 0; i < _workerThreads; ++i)
+            for (var i = 0; i < _workerThreads; ++i)
             {
-                var thread = new Thread(() => WorkerThread(_barrier, _contexts, _mutex, _eventFetcher));
+                var thread = new Thread(() => WorkerThread());
                 thread.Start();
+            }
+        }
+
+        private void Execute(Action action)
+        {
+            lock (_mutex)
+            {
+                action();
+                Monitor.Pulse(_mutex);
             }
         }
 
@@ -48,9 +57,11 @@ namespace ESPlus.Subscribers
             {
                 Priority = priority,
                 Position = position,
-                RequestStatus = RequestStatus.Waiting,
+                RequestStatus = RequestStatus.Initialized,
                 StarvedCycles = 0,
-                Manager = this
+                Manager = this,
+                Future = position,
+                SynchronizedAction = Execute
             };
 
             lock (_mutex)
@@ -78,22 +89,22 @@ namespace ESPlus.Subscribers
             }
         }
 
-        private static void WorkerThread(Barrier barrier, List<SubscriptionContext> contexts, object mutex, IEventFetcher eventFetcher)
+        private void WorkerThread()
         {
-            barrier.SignalAndWait();
+            _barrier.SignalAndWait();
 
             while (true)
             {
                 SubscriptionContext subscriptionContext;
 
-                lock (mutex)
+                lock (_mutex)
                 {
-                    while (!contexts.Any(x => x.RequestStatus == RequestStatus.Waiting))
+                    while (!_contexts.Any(x => x.RequestStatus == RequestStatus.Waiting))
                     {
-                        Monitor.Wait(mutex);
+                        Monitor.Wait(_mutex);
                     }
 
-                    var waiting = contexts.Where(x => x.RequestStatus == RequestStatus.Waiting).ToList();
+                    var waiting = _contexts.Where(x => x.RequestStatus == RequestStatus.Waiting).ToList();
 
                     waiting.Sort();
                     waiting.ForEach(x => ++x.StarvedCycles);
@@ -101,9 +112,9 @@ namespace ESPlus.Subscribers
                     subscriptionContext.RequestStatus = RequestStatus.Fetching;
                 }
 
-                var events = eventFetcher.GetFromPosition(subscriptionContext.Position);
+                var events = _eventFetcher.GetFromPosition(subscriptionContext.Position);
 
-                lock (mutex)
+                lock (_mutex)
                 {
                     /*
                     Console.WriteLine($"{DateTime.Now:yyyy-MM-dd hh:mm:ss}: WorkerThread(long position = {subscriptionContext.Position.CommitPosition}), next: {events.NextPosition.CommitPosition}");
@@ -121,5 +132,38 @@ namespace ESPlus.Subscribers
                 }
             }
         }
+
+        // Already done, threads decide :p
+        // public class MaxParellelism
+        // {
+        //     private object _mutex = new object();
+        //     private int _max = 3;
+        //     private int _current = 0;
+
+        //     public MaxParellelism(int max)
+        //     {
+        //         _max = max;
+        //     }
+
+        //     public void Execute(Action action)
+        //     {
+        //         lock (_mutex)
+        //         {
+        //             ++_current;
+        //             while (_current >= _max)
+        //             {
+        //                 Monitor.Wait(_mutex);
+        //             }
+        //         }
+
+        //         action();
+
+        //         lock (_mutex)
+        //         {
+        //             --_current;
+        //             Monitor.Pulse(_mutex);
+        //         }
+        //     }
+        // }
     }
 }

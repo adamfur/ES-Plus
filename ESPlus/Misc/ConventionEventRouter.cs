@@ -9,6 +9,7 @@ namespace ESPlus.Aggregates
     {
         readonly bool throwOnApplyNotFound;
         private readonly IDictionary<Type, Action<object>> handlers = new Dictionary<Type, Action<object>>();
+        private readonly ISet<string> _handle = new HashSet<string>();
         private object registered;
 
         public ConventionEventRouter() : this(true)
@@ -36,6 +37,11 @@ namespace ESPlus.Aggregates
             var applyMethods = aggregate.GetType()
                 .GetRuntimeMethods()// (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(m => m.Name == "Apply" && m.GetParameters().Length == 1 && m.ReturnParameter.ParameterType == typeof(void))
+                .Select(x =>
+                {
+                    _handle.Add(x.GetParameters().Single().ParameterType.FullName);
+                    return x;
+                })
                 .Select(m => new
                 {
                     Method = m,
@@ -44,26 +50,66 @@ namespace ESPlus.Aggregates
 
             foreach (var apply in applyMethods)
             {
-                var applyMethod = apply.Method;
-                this.handlers.Add(apply.MessageType, m => applyMethod.Invoke(aggregate, new[] { m as object }));
+                _handle.Add(apply.MessageType.FullName);
+
+                //MethodInfo applyMethod = apply.Method;
+                //this.handlers.Add(apply.MessageType, m => applyMethod.Invoke(aggregate, new[] { m as object }));
+                this.handlers.Add(apply.MessageType, Build((dynamic) Activator.CreateInstance(apply.MessageType), aggregate, apply.Method));
             }
+        }
+
+        private Action<object> Build<T>(T typeInstance, object instance, MethodInfo applyMethod)
+        {
+            var specificDelegate = ((Action<T>)Delegate.CreateDelegate(typeof(Action<T>), instance, applyMethod));
+            var genericDelegate = (Action<object>)(x => specificDelegate((T)x));
+
+            return genericDelegate;
         }
 
         public virtual void Dispatch(object eventMessage)
         {
-            if (eventMessage == null)
-                throw new ArgumentNullException("eventMessage");
+            //if (eventMessage == null)
+            //throw new ArgumentNullException("eventMessage");
 
             Action<object> handler;
             if (this.handlers.TryGetValue(eventMessage.GetType(), out handler))
+            {
                 handler(eventMessage);
+            }
             //else if (this.throwOnApplyNotFound)
-                //this.registered.ThrowHandlerNotFound(eventMessage);
+            //this.registered.ThrowHandlerNotFound(eventMessage);
         }
 
         private void Register(Type messageType, Action<object> handler)
         {
             this.handlers[messageType] = handler;
         }
+
+        public bool CanHandle(string type)
+        {
+            return _handle.Contains(type);
+        }
+    }
+
+    public class Bajs
+    {
     }
 }
+
+/*
+delegate void OpenInstanceDelegate(A instance, int a);
+
+class A
+{
+    public void Method(int a) {}
+
+    static void Main(string[] args)
+    {
+        A a = null;
+        MethodInfo method = typeof(A).GetMethod("Method");
+        OpenInstanceDelegate action = (Action<object>)Delegate.CreateDelegate(typeof(Action<object>), a, method);
+
+        PossiblyExecuteDelegate(action);
+    }
+}
+*/

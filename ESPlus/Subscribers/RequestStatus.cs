@@ -5,6 +5,7 @@ namespace ESPlus.Subscribers
         Busy,
         Waiting,
         Fetching,
-        Ahead
+        Ahead,
+        Initialized
     }
 }

@@ -116,5 +116,10 @@ namespace ESPlus.Storage
         protected virtual void DoFlush()
         {
         }
+
+        public void Reset()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

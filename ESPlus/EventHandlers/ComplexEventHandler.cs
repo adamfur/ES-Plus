@@ -1,35 +1,38 @@
 using System;
 using System.Collections.Generic;
+using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
 {
     public class ComplexEventHandler<TContext> : EventHandlerBase<TContext>
         where TContext : IEventHandlerContext
     {
-        private LinkedList<IEventHandler<TContext>> _pipeline = new LinkedList<IEventHandler<TContext>>();
+        private LinkedList<IEventHandler> _pipeline = new LinkedList<IEventHandler>();
 
         public ComplexEventHandler(TContext context)
             : base(context)
         {
         }
 
-        public void Add(IEventHandler<TContext> eventHandler)
+        public void Add(IEventHandler eventHandler)
         {
             _pipeline.AddLast(eventHandler);
         }
 
-        public override void DispatchEvent(object @event)
+        public override bool DispatchEvent(object @event)
         {
             var payload = new List<object> { @event };
+            var result = false;
 
             foreach (var eventHandler in _pipeline)
             {
                 foreach (var item in payload)
                 {
-                    eventHandler.DispatchEvent(item);
+                    result |= eventHandler.DispatchEvent(item);
                 }
                 payload.AddRange(eventHandler.TakeEmittedEvents());
             }
+            return result;
         }
 
         public override IEnumerable<object> TakeEmittedEvents()
@@ -55,6 +58,11 @@ namespace ESPlus.EventHandlers
                 payload.AddRange(eventHandler.TakeEmittedOnSubmitEvents());
             }            
             base.Flush();
+        }
+
+        public override bool Dispatch(Event @event)
+        {
+            throw new NotImplementedException();
         }
     }
 }

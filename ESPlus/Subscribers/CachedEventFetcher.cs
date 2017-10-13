@@ -10,7 +10,7 @@ namespace ESPlus.Subscribers
         private readonly IEventFetcher _concrete;
         private readonly LinkedList<EventFetcherCacheRow> _cache = new LinkedList<EventFetcherCacheRow>();
         private int _cachedItems = 0;
-        private const int CacheLimit = 40960;
+        private const int CacheLimit = 4096;
         private object _mutex = new object();
 
         public CachedEventFetcher(IEventFetcher eventFetcher)

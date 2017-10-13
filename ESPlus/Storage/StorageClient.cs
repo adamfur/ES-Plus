@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace ESPlus.Storage
 {
-    public class StorageX : IStorageX
+    public class StorageClient : IStorageClient
     {
         private IJournaled _journal;
         private string _namespace;
         private Dictionary<Type, int> _shardMap = new Dictionary<Type, int>();
 
-        public StorageX(IJournaled journal, string @namespace)
+        public StorageClient(IJournaled journal, string @namespace)
         {
             _journal = journal;
             _namespace = @namespace;
@@ -34,6 +35,11 @@ namespace ESPlus.Storage
 
             action(graph);
             Put<T>(shard, graph);
+        }
+
+        public void Reset()
+        {
+            _journal.Reset();
         }
 
         public T Get<T>(string path)
@@ -67,6 +73,20 @@ namespace ESPlus.Storage
             var shard = Math.Abs(input.GetHashCode()) % shards;
 
             return Regex.Replace(input, "/([^/]*)$", $"/{shard}_$i");
+        }
+
+        public void Update<T>(string path, Action<T> action)
+            where T : new()
+        {
+            T item = Get<T>(path);
+
+            if (item == null)
+            {
+                item = new T();
+            }
+
+            action(item);
+            Put<T>(path, item);
         }
     }
 }

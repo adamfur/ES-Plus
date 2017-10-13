@@ -31,10 +31,17 @@ namespace ESPlus.Storage
 
         public object Get(string path)
         {
-            var absolutePath = Combine(BasePath, _container, path);
-            var text = File.ReadAllText(absolutePath);
+            try
+            {
+                var absolutePath = Combine(BasePath, _container, path);
+                var text = File.ReadAllText(absolutePath);
 
-            return text;
+                return text;
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
         }
 
         public void Flush()
@@ -104,6 +111,17 @@ namespace ESPlus.Storage
         private string Combine(params string[] list)
         {
             return Path.Combine(list).Replace("\\", "/");
+        }
+
+        public void Reset()
+        {
+            var absolutePath = Path.Combine(BasePath, _container);
+
+            if (Directory.Exists(absolutePath))
+            {
+                Directory.Delete(absolutePath, true);
+            }
+            _pathExits.Clear();
         }
 
         /*

@@ -24,5 +24,10 @@ namespace ESPlus.Storage
         {
             _data[path] = item;
         }
+
+        public void Reset()
+        {
+            _data.Clear();
+        }
     }
 }

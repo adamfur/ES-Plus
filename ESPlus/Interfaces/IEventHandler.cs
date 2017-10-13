@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
 {
-    public interface IEventHandler<TContext>
-        where TContext : IEventHandlerContext
+    public interface IEventHandler
     {
-        void DispatchEvent(object @event);
+        bool DispatchEvent(object @event);
+        bool Dispatch(Event @event);
         void Initialize();
         void Flush();
         IEnumerable<object> TakeEmittedEvents();

@@ -12,7 +12,10 @@ namespace ESPlus.Subscribers
         public RequestStatus RequestStatus { get; set; }
         public long StarvedCycles { get; set; }
         public Position Position { get; set; }
-        public SubscriptionManager Manager { get; internal set; }
+        public SubscriptionManager Manager { get; set; }
+        public Position Future { get; set; }
+        public int QueueDepth { get; set; }
+        public Action<Action> SynchronizedAction { get; set; }
 
         public long Score
         {
@@ -28,7 +31,7 @@ namespace ESPlus.Subscribers
                     return (long)Priority;
                 }
 
-                return (long)Priority * StarvedCycles;
+                return (long)Priority + StarvedCycles;
             }
         }
 
@@ -55,15 +58,15 @@ namespace ESPlus.Subscribers
                 }
             }
 
-            if (StarvedCycles == other.StarvedCycles)
-            {
-                return other.Priority.CompareTo(Priority);
-            }
+            // if (StarvedCycles == other.StarvedCycles)
+            // {
+            //     return other.Priority.CompareTo(Priority);
+            // }
 
-            if (Score == other.Score)
-            {
-                return other.Priority.CompareTo(Priority);
-            }
+            // if (Score == other.Score)
+            // {
+            //     return other.Priority.CompareTo(Priority);
+            // }
 
             return other.Score.CompareTo(Score);
         }
@@ -74,12 +77,20 @@ namespace ESPlus.Subscribers
             {
                 while (_queue.Count == 0)
                 {
+                    // SynchronizedAction(() =>
+                    // {
+                    //     RequestStatus = RequestStatus.Waiting;
+                    // });
                     Manager.TriggerContext(this);
                     Monitor.Wait(_queue);
                 }
 
                 var events = _queue.Dequeue();
 
+                SynchronizedAction(() =>
+                {
+                    --QueueDepth;
+                });
                 return events;
             }
         }
@@ -90,6 +101,11 @@ namespace ESPlus.Subscribers
             {
                 _queue.Enqueue(events);
                 StarvedCycles = 0;
+                Future = events.NextPosition;
+                SynchronizedAction(() =>
+                {
+                    ++QueueDepth;
+                });
                 Monitor.Pulse(_queue);
             }
         }

@@ -12,6 +12,12 @@ namespace ESPlus.Subscribers
             _subscriptionContext = subscriptionContext;
         }
 
+        public Priority Priority
+        {
+            get => _subscriptionContext.Priority;
+            set => _subscriptionContext.Priority = value;
+        }
+
         public IEnumerator<Event> GetEnumerator()
         {
             while (true)

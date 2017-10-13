@@ -1,0 +1,25 @@
+Performance Improvements:
+
+Deserialize Ahead of time
+Fetch Ahead of time
+Subscription appends instead of dispatch a read
+
+
+
+
+
+
+
+Projection
+    * Spawn
+    * Set Default
+    * Benchmark
+    * Stats
+        * Eps
+        * Waiting time (Waiting time)
+        * Processing time (Time elapsed during dispatch and Flush)
+            * Flush Time
+        * Idle time (Ahead)
+        * Force flush
+
+    

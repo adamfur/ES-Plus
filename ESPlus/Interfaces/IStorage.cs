@@ -6,5 +6,6 @@ namespace ESPlus.Interfaces
     {
         void Put(string path, object item);
         object Get(string path);        
+        void Reset();
     }
 }
