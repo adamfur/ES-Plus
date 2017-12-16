@@ -9,6 +9,11 @@ namespace ESPlus
         public long Version { get; set; }
         public long ExpectedVersion { get; set; }
 
+        public AggregateVersionException()
+        {
+            
+        }
+
         public AggregateVersionException(string id, Type type, long version, long expectedVersion)
         {
             Id = id;

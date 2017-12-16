@@ -77,23 +77,23 @@ namespace ESPlus.Tests.Subscribers
             Assert.Equal(_idle, list[1]);
         }
 
-        [Theory]
-        [InlineData(0, 0, false)]
-        [InlineData(10, 0, false)]
-        [InlineData(11, 0, true)]
-        public void Sort_VariousInput_ExpectedResult(int normalStarvation, int highStarvation, bool breakOrder)
-        {
-            _normal.StarvedCycles = normalStarvation;
-            _high.StarvedCycles = highStarvation;
-            var list = new List<SubscriptionContext>
-            {
-                _normal,
-                _high,
-            };
+        // [Theory]
+        // [InlineData(0, 0, false)]
+        // [InlineData(10, 0, false)]
+        // [InlineData(11, 0, true)]
+        // public void Sort_VariousInput_ExpectedResult(int normalStarvation, int highStarvation, bool breakOrder)
+        // {
+        //     _normal.StarvedCycles = normalStarvation;
+        //     _high.StarvedCycles = highStarvation;
+        //     var list = new List<SubscriptionContext>
+        //     {
+        //         _normal,
+        //         _high,
+        //     };
 
-            list.Sort();
+        //     list.Sort();
 
-            Assert.True(list.First() == (breakOrder ? _normal : _high));
-        }
+        //     Assert.True(list.First() == (breakOrder ? _normal : _high));
+        // }
     }
 }

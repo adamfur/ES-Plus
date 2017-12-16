@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
@@ -61,6 +62,11 @@ namespace ESPlus.EventHandlers
         }
 
         public override bool Dispatch(Event @event)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<bool> DispatchEventAsync(object @event)
         {
             throw new NotImplementedException();
         }

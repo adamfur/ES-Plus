@@ -12,5 +12,5 @@ namespace ESPlus
             Id = id;
             Type = type;
         }
-    }    
+    }
 }

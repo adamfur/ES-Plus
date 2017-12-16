@@ -38,7 +38,7 @@ namespace ESPlus
             _all.First = _all.Last = new EventNode(null);
         }
 
-        private void Subscribe(IEventHandler eventHandler)
+        public void RegisterSubscriber(IEventHandler eventHandler)
         {
             _subscribers.Add(eventHandler);
         }
@@ -55,83 +55,106 @@ namespace ESPlus
             }
         }
 
-        public Task AppendAsync<TAggregate>(TAggregate aggregate) where TAggregate : AppendableObject
-        {
-            return SaveImpl<TAggregate>(aggregate);
-        }
-
         public Task DeleteStream<TAggregate>(string id) where TAggregate : IAggregate
         {
-            var name = $"{typeof(TAggregate).Name}-{id}";
-
-            _streams.Remove(name);
+            _streams.Remove(id);
             return Task.WhenAll();
         }
 
-        public Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : ReplayableObject
+        public Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate
         {
             var instance = (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
             var aggregate = (IAggregate)instance;
-            var name = $"{typeof(TAggregate).Name}-{id}";
+            var currentVersion = 0;
 
-            if (_streams.ContainsKey(name))
+            if (_streams.ContainsKey(id))
             {
-                var stream = _streams[name];
+                var stream = _streams[id];
                 var enumrator = stream.First;
 
-                while (enumrator != null)
+                while (enumrator != null && ++currentVersion <= version)
                 {
+                    //Console.WriteLine($"{enumrator.Event.GetType()} {++count}");
                     aggregate.ApplyChange(enumrator.Event);
                     enumrator = enumrator.NextInStream;
                 }
             }
 
+            aggregate.TakeUncommittedEvents();
+
             return Task.FromResult(instance);
         }
 
-        public Task SaveAsync<TAggregate>(TAggregate aggregate) where TAggregate : ReplayableObject
+        public Task SaveAsync(ReplayableObject aggregate)
         {
-            return SaveImpl<TAggregate>(aggregate);
+            return SaveImpl(aggregate, aggregate.Version);
         }
 
-        public Task SaveImpl<TAggregate>(TAggregate aggregate) where TAggregate : IAggregate
+        public Task SaveAsync(AppendableObject aggregate)
         {
-            var uncommitedEvents = aggregate.TakeUncommittedEvents();
-            var name = $"{typeof(TAggregate).Name}-{aggregate.Id}"; ;
+            return SaveImpl(aggregate, WritePolicy.Any);
+        }
+
+        public Task SaveNewAsync(IAggregate aggregate)
+        {
+            return SaveImpl(aggregate, WritePolicy.EmptyStream);
+        }
+
+        public async Task SaveImpl(IAggregate aggregate, long policy)
+        {
+            var events = aggregate.TakeUncommittedEvents().ToList();
             EventStream stream;
 
-            if (_streams.ContainsKey(name))
+            if (_streams.ContainsKey(aggregate.Id))
             {
-                stream = _streams[name];
+                stream = _streams[aggregate.Id];
             }
             else
             {
-                _streams[name] = stream = new EventStream();
+                _streams[aggregate.Id] = stream = new EventStream();
             }
 
-            foreach (var @event in uncommitedEvents)
+            if (policy >= 0 && stream.Version != aggregate.Version - events.Count())
+            {
+                throw new AggregateVersionException();
+            }
+            else if (policy == WritePolicy.NoStream && stream.Version != 0)
+            {
+                throw new AggregateVersionException();
+            }
+
+            foreach (var @event in events)
             {
                 var node = new EventNode(@event);
 
                 ++stream.Version;
-                stream.First = stream.First ?? node;
-                stream.Last.NextInStream = node;
-                stream.Last = node;
+                if (stream.First == null)
+                {
+                    stream.First = node;
+                    stream.Last = node;
+                }
+                else
+                {
+                    stream.Last.NextInStream = node;
+                    stream.Last = node;
+                }
 
                 _all.Last.Next = node;
                 _all.Last = node;
+            };
 
-                NotifySubscribers(@event);
-            }
-
-            return Task.WhenAll();
+            foreach (var @event in events)
+            {
+                //Console.WriteLine(@event);
+                await NotifySubscribers(@event);
+            };
         }
 
-        private void NotifySubscribers(object @event)
+        private async Task NotifySubscribers(object @event)
         {
             foreach (var subscriber in _subscribers)
             {
-                subscriber.DispatchEvent(@event);
+                await subscriber.DispatchEventAsync(@event);
             }
         }
     }

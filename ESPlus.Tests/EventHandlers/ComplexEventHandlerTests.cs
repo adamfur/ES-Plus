@@ -1,4 +1,6 @@
+using System.Threading.Tasks;
 using ESPlus.EventHandlers;
+using ESPlus.Misc;
 using NSubstitute;
 using Xunit;
 
@@ -25,7 +27,11 @@ namespace ESPlus.Tests.EventHandlers
             IHandleEvent<DummyEmitOnSubmit>
         {
             public DummyEventHandler(IEventHandlerContext context)
-                : base(context)
+                : base(context, null)
+            {
+            }
+
+            public DummyEventHandler(IEventHandlerContext context, IEventTypeResolver eventTypeResolver) : base(context, eventTypeResolver)
             {
             }
 
@@ -37,6 +43,11 @@ namespace ESPlus.Tests.EventHandlers
             public void Apply(DummyEmitOnSubmit @event)
             {
                 EmitOnSubmit(@event.Key, @event.Payload);
+            }
+
+            public override Task<bool> DispatchEventAsync(object @event)
+            {
+                throw new System.NotImplementedException();
             }
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using ESPlus.EventHandlers;
 using NSubstitute;
 using Xunit;
@@ -28,7 +29,7 @@ namespace ESPlus.Tests.EventHandlers
             public bool Called { get; set; } = false;
 
             public DummyEventHandler(IEventHandlerContext context)
-                : base(context)
+                : base(context, null)
             {
             }
 
@@ -46,6 +47,11 @@ namespace ESPlus.Tests.EventHandlers
             {
                 EmitOnSubmit("abc", "def");
             }
+
+            public override Task<bool> DispatchEventAsync(object @event)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private IEventHandlerContext _context;
@@ -58,7 +64,7 @@ namespace ESPlus.Tests.EventHandlers
         [Fact]
         public void Flush_ContextIsAlsoFlushed_Once()
         {
-            var eventHandler = new BasicEventHandler<IEventHandlerContext>(_context);
+            var eventHandler = new BasicEventHandler<IEventHandlerContext>(_context, null);
 
             eventHandler.Flush();
 

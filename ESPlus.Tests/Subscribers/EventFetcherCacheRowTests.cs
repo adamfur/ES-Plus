@@ -21,7 +21,7 @@ namespace ESPlus.Tests.Subscribers
 
             for (var i = from; i <= to; ++i)
             {
-                result.Add(new Event { Position = i.ToPosition() });
+                result.Add(new Event(null) { Position = i.ToPosition() });
             }
 
             return new EventStream

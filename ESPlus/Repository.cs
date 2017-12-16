@@ -38,26 +38,26 @@ namespace ESPlus
             return new EventData(eventId, typeName, true, data, metadata);
         }
 
-        public Task SaveAsync<TAggregate>(TAggregate aggregate) where TAggregate : ReplayableObject
+        public Task SaveAsync(ReplayableObject aggregate)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var originalVersion = aggregate.Version - newEvents.Count();
             var expectedVersion = originalVersion == 0 ? ExpectedVersion.NoStream : originalVersion;
 
-            return SaveAggregate<TAggregate>(aggregate, newEvents, expectedVersion);
+            return SaveAggregate(aggregate, newEvents, expectedVersion);
         }
 
-        public Task AppendAsync<TAggregate>(TAggregate aggregate) where TAggregate : AppendableObject
+        public Task SaveAsync(AppendableObject aggregate)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
 
-            return SaveAggregate<TAggregate>(aggregate, newEvents, expectedVersion);
+            return SaveAggregate(aggregate, newEvents, expectedVersion);
         }
 
-        private async Task SaveAggregate<TAggregate>(AggregateBase aggregate, IEnumerable<object> newEvents, long expectedVersion)
+        private async Task SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion)
         {
-            var streamName = StreamName<TAggregate>(aggregate.Id);
+            var streamName = StreamName(aggregate.GetType(), aggregate.Id);
             var eventsToSave = newEvents.Select(e => ToEventData(Guid.NewGuid(), e)).ToList();
 
             if (eventsToSave.Count < WritePageSize)
@@ -81,14 +81,14 @@ namespace ESPlus
             }
         }
 
-        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : ReplayableObject
+        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate
         {
             if (version <= 0)
             {
                 throw new InvalidOperationException("Cannot get version <= 0");
             }
 
-            var streamName = StreamName<TAggregate>(id);
+            var streamName = StreamName(typeof (TAggregate), id);
             var aggregate = ConstructAggregate<TAggregate>(streamName);
             var applyAggregate = (IAggregate)aggregate;
             var sliceStart = 0L; //Ignores $StreamCreated--
@@ -134,11 +134,16 @@ namespace ESPlus
             return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
 
-        private string StreamName<TAggregate>(string id)
+        private string StreamName(Type type, string id)
         {
-            var result = $"{typeof(TAggregate).Name}:{id}";
+            // var result = $"{type.Name}:{id}";
 
-            return result;
+            return id;
+        }
+
+        public Task SaveNewAsync(IAggregate aggregate)
+        {
+            throw new NotImplementedException();
         }
     }
 }

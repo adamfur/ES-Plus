@@ -63,20 +63,27 @@ namespace ESPlus.Storage
 
         public object Get(string path)
         {
-            if (_cache.ContainsKey(path))
+            try
             {
-                return _cache[path];
-            }
+                if (_cache.ContainsKey(path))
+                {
+                    return _cache[path];
+                }
 
-            if (SubscriptionMode == SubscriptionMode.Replay)
+                if (SubscriptionMode == SubscriptionMode.Replay)
+                {
+                    return null;
+                }
+
+                var data = _dataStorage.Get(path);
+
+                _cache[path] = data;
+                return data;
+            }
+            catch (System.IO.DirectoryNotFoundException)
             {
                 return null;
             }
-
-            var data = _dataStorage.Get(path);
-
-            _cache[path] = data;
-            return data;
         }
 
         protected void WriteJournal(Dictionary<string, string> map)

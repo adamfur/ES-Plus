@@ -11,21 +11,29 @@ namespace ESPlus.Specification
     public abstract class Specification<TAggregate> : IDisposable
         where TAggregate : IAggregate
     {
-        protected abstract TAggregate Given();
         protected TAggregate Aggregate;
-        private List<object> _actalEvents;
         private Exception _exception;
-        private bool _doAssert = true;
+        private List<object> _emittedEvents = new List<object>();
+        private bool _muteException = false;
         private int _offset = 0;
-        private int _skip = 0;
-        private bool _scope = false;
+        private bool _doThrow = false;
 
-        public Specification()
+        public IEnumerable<object> Events => _emittedEvents;
+
+        protected void Given(Action act)
         {
+            _doThrow = true;
+            Aggregate.TakeUncommittedEvents();
+            act();
+        }
+
+        protected void When(Action when)
+        {
+            _doThrow = true;
             try
             {
-                Aggregate = Given();
-                _actalEvents = ((IAggregate)Aggregate).TakeUncommittedEvents().ToList();
+                Aggregate.TakeUncommittedEvents();
+                when();
             }
             catch (Exception ex)
             {
@@ -33,103 +41,28 @@ namespace ESPlus.Specification
             }
         }
 
-        private object CurrentEvent
+        protected void Then(Action then)
         {
-            get
+            if (_exception != null)
             {
-                if (_offset + _skip <= _actalEvents.Count)
-                {
-                    return _actalEvents[_offset + _skip];
-                }
-                throw new Exception("No more events!");
+                _muteException = true;
+                throw _exception;
             }
+
+            _doThrow = false;
+            _emittedEvents.AddRange(Aggregate.TakeUncommittedEvents());
+            then();
+            _muteException = true;
         }
 
-        protected IEnumerable<object> Events => _actalEvents.Skip(_skip);
+        public void ThenExecute()
+        {
+            _doThrow = false;
+        }
 
-        // protected void AssertOrder()
-        // {
-        // var max = Math.Max(_actalEvents.Count(), _expected.Count());
-
-        // Console.WriteLine("----------------");
-        // for (int i = 0; i < max; ++i)
-        // {
-        //     var actual = (i <= _actalEvents.Count() ? _actalEvents[i].GetType().ToString() : "N/A");
-        //     var expected = (i <= _expected.Count() ? _expected[i].ToString() : "N/A");
-
-        //     Console.WriteLine($"{i}) [{(actual == expected ? "x" : " ")}] {actual} vs. {expected}");
-        // }
-        //throw new Exception("string.Join(Environment.NewLine, list)");
-        // }
-
-        protected void Then()
+        protected void ThenNothing()
         {
             Then(() => { });
-        }
-
-        protected void Then(Action action)
-        {
-            _scope = true;
-            action();
-            _scope = false;
-        }
-
-        protected void Any<T>()
-        {
-            Any<T>(e => true);
-        }
-
-        protected void Any<T>(Expression<Predicate<T>> expr)
-        {
-            AssertScope();
-            var compiled = expr.Compile();
-
-            _doAssert = false;
-            if (!Events.OfType<T>().Any(e => compiled(e)))
-            {
-                throw new Exception($"Didn't find event of type {typeof(T).FullName} w/ {expr}");
-            }
-        }
-
-        protected void Is<T>()
-        {
-            Is<T>(e => true);
-        }
-
-        protected void Is<T>(Expression<Predicate<T>> expr)
-        {
-            AssertScope();
-            var compiled = expr.Compile();
-            var @event = CurrentEvent;
-
-            if (@event.GetType() != typeof(T) || !compiled(((T)@event)))
-            {
-                _doAssert = false;
-                throw new Exception($"Didn't find event of type {typeof(T).FullName} w/ {expr}");
-            }
-            ++_offset;
-        }
-
-        private void AssertScope()
-        {
-            if (!_scope)
-            {
-                throw new Exception("Must be in a Then-scope");
-            }
-        }
-
-        protected void When(Action<TAggregate> ar)
-        {
-            try
-            {
-                ar(Aggregate);
-                _skip = _actalEvents.Count;
-                _actalEvents.AddRange(((IAggregate)Aggregate).TakeUncommittedEvents().ToList());
-            }
-            catch (Exception ex)
-            {
-                _exception = _exception ?? ex;
-            }
         }
 
         protected void ThenThrows<TException>()
@@ -141,34 +74,77 @@ namespace ESPlus.Specification
         protected void ThenThrows<TException>(Expression<Predicate<TException>> expr)
             where TException : Exception
         {
+            _muteException = true;
+            _doThrow = false;
+
             if (_exception == null)
             {
-                _doAssert = false;
                 throw new Exception("No exception has been thrown!");
             }
 
             if (_exception.GetType() != typeof(TException))
             {
-                _doAssert = false;
                 throw new Exception($"Exception: {_exception.GetType()} was thrown, expected: {typeof(TException)}");
             }
 
             if (!expr.Compile()((TException)_exception))
             {
-                _doAssert = false;
                 throw new Exception($"Exception: {expr}");
             }
-            _doAssert = false;
+        }
+
+        protected void Is<T>()
+        {
+            Is<T>(e => true);
+        }
+
+        private object CurrentEvent
+        {
+            get
+            {
+                return _emittedEvents[_offset];
+            }
+        }
+
+        protected void Is<T>(Expression<Predicate<T>> expr)
+        {
+            var compiled = expr.Compile();
+            var @event = CurrentEvent;
+
+            if (@event.GetType() != typeof(T) || !compiled(((T)@event)))
+            {
+                _muteException = true;
+                throw new Exception($"Didn't find event of type {typeof(T).FullName} w/ {expr}");
+            }
+            ++_offset;
+            //_expectedEvents.Add(@event);
+        }
+
+        protected void Any<T>()
+        {
+            Any<T>(e => true);
+        }
+
+        protected void Any<T>(Expression<Predicate<T>> expr)
+        {
+            var compiled = expr.Compile();
+
+            if (!Events.OfType<T>().Any(e => compiled(e)))
+            {
+                throw new Exception($"Didn't find event of type {typeof(T).FullName} w/ {expr}");
+            }
         }
 
         void IDisposable.Dispose()
         {
-            if (_doAssert)
+            if (!_muteException && _exception != null)
             {
-                if (_offset + _skip != _actalEvents.Count)
-                {
-                    throw new Exception($"Missmatching number of events, got: {_offset + _skip}, expected: {_actalEvents.Count - _skip}");
-                }
+                throw _exception;
+            }
+
+            if (_doThrow)
+            {
+                throw new Exception("Then()-statement expected");
             }
         }
     }

@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ESPlus\ESPlus.csproj" />
+    <ProjectReference Include="..\ESPlus.Specification\ESPlus.Specification.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,31 +2,42 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Misc;
+using ESPlus.Storage;
 using ESPlus.Subscribers;
 using EventStore.ClientAPI;
 using Newtonsoft.Json;
 
 namespace ESPlus.EventHandlers
 {
-    public abstract class BasicEventHandler<TContext> : EventHandlerBase<TContext>
+    public class BasicEventHandler<TContext> : EventHandlerBase<TContext>
         where TContext : IEventHandlerContext
     {
-        private readonly ConventionEventRouter _router = new ConventionEventRouter();
+        protected readonly ConventionEventRouter _router = new ConventionEventRouter();
         private LinkedList<object> _emitQueue = new LinkedList<object>();
         private Dictionary<string, object> _emitOnSubmit = new Dictionary<string, object>();
         private readonly IEventTypeResolver _eventTypeResolver;
+        protected Once _once;
 
         public BasicEventHandler(TContext context, IEventTypeResolver eventTypeResolver)
             : base(context)
         {
-            _router.Register(this);
+            _once = new Once(() => {
+                RegisterRouter(_router);
+            });
             _eventTypeResolver = eventTypeResolver;
+        }
+
+        protected virtual void RegisterRouter(ConventionEventRouter router)
+        {
+            router.Register(this);
         }
 
         public override bool DispatchEvent(object @event)
         {
+            _once.Execute();
             _router.Dispatch(@event);
             return true;
         }
@@ -74,6 +85,13 @@ namespace ESPlus.EventHandlers
                 return true;
             }
             return false;
+        }
+
+        public override Task<bool> DispatchEventAsync(object @event)
+        {
+            var result = this.DispatchEvent(@event);
+
+            return Task.FromResult(result);
         }
     }
 }
