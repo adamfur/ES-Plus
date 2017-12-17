@@ -1,3 +1,3 @@
 [submodule "Cron"]
 	path = Cron
-	url = ../Cron
+	url = https://github.com/adamfur/Cron
