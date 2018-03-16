@@ -54,7 +54,7 @@ namespace ESPlus.Aggregates
 
                 //MethodInfo applyMethod = apply.Method;
                 //this.handlers.Add(apply.MessageType, m => applyMethod.Invoke(aggregate, new[] { m as object }));
-                this.handlers.Add(apply.MessageType, Build((dynamic) Activator.CreateInstance(apply.MessageType), aggregate, apply.Method));
+                this.handlers.Add(apply.MessageType, Build((dynamic) Activator.CreateInstance(apply.MessageType, true), aggregate, apply.Method));
             }
         }
 

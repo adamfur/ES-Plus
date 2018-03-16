@@ -40,9 +40,9 @@ namespace ESPlus
 
         public Task SaveAsync(ReplayableObject aggregate)
         {
-            var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
-            var originalVersion = aggregate.Version - newEvents.Count();
-            var expectedVersion = originalVersion == 0 ? ExpectedVersion.NoStream : originalVersion;
+            var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
+            var originalVersion = aggregate.Version - newEvents.Count() - 1;
+            var expectedVersion = originalVersion == -1 ? ExpectedVersion.NoStream : originalVersion;
 
             return SaveAggregate(aggregate, newEvents, expectedVersion);
         }
@@ -88,7 +88,7 @@ namespace ESPlus
                 throw new InvalidOperationException("Cannot get version <= 0");
             }
 
-            var streamName = StreamName(typeof (TAggregate), id);
+            var streamName = StreamName(typeof(TAggregate), id);
             var aggregate = ConstructAggregate<TAggregate>(streamName);
             var applyAggregate = (IAggregate)aggregate;
             var sliceStart = 0L; //Ignores $StreamCreated--
@@ -125,6 +125,8 @@ namespace ESPlus
             {
                 throw new AggregateVersionException(id, typeof(TAggregate), aggregate.Version, version);
             }
+
+            aggregate.TakeUncommittedEvents();
 
             return aggregate;
         }

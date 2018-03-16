@@ -23,7 +23,6 @@ namespace ESPlus.Specification
         protected void Given(Action act)
         {
             _doThrow = true;
-            Aggregate.TakeUncommittedEvents();
             act();
         }
 
