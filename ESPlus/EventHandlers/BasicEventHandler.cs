@@ -8,7 +8,6 @@ using ESPlus.Misc;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
 using EventStore.ClientAPI;
-using Newtonsoft.Json;
 
 namespace ESPlus.EventHandlers
 {
