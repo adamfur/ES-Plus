@@ -14,7 +14,7 @@ namespace ESPlus.IntegrationTests
     //     public string Checksum { get; set; }
     // }
 
-    // public class ChecksumAggregate : ReplayableObject
+    // public class ChecksumAggregate : AggregateBase
     // {
     //     public string Checksum { get; set; }
 

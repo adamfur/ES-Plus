@@ -38,7 +38,7 @@ namespace ESPlus
             return new EventData(eventId, typeName, true, data, metadata);
         }
 
-        public Task SaveAsync(ReplayableObject aggregate)
+        public Task SaveAsync(AggregateBase aggregate)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count() - 1;
@@ -47,7 +47,7 @@ namespace ESPlus
             return SaveAggregate(aggregate, newEvents, expectedVersion);
         }
 
-        public Task SaveAsync(AppendableObject aggregate)
+        public Task AppendAsync(AggregateBase aggregate)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;

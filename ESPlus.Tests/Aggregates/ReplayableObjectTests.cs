@@ -6,14 +6,14 @@ using Xunit;
 
 namespace ESPlus.Tests.Aggregates
 {
-    public class ReplayableObjectTests
+    public class AggregateBaseTests
     {
         public class DummyEvent
         {
             public string Text { get; set; }
         }
 
-        public class DummyAggreagate : ReplayableObject
+        public class DummyAggreagate : AggregateBase
         {
             public string Text { get; set; }
 
@@ -38,7 +38,7 @@ namespace ESPlus.Tests.Aggregates
 
         private readonly string _id;
 
-        public ReplayableObjectTests()
+        public AggregateBaseTests()
         {
             _id = Guid.NewGuid().ToString();
         }

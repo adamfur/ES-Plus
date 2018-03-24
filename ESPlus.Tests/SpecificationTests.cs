@@ -4,7 +4,7 @@ using Xunit;
 
 namespace ESPlus.Tests
 {
-    // public class DummyAggregate : ReplayableObject
+    // public class DummyAggregate : AggregateBase
     // {
     //     public DummyAggregate(bool emit)
     //         : base("N/A")

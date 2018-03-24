@@ -5,8 +5,8 @@ namespace ESPlus.Interfaces
 {
     public interface IRepository
     {
-        Task SaveAsync(ReplayableObject aggregate);
-        Task SaveAsync(AppendableObject aggregate);
+        Task SaveAsync(AggregateBase aggregate);
+        Task AppendAsync(AggregateBase aggregate);
         Task SaveNewAsync(IAggregate aggregate);
         Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate;
     }

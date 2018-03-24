@@ -7,7 +7,7 @@ namespace ESPlus.Tests
 {
     public abstract class RepositoryTests
     {
-        public class DummyReplayable : ReplayableObject
+        public class DummyReplayable : AggregateBase
         {
             public DummyReplayable(string id)
                 : base(id)
@@ -16,7 +16,7 @@ namespace ESPlus.Tests
             }
         }
 
-        public class DummyAppendable : AppendableObject
+        public class DummyAppendable : AggregateBase
         {
             public DummyAppendable(string id)
                 : base(id)

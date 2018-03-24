@@ -85,12 +85,12 @@ namespace ESPlus
             return Task.FromResult(instance);
         }
 
-        public Task SaveAsync(ReplayableObject aggregate)
+        public Task SaveAsync(AggregateBase aggregate)
         {
             return SaveImpl(aggregate, aggregate.Version);
         }
 
-        public Task SaveAsync(AppendableObject aggregate)
+        public Task AppendAsync(AggregateBase aggregate)
         {
             return SaveImpl(aggregate, WritePolicy.Any);
         }
