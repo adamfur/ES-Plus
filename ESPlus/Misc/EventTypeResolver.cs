@@ -35,7 +35,7 @@ namespace ESPlus.Misc
 
         public Type ResolveType(string fullName, string name = "", string eventId = "")
         {
-            return FindByEventId(eventId) ?? FindByFullName(fullName) ?? FindByName(name) ?? throw new ArgumentException("Unabel to resolve type!!!");
+            return FindByEventId(eventId) ?? FindByFullName(fullName) ?? FindByName(name) ?? throw new ArgumentException($"Unabel to resolve type {fullName}!!!");
         }
 
         private Type FindByName(string type)

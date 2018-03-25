@@ -37,7 +37,7 @@ namespace ESPlus.Tests.Storage
         [Fact]
         public void Create_HasJournalWithCheckpoint_RealTimeMode()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = 57L.ToPosition() });
+            _metadataStorage.Get<object>(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = 57L.ToPosition() });
 
             _journal.Initialize();
 
@@ -48,7 +48,7 @@ namespace ESPlus.Tests.Storage
         [Fact]
         public void Create_HasJournalWithCheckpoint_ReplayMode()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
+            _metadataStorage.Get<object>(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
 
             _journal.Initialize();
 

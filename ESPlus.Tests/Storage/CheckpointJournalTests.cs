@@ -20,7 +20,7 @@ namespace ESPlus.Tests.Storage
             var destination = "prod/file1";
             var payload = new object();
 
-            _stageStorage.Get(source).Returns(_payload);
+            _stageStorage.Get<object>(source).Returns(_payload);
 
             // Act
             _journal.Initialize();

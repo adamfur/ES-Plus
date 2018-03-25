@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
@@ -29,9 +30,18 @@ namespace ESPlus.Storage
 
         private void LoadJournal()
         {
-            var journal = (JournalLog)_metadataStorage.Get(JournalPath) ?? new JournalLog();
+            JournalLog journal;
 
+            try
+            {
+                journal = _metadataStorage.Get<JournalLog>(JournalPath);
+            }
+            catch (Exception e)
+            {
+                journal = new JournalLog();
+            }
             Checkpoint = journal.Checkpoint;
+
             if (journal.Checkpoint == Position.Start)
             {
                 SubscriptionMode = SubscriptionMode.Replay;
@@ -61,28 +71,28 @@ namespace ESPlus.Storage
             _changed = true;
         }
 
-        public object Get(string path)
+        public T Get<T>(string path)
         {
             try
             {
                 if (_cache.ContainsKey(path))
                 {
-                    return _cache[path];
+                    return (T)_cache[path];
                 }
 
                 if (SubscriptionMode == SubscriptionMode.Replay)
                 {
-                    return null;
+                    return default(T);
                 }
 
-                var data = _dataStorage.Get(path);
+                var data = _dataStorage.Get<T>(path);
 
                 _cache[path] = data;
                 return data;
             }
             catch (System.IO.DirectoryNotFoundException)
             {
-                return null;
+                return default(T);
             }
         }
 

@@ -11,13 +11,13 @@ namespace ESPlus.Storage
         {
         }
 
-        public object Get(string path)
+        public T Get<T>(string path)
         {
             if (_data.ContainsKey(path))
             {
-                return _data[path];
+                return (T) _data[path];
             }
-            return null;
+            return default (T);
         }
 
         public void Put(string path, object item)

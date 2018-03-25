@@ -31,8 +31,8 @@ namespace ESPlus.Tests.Storage
                 }
             };
 
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(replayLog);
-            _stageStorage.Get(source).Returns(_payload);
+            _metadataStorage.Get<object>(PersistantJournal.JournalPath).Returns(replayLog);
+            _stageStorage.Get<object>(source).Returns(_payload);
 
             // Act
             _journal.Initialize();
@@ -40,7 +40,7 @@ namespace ESPlus.Tests.Storage
             // Assert
             Received.InOrder(() =>
             {
-                _stageStorage.Received().Get(Arg.Any<string>());
+                _stageStorage.Received().Get<object>(Arg.Any<string>());
                 _dataStorage.Received().Put(Arg.Any<string>(), Arg.Any<object>());
                 _dataStorage.Received().Flush();
             });
@@ -54,7 +54,7 @@ namespace ESPlus.Tests.Storage
             var destination = "prod/file1";
             var payload = new object();
 
-            _stageStorage.Get(source).Returns(_payload);
+            _stageStorage.Get<object>(source).Returns(_payload);
 
             // Act
             _journal.Initialize();
@@ -98,50 +98,50 @@ namespace ESPlus.Tests.Storage
         public void Get_RealTimeModeNoCache_GetFromStorage()
         {
             var path = "path/1";
-            _dataStorage.Get(path).Returns(_payload);
+            _dataStorage.Get<object>(path).Returns(_payload);
 
-            var item = _journal.Get(path);
+            var item = _journal.Get<object>(path);
 
             Assert.Equal(_payload, item);
-            _dataStorage.Received().Get(path);
+            _dataStorage.Received().Get<object>(path);
         }
 
         [Fact]
         public void Get_Twice_GetFromCacheSecondTime()
         {
             var path = "path/1";
-            _dataStorage.Get(path).Returns(_payload);
+            _dataStorage.Get<object>(path).Returns(_payload);
 
-            _journal.Get(path);
-            _journal.Get(path);
+            _journal.Get<object>(path);
+            _journal.Get<object>(path);
 
-            _dataStorage.Received(1).Get(path);
+            _dataStorage.Received(1).Get<object>(path);
         }
 
         [Fact]
         public void Get_PutBefore_ReceiveFromCache()
         {
             var path = "path/1";
-            _dataStorage.Get(path).Returns(_payload);
+            _dataStorage.Get<object>(path).Returns(_payload);
 
             _journal.Put(path, _payload);
-            _journal.Get(path);
+            _journal.Get<object>(path);
 
-            _dataStorage.DidNotReceive().Get(path);
+            _dataStorage.DidNotReceive().Get<object>(path);
         }
 
         [Fact]
         public void Get_ReplayMode_UnlessInCacheReturnNewT()
         {
-            _metadataStorage.Get(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
+            _metadataStorage.Get<object>(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
 
             var path = "path/1";
-            _dataStorage.Get(path).Returns(_payload);
+            _dataStorage.Get<object>(path).Returns(_payload);
 
             _journal.Initialize();
-            _journal.Get(path);
+            _journal.Get<object>(path);
 
-            _dataStorage.DidNotReceive().Get(path);
+            _dataStorage.DidNotReceive().Get<object>(path);
         }
 
         [Fact]

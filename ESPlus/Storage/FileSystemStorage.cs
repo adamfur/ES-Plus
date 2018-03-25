@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace ESPlus.Storage
 {
@@ -26,21 +27,24 @@ namespace ESPlus.Storage
             var relativePath = Combine(_container, path);
 
             CreatePath(relativePath);
-            File.WriteAllText(Combine(BasePath, relativePath), JsonConvert.SerializeObject(item));
+            File.WriteAllText(Combine(BasePath, relativePath), JsonConvert.SerializeObject(item, new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver() 
+            }));
         }
 
-        public object Get(string path)
+        public T Get<T>(string path)
         {
             try
             {
                 var absolutePath = Combine(BasePath, _container, path);
                 var text = File.ReadAllText(absolutePath);
 
-                return text;
+                return JsonConvert.DeserializeObject<T>(text);
             }
             catch (FileNotFoundException)
             {
-                return null;
+                return default(T);
             }
         }
 

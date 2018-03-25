@@ -48,7 +48,7 @@ namespace ESPlus.Storage
             {
                 var source = item.Key;
                 var destination = item.Value;
-                var payload = _stageStorage.Get(source);
+                var payload = _stageStorage.Get<JournalLog>(source);
 
                 _dataStorage.Put(destination, payload);
             }

@@ -14,7 +14,7 @@ namespace ESPlus.Subscribers
         private IEventFetcher _eventFetcher;
         private int _workerThreads;
 
-        public SubscriptionManager(IEventFetcher eventFetcher, int workerThreads)
+        public SubscriptionManager(IEventFetcher eventFetcher, int workerThreads = 1)
         {
             _workerThreads = workerThreads;
             _barrier = new Barrier(workerThreads);

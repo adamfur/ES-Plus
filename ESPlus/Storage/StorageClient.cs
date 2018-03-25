@@ -47,7 +47,7 @@ namespace ESPlus.Storage
         {
             var shard = Name<T>(path);
 
-            return (T)_journal.Get(shard);
+            return _journal.Get<T>(shard);
         }
 
         public void Put<T>(string path, T graph)
