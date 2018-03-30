@@ -24,7 +24,7 @@ namespace ESPlus.Storage
 
         public override void Put(string destinationPath, object item)
         {
-            var stagePath = $"Journal/{Checkpoint}/{destinationPath}";
+            var stagePath = destinationPath;
 
             _dataStageCache[stagePath] = item;
             _map[stagePath] = destinationPath;

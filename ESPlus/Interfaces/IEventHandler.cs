@@ -4,7 +4,7 @@ using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
 {
-    public interface IEventHandler
+    public interface IEventHandler : IFlushPolicy
     {
         bool DispatchEvent(object @event);
         Task<bool> DispatchEventAsync(object @event);

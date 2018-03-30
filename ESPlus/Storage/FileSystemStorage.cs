@@ -9,6 +9,18 @@ using Newtonsoft.Json.Serialization;
 
 namespace ESPlus.Storage
 {
+    class CamelCaseExceptDictionaryKeysResolver : CamelCasePropertyNamesContractResolver
+    {
+        protected override JsonDictionaryContract CreateDictionaryContract(Type objectType)
+        {
+            JsonDictionaryContract contract = base.CreateDictionaryContract(objectType);
+
+            contract.DictionaryKeyResolver = propertyName => propertyName;
+
+            return contract;
+        }
+    }
+
     public class FileSystemStorage : IStorage
     {
         private string BasePath { get; }
@@ -29,7 +41,7 @@ namespace ESPlus.Storage
             CreatePath(relativePath);
             File.WriteAllText(Combine(BasePath, relativePath), JsonConvert.SerializeObject(item, new JsonSerializerSettings
             {
-                ContractResolver = new CamelCasePropertyNamesContractResolver() 
+                ContractResolver = new CamelCaseExceptDictionaryKeysResolver()
             }));
         }
 

@@ -7,11 +7,17 @@ namespace ESPlus.EventHandlers
     public abstract class EventHandlerBase<TContext> : IEventHandler
         where TContext : IEventHandlerContext
     {
+        private readonly IFlushPolicy _flushPolicy;
         protected TContext Context { get; private set; }
+        protected object Mutex = new object();
 
-        public EventHandlerBase(TContext context)
+        IEventHandler IFlushPolicy.EventHandler { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+
+        public EventHandlerBase(TContext context, IFlushPolicy flushPolicy)
         {
             Context = context;
+            flushPolicy.EventHandler = this;
+            _flushPolicy = flushPolicy;
         }
 
         public virtual void Initialize()
@@ -20,7 +26,10 @@ namespace ESPlus.EventHandlers
 
         public virtual void Flush()
         {
-            Context.Flush();
+            lock (Mutex)
+            {
+                Context.Flush();
+            }
         }
 
         public abstract bool DispatchEvent(object @event);
@@ -28,5 +37,20 @@ namespace ESPlus.EventHandlers
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
         public abstract bool Dispatch(Event @event);
         public abstract Task<bool> DispatchEventAsync(object @event);
+
+        public void FlushWhenAhead()
+        {
+            _flushPolicy.FlushWhenAhead();
+        }
+
+        public void FlushEndOfBatch()
+        {
+            _flushPolicy.FlushEndOfBatch();
+        }
+
+        public void FlushEvent()
+        {
+            _flushPolicy.FlushEvent();
+        }
     }
 }

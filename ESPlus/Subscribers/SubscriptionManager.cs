@@ -129,7 +129,7 @@ namespace ESPlus.Subscribers
                     {
                         subscriptionContext.Put(EventStream.Ahead);
                         subscriptionContext.RequestStatus = RequestStatus.Ahead;
-                        Console.WriteLine("!Ahead");
+                        // Console.WriteLine("!Ahead");
                     }
                 }
             }

@@ -11,7 +11,7 @@ namespace ESPlus.EventHandlers
         private LinkedList<IEventHandler> _pipeline = new LinkedList<IEventHandler>();
 
         public ComplexEventHandler(TContext context)
-            : base(context)
+            : base(context, new NullFlushPolicy())
         {
         }
 

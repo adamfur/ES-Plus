@@ -29,7 +29,7 @@ namespace ESPlus.Tests.EventHandlers
             public bool Called { get; set; } = false;
 
             public DummyEventHandler(IEventHandlerContext context)
-                : base(context, null)
+                : base(context, null, new NullFlushPolicy())
             {
             }
 
@@ -64,7 +64,7 @@ namespace ESPlus.Tests.EventHandlers
         [Fact]
         public void Flush_ContextIsAlsoFlushed_Once()
         {
-            var eventHandler = new BasicEventHandler<IEventHandlerContext>(_context, null);
+            var eventHandler = new BasicEventHandler<IEventHandlerContext>(_context, null, new NullFlushPolicy());
 
             eventHandler.Flush();
 

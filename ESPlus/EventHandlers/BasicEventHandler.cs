@@ -20,10 +20,11 @@ namespace ESPlus.EventHandlers
         private readonly IEventTypeResolver _eventTypeResolver;
         protected Once _once;
 
-        public BasicEventHandler(TContext context, IEventTypeResolver eventTypeResolver)
-            : base(context)
+        public BasicEventHandler(TContext context, IEventTypeResolver eventTypeResolver, IFlushPolicy flushPolicy)
+            : base(context, flushPolicy)
         {
-            _once = new Once(() => {
+            _once = new Once(() =>
+            {
                 RegisterRouter(_router);
             });
             _eventTypeResolver = eventTypeResolver;
@@ -36,9 +37,12 @@ namespace ESPlus.EventHandlers
 
         public override bool DispatchEvent(object @event)
         {
-            _once.Execute();
-            _router.Dispatch(@event);
-            return true;
+            lock (Mutex)
+            {
+                _once.Execute();
+                _router.Dispatch(@event);
+                return true;
+            }
         }
 
         protected void Emit(object @event)
