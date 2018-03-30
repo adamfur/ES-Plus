@@ -51,7 +51,7 @@ namespace ESPlus.Subscribers
             }
         }
 
-        public ISubscriptionClient Subscribe(Position position, Priority priority = Priority.Normal)
+        public ISubscriptionClient Subscribe(Position position, CancellationToken cancellationToken, Priority priority = Priority.Normal)
         {
             var context = new SubscriptionContext
             {
@@ -61,7 +61,8 @@ namespace ESPlus.Subscribers
                 StarvedCycles = 0,
                 Manager = this,
                 Future = position,
-                SynchronizedAction = Execute
+                SynchronizedAction = Execute,
+                CancellationToken = cancellationToken
             };
 
             lock (_mutex)
@@ -126,44 +127,12 @@ namespace ESPlus.Subscribers
                     }
                     else
                     {
+                        subscriptionContext.Put(EventStream.Ahead);
                         subscriptionContext.RequestStatus = RequestStatus.Ahead;
-                        //Console.WriteLine("Ahead");
+                        Console.WriteLine("!Ahead");
                     }
                 }
             }
         }
-
-        // Already done, threads decide :p
-        // public class MaxParellelism
-        // {
-        //     private object _mutex = new object();
-        //     private int _max = 3;
-        //     private int _current = 0;
-
-        //     public MaxParellelism(int max)
-        //     {
-        //         _max = max;
-        //     }
-
-        //     public void Execute(Action action)
-        //     {
-        //         lock (_mutex)
-        //         {
-        //             ++_current;
-        //             while (_current >= _max)
-        //             {
-        //                 Monitor.Wait(_mutex);
-        //             }
-        //         }
-
-        //         action();
-
-        //         lock (_mutex)
-        //         {
-        //             --_current;
-        //             Monitor.Pulse(_mutex);
-        //         }
-        //     }
-        // }
     }
 }

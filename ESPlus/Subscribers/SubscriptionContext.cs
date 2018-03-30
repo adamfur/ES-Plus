@@ -16,6 +16,8 @@ namespace ESPlus.Subscribers
         public Position Future { get; set; }
         public int QueueDepth { get; set; }
         public Action<Action> SynchronizedAction { get; set; }
+        public CancellationToken CancellationToken { get; set; }
+        public bool Ahead { get; private set; } = false;
 
         public long Score
         {
@@ -77,10 +79,6 @@ namespace ESPlus.Subscribers
             {
                 while (_queue.Count == 0)
                 {
-                    // SynchronizedAction(() =>
-                    // {
-                    //     RequestStatus = RequestStatus.Waiting;
-                    // });
                     Manager.TriggerContext(this);
                     Monitor.Wait(_queue);
                 }
@@ -99,9 +97,18 @@ namespace ESPlus.Subscribers
         {
             lock (_queue)
             {
+                if (Ahead && events == EventStream.Ahead)
+                {
+                    return;
+                }
+
+                Ahead = events == EventStream.Ahead;
                 _queue.Enqueue(events);
                 StarvedCycles = 0;
-                Future = events.NextPosition;
+                if (!events.IsArtificial)
+                {
+                    Future = events.NextPosition;
+                }
                 SynchronizedAction(() =>
                 {
                     ++QueueDepth;

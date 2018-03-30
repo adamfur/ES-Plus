@@ -16,6 +16,11 @@ namespace ESPlus.Subscribers
             _eventTypeResolver = eventTypeResolver;
         }
 
+        public Event(bool isAhead)
+        {
+            IsAhead = isAhead;
+        }        
+
         public object DeserializedItem()
         {
             if (_cache != null)
@@ -43,5 +48,6 @@ namespace ESPlus.Subscribers
         public byte[] Meta { get; set; }
         public byte[] Payload { get; set; }
         public string EventType { get; set; }
+        public bool IsAhead { get; private set; } = false;
     }
 }

@@ -26,10 +26,16 @@ namespace ESPlus.Subscribers
 
                 foreach (var @event in stream.Events)
                 {
-                    _subscriptionContext.Position = @event.Position;
+                    if (!stream.IsArtificial)
+                    {
+                        _subscriptionContext.Position = @event.Position;
+                    }
                     yield return @event;
                 }
-                _subscriptionContext.Position = stream.NextPosition;
+                if (!stream.IsArtificial)
+                {
+                    _subscriptionContext.Position = stream.NextPosition;
+                }
             }
         }
 
