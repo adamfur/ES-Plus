@@ -34,7 +34,7 @@ namespace ESPlus.Storage
 
             try
             {
-                journal = _metadataStorage.Get<JournalLog>(JournalPath);
+                journal = _metadataStorage.Get<JournalLog>(JournalPath) ?? new JournalLog();
             }
             catch (Exception e)
             {

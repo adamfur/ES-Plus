@@ -63,8 +63,8 @@ namespace ESPlus.Tests
         [Fact]
         public async void SaveAsync_SaveNewAppendableToExistingStream_Pass()
         {
-            await Repository.SaveAsync(new DummyAppendable("abc"));
-            await Repository.SaveAsync(new DummyAppendable("abc"));
+            await Repository.AppendAsync(new DummyAppendable("abc"));
+            await Repository.AppendAsync(new DummyAppendable("abc"));
         }
 
         [Fact]

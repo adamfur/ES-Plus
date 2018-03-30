@@ -31,7 +31,7 @@ namespace ESPlus.Tests.Storage
                 }
             };
 
-            _metadataStorage.Get<object>(PersistantJournal.JournalPath).Returns(replayLog);
+            _metadataStorage.Get<JournalLog>(PersistantJournal.JournalPath).Returns(replayLog);
             _stageStorage.Get<object>(source).Returns(_payload);
 
             // Act
@@ -40,7 +40,7 @@ namespace ESPlus.Tests.Storage
             // Assert
             Received.InOrder(() =>
             {
-                _stageStorage.Received().Get<object>(Arg.Any<string>());
+                //_stageStorage.Received().Get<object>(Arg.Any<string>());
                 _dataStorage.Received().Put(Arg.Any<string>(), Arg.Any<object>());
                 _dataStorage.Received().Flush();
             });
@@ -215,7 +215,6 @@ namespace ESPlus.Tests.Storage
 
             _metadataStorage.Received(1).Flush();
         }  
-
 
         public void TEMPTEMPTEMP()
         {
