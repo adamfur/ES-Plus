@@ -3,7 +3,7 @@ using ESPlus.Subscribers;
 
 namespace ESPlus
 {
-    public class NullFlushPolicy : IFlushPolicy
+    public class AlwaysFlushPolicy : IFlushPolicy
     {
         public IEventHandler EventHandler { get; set; }
 
@@ -13,10 +13,11 @@ namespace ESPlus
 
         public void FlushOnEvent()
         {
+            EventHandler.Flush();
         }
 
         public void FlushWhenAhead()
         {
         }
-    }
+    }    
 }

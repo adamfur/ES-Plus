@@ -7,7 +7,7 @@ namespace ESPlus.Subscribers
     {
         void FlushWhenAhead();
         void FlushEndOfBatch();
-        void FlushEvent();
+        void FlushOnEvent();
         IEventHandler EventHandler { get; set; }
     }
 }

@@ -7,7 +7,6 @@
     <ItemGroup>
     <!--PackageReference Include="CoreCompat.Newtonsoft.Json" Version="9.0.2-beta001" /-->
     <PackageReference Include="EventStore.ClientAPI.NetCore" Version="4.1.0.23" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
     <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
     <!--<PackageReference Include="Quartz" Version="3.0.0-alpha2" />-->

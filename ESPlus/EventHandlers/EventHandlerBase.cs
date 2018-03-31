@@ -48,9 +48,9 @@ namespace ESPlus.EventHandlers
             _flushPolicy.FlushEndOfBatch();
         }
 
-        public void FlushEvent()
+        public void FlushOnEvent()
         {
-            _flushPolicy.FlushEvent();
+            _flushPolicy.FlushOnEvent();
         }
     }
 }
