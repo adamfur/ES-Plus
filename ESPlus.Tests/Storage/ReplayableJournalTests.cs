@@ -46,53 +46,53 @@ namespace ESPlus.Tests.Storage
             });
         }
 
-        [Fact]
-        public void Flush_PutFile_WriteFirstToStageThenJournalThenStorage()
-        {
-            // Arrange
-            var source = "stage/1/file1";
-            var destination = "prod/file1";
-            var payload = new object();
+        // [Fact]
+        // public void Flush_PutFile_WriteFirstToStageThenJournalThenStorage()
+        // {
+        //     // Arrange
+        //     var source = "stage/1/file1";
+        //     var destination = "prod/file1";
+        //     var payload = new object();
 
-            _stageStorage.Get<object>(source).Returns(_payload);
+        //     _stageStorage.Get<object>(source).Returns(_payload);
 
-            // Act
-            _journal.Initialize();
-            _journal.Checkpoint = 12L.ToPosition();
-            _journal.Put(destination, payload);
-            _journal.Flush();
+        //     // Act
+        //     _journal.Initialize();
+        //     _journal.Checkpoint = 12L.ToPosition();
+        //     _journal.Put(destination, payload);
+        //     _journal.Flush();
 
-            // Assert
-            Received.InOrder(() =>
-            {
-                _stageStorage.Received().Put(Arg.Is<string>(p => p == "Journal/12/0/prod/file1"), payload);
-                _stageStorage.Received().Flush();
-                _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => true));
-                _metadataStorage.Received().Flush();
-                _dataStorage.Received().Put(Arg.Is<string>(p => p == "prod/file1"), payload);
-                _dataStorage.Received().Flush();
-            });
-        }
+        //     // Assert
+        //     Received.InOrder(() =>
+        //     {
+        //         _stageStorage.Received().Put(Arg.Is<string>(p => p == "Journal/12/0/prod/file1"), payload);
+        //         _stageStorage.Received().Flush();
+        //         _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => true));
+        //         _metadataStorage.Received().Flush();
+        //         _dataStorage.Received().Put(Arg.Is<string>(p => p == "prod/file1"), payload);
+        //         _dataStorage.Received().Flush();
+        //     });
+        // }
 
-        [Fact]
-        public void Flush_PutFile_StagePathAndDestinationPathInJournal()
-        {
-            // Arrange
-            var destination = "prod/file1";
-            var payload = new object();
+        // [Fact]
+        // public void Flush_PutFile_StagePathAndDestinationPathInJournal()
+        // {
+        //     // Arrange
+        //     var destination = "prod/file1";
+        //     var payload = new object();
 
-            // Act
-            _journal.Initialize();
-            _journal.Checkpoint = 12L.ToPosition();
-            _journal.Put(destination, payload);
-            _journal.Flush();
+        //     // Act
+        //     _journal.Initialize();
+        //     _journal.Checkpoint = 12L.ToPosition();
+        //     _journal.Put(destination, payload);
+        //     _journal.Flush();
 
-            // Assert
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 12L.ToPosition()
-                && p.Map.Count == 1
-                && p.Map.First().Key == "Journal/12/0/" + destination
-                && p.Map.First().Value == destination));
-        }
+        //     // Assert
+        //     _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 12L.ToPosition()
+        //         && p.Map.Count == 1
+        //         && p.Map.First().Key == "Journal/12/0/" + destination
+        //         && p.Map.First().Value == destination));
+        // }
 
         [Fact]
         public void Get_RealTimeModeNoCache_GetFromStorage()
@@ -178,22 +178,22 @@ namespace ESPlus.Tests.Storage
             _dataStorage.Received(1).Put(path2, Arg.Any<object>());
         }
 
-        [Fact]
-        public void Flush_WipeStageCacheBetweenWrites_CleanSlate2()
-        {
-            var path1 = "path/1";
-            var path2 = "path/2";
+        // [Fact]
+        // public void Flush_WipeStageCacheBetweenWrites_CleanSlate2()
+        // {
+        //     var path1 = "path/1";
+        //     var path2 = "path/2";
             
-            _journal.Checkpoint = 12L.ToPosition();
-            _journal.Put(path1, _payload);
-            _journal.Flush();
-            _journal.Checkpoint = 13L.ToPosition();
-            _journal.Put(path2, _payload);
-            _journal.Flush();
+        //     _journal.Checkpoint = 12L.ToPosition();
+        //     _journal.Put(path1, _payload);
+        //     _journal.Flush();
+        //     _journal.Checkpoint = 13L.ToPosition();
+        //     _journal.Put(path2, _payload);
+        //     _journal.Flush();
 
-            _stageStorage.Received(1).Put("Journal/12/0/" + path1, Arg.Any<object>());
-            _stageStorage.Received(1).Put("Journal/13/0/" + path2, Arg.Any<object>());
-        } 
+        //     _stageStorage.Received(1).Put("Journal/12/0/" + path1, Arg.Any<object>());
+        //     _stageStorage.Received(1).Put("Journal/13/0/" + path2, Arg.Any<object>());
+        // } 
 
         [Fact]
         public void Flush_NoChange_NoFlush()
