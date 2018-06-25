@@ -168,7 +168,7 @@ namespace ESPlus
 
             if (status != 0)
             {
-                throw new Exception($"if (status != 0): {status}");
+                throw new WrongExpectedVersionException($"if (status != 0): {status}");
             }
             await Task.FromResult(0);
         }

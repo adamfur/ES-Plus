@@ -41,7 +41,7 @@ namespace ESPlus.Repositories
         public Task SaveAsync(AggregateBase aggregate)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
-            var originalVersion = aggregate.Version - newEvents.Count() - 1;
+            var originalVersion = aggregate.Version - newEvents.Count()/* - 1*/;
             var expectedVersion = originalVersion == -1 ? ExpectedVersion.NoStream : originalVersion;
 
             return SaveAggregate(aggregate, newEvents, expectedVersion);
@@ -57,28 +57,49 @@ namespace ESPlus.Repositories
 
         private async Task SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion)
         {
-            var streamName = StreamName(aggregate.GetType(), aggregate.Id);
-            var eventsToSave = newEvents.Select(e => ToEventData(Guid.NewGuid(), e)).ToList();
-
-            if (eventsToSave.Count < WritePageSize)
+            try
             {
-                await _eventStoreConnection.AppendToStreamAsync(streamName, expectedVersion, eventsToSave);
-            }
-            else
-            {
-                var transaction = await _eventStoreConnection.StartTransactionAsync(streamName, expectedVersion);
+                var streamName = aggregate.Id;
+                var eventsToSave = newEvents.Select(e => ToEventData(Guid.NewGuid(), e)).ToList();
 
-                var position = 0;
-
-                while (position < eventsToSave.Count)
+                if (eventsToSave.Count < WritePageSize)
                 {
-                    var pageEvents = eventsToSave.Skip(position).Take(WritePageSize);
-                    await transaction.WriteAsync(pageEvents);
-                    position += WritePageSize;
+                    await _eventStoreConnection.AppendToStreamAsync(streamName, expectedVersion, eventsToSave);
                 }
+                else
+                {
+                    var transaction = await _eventStoreConnection.StartTransactionAsync(streamName, expectedVersion);
 
-                await transaction.CommitAsync();
+                    var position = 0;
+
+                    while (position < eventsToSave.Count)
+                    {
+                        var pageEvents = eventsToSave.Skip(position).Take(WritePageSize);
+                        await transaction.WriteAsync(pageEvents);
+                        position += WritePageSize;
+                    }
+
+                    await transaction.CommitAsync();
+                }
             }
+            catch (EventStore.ClientAPI.Exceptions.WrongExpectedVersionException)
+            {
+                throw new WrongExpectedVersionException();
+            }
+        }
+
+        private void Index<TAggregate>()
+        {
+            typeof(TAggregate).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
+                .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
+                .Select(x => x.GetParameters().First().ParameterType)
+                .ToList()
+                .ForEach(t =>
+                {
+                    Console.WriteLine($"Register type: {t.FullName}");
+                    _types[t.FullName] = t;
+                });
         }
 
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate
@@ -88,7 +109,8 @@ namespace ESPlus.Repositories
                 throw new InvalidOperationException("Cannot get version <= 0");
             }
 
-            var streamName = StreamName(typeof(TAggregate), id);
+            Index<TAggregate>();
+            var streamName = id;
             var aggregate = ConstructAggregate<TAggregate>(streamName);
             var applyAggregate = (IAggregate)aggregate;
             var sliceStart = 0L; //Ignores $StreamCreated--
@@ -115,7 +137,14 @@ namespace ESPlus.Repositories
 
                 foreach (var evnt in currentSlice.Events)
                 {
-                    var type = _types.Values.First(x => x.FullName == evnt.Event.EventType);
+                    var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.Event.EventType);
+
+                    applyAggregate.Version = evnt.Event.EventNumber;
+
+                    if (type == null)
+                    {
+                        continue;
+                    }
 
                     applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.OriginalEvent.Data));
                 }
@@ -136,16 +165,14 @@ namespace ESPlus.Repositories
             return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
 
-        private string StreamName(Type type, string id)
-        {
-            // var result = $"{type.Name}:{id}";
-
-            return id;
-        }
-
         public Task SaveNewAsync(IAggregate aggregate)
         {
             throw new NotImplementedException();
+        }
+
+        public Task DeleteAsync(string streamName)
+        {
+            return Task.FromResult(0);
         }
     }
 }

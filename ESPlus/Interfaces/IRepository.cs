@@ -9,6 +9,7 @@ namespace ESPlus.Interfaces
         Task AppendAsync(AggregateBase aggregate);
         Task SaveNewAsync(IAggregate aggregate);
         Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate;
+        Task DeleteAsync(string streamName);
     }
 
     public static class WritePolicy

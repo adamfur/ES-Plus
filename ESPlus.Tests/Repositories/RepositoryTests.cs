@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using Xunit;
@@ -7,21 +8,22 @@ namespace ESPlus.Tests.Repositories
 {
     public abstract class RepositoryTests
     {
-        public class DummyReplayable : AggregateBase
+        public class DummyAggregate : AggregateBase
         {
-            public DummyReplayable(string id)
+            public DummyAggregate(string id)
                 : base(id)
+            {
+                Poke();
+            }
+
+            public void Poke()
             {
                 ApplyChange(new DummyEvent());
             }
-        }
 
-        public class DummyAppendable : AggregateBase
-        {
-            public DummyAppendable(string id)
-                : base(id)
+            //[NoReplay]
+            protected void Apply(DummyEvent @event)
             {
-                ApplyChange(new DummyEvent());
             }
         }
 
@@ -39,48 +41,86 @@ namespace ESPlus.Tests.Repositories
         }
 
         [Fact]
-        public async void SaveAsync_SaveNewReplayableStream_Pass()
+        public async Task SaveAsync_InsertNewStream_Save()
         {
-            await Repository.SaveAsync(new DummyReplayable("abc"));
+            var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
+
+            await Repository.SaveAsync(aggregate);
         }
 
         [Fact]
-        public async void SaveAsync_SaveNewReplayableToExistingStream_Throws()
+        public async Task SaveAsync_AppendToExistingStream_Save()
         {
-            await Repository.SaveAsync(new DummyReplayable("abc"));
-            await Assert.ThrowsAsync<AggregateVersionException>(async () =>
-            {
-                await Repository.SaveAsync(new DummyReplayable("abc"));
-            });
+            var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
+
+            await Repository.SaveAsync(aggregate);
+            aggregate.Poke();
+            await Repository.SaveAsync(aggregate);
         }
 
         [Fact]
-        public async void SaveAsync_SaveNewAppendableStream_Pass()
+        public async Task SaveAsync_AppendToExistingStreamV2_Save()
         {
-            await Repository.SaveAsync(new DummyAppendable("abc"));
+            var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
+
+            await Repository.SaveAsync(aggregate);
+            aggregate.Poke();
+            await Repository.SaveAsync(aggregate);
+            aggregate.Poke();
+            await Repository.SaveAsync(aggregate);
         }
 
         [Fact]
-        public async void SaveAsync_SaveNewAppendableToExistingStream_Pass()
+        public async Task SaveAsync_SameStream_Throw()
         {
-            await Repository.AppendAsync(new DummyAppendable("abc"));
-            await Repository.AppendAsync(new DummyAppendable("abc"));
+            var id = Guid.NewGuid().ToString();
+            var aggregate1 = new DummyAggregate(id);
+            var aggregate2 = new DummyAggregate(id);
+
+            await Repository.SaveAsync(aggregate1);
+            await Assert.ThrowsAsync<WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
         }
 
         [Fact]
-        public async void SaveNewAsync_SaveStreamAsNew_Pass()
+        public async Task DeleteAsync_DeleteExistingStream_Pass()
         {
-            await Repository.SaveNewAsync(new DummyAppendable("abc"));
+            var id = Guid.NewGuid().ToString();
+            var aggregate1 = new DummyAggregate(id);
+
+            await Repository.DeleteAsync(id);
         }
 
         [Fact]
-        public async void SaveNewAsync_SaveAnotherStreamAsNew_Throws()
+        public async Task DeleteAsync_DeleteNonexistingStream_Pass()
         {
-            await Repository.SaveNewAsync(new DummyAppendable("abc"));
-            await Assert.ThrowsAsync<AggregateVersionException>(async () =>
-            {
-                await Repository.SaveNewAsync(new DummyAppendable("abc"));
-            });
+            var id = Guid.NewGuid().ToString();
+
+            await Repository.DeleteAsync(id);
+        }
+
+        [Fact]
+        public async Task GetAsync_ReadOneEventFromExistingStream_Pass()
+        {
+            var id = Guid.NewGuid().ToString();
+            var aggregate = new DummyAggregate(id);
+
+            await Repository.SaveAsync(aggregate);
+            var copy = await Repository.GetByIdAsync<DummyAggregate>(id);
+
+            Assert.Equal(aggregate.Version, copy.Version);
+        }
+
+        [Fact]
+        public async Task GetAsync_ReadTwoEventsFromExistingStream_Pass()
+        {
+            var id = Guid.NewGuid().ToString();
+            var aggregate = new DummyAggregate(id);
+
+            aggregate.Poke();
+            await Repository.SaveAsync(aggregate);
+            var copy = await Repository.GetByIdAsync<DummyAggregate>(id);
+
+            Assert.Equal(aggregate.Version, copy.Version);
         }
     }
 }

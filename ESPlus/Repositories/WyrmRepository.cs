@@ -143,47 +143,10 @@ namespace ESPlus.Repositories
             foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
                 applyAggregate.Version = evnt.Version;
-                Console.WriteLine("** evnt");
                 //var type = _types.Values.First(x => x.FullName == evnt.EventType);
 
                 //applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Body));
             }
-
-            // var applyAggregate = (IAggregate)aggregate;
-            // var sliceStart = 0L; //Ignores $StreamCreated--
-            // StreamEventsSlice currentSlice;
-            // var currentSliceTask = _eventStoreConnection.ReadStreamEventsForwardAsync(streamName, sliceStart, ReadPageSize, false);
-
-            // do
-            // {
-            //     currentSlice = await currentSliceTask;
-
-            //     if (currentSlice.Status == SliceReadStatus.StreamNotFound)
-            //     {
-            //         throw new AggregateNotFoundException(id, typeof(TAggregate));
-            //     }
-
-            //     if (currentSlice.Status == SliceReadStatus.StreamDeleted)
-            //     {
-            //         throw new AggregateDeletedException(id, typeof(TAggregate));
-            //     }
-
-            //     var sliceCount = (int)(sliceStart + ReadPageSize <= version ? ReadPageSize : version - sliceStart + 1);
-            //     sliceStart = currentSlice.NextEventNumber;
-            //     currentSliceTask = _eventStoreConnection.ReadStreamEventsForwardAsync(streamName, sliceStart, sliceCount, false);
-
-            //     foreach (var evnt in currentSlice.Events)
-            //     {
-            //         var type = _types.Values.First(x => x.FullName == evnt.Event.EventType);
-
-            //         applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.OriginalEvent.Data));
-            //     }
-            // } while (version >= currentSlice.NextEventNumber && !currentSlice.IsEndOfStream);
-
-            // if (aggregate.Version != version && version != Int32.MaxValue)
-            // {
-            //     throw new AggregateVersionException(id, typeof(TAggregate), aggregate.Version, version);
-            // }
 
             aggregate.TakeUncommittedEvents();
             await Task.FromResult(0);

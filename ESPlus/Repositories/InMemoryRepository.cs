@@ -14,18 +14,20 @@ namespace ESPlus.Repositories
         {
             public EventNode First { get; set; }
             public EventNode Last { get; set; }
-            public int Version { get; set; } = -1;
+            public long Version { get; set; } = -1;
         }
 
         private class EventNode
         {
             public object Event { get; set; }
+            public long Version { get; set; }
             public EventNode Next { get; set; }
             public EventNode NextInStream { get; set; }
 
-            public EventNode(object @event)
+            public EventNode(object @event, long version)
             {
                 Event = @event;
+                Version = version;
             }
         }
 
@@ -35,7 +37,7 @@ namespace ESPlus.Repositories
 
         public InMemoryRepository()
         {
-            _all.First = _all.Last = new EventNode(null);
+            _all.First = _all.Last = new EventNode(null, -1);
         }
 
         public void RegisterSubscriber(IEventHandler eventHandler)
@@ -76,6 +78,7 @@ namespace ESPlus.Repositories
                 {
                     //Console.WriteLine($"{enumrator.Event.GetType()} {++count}");
                     aggregate.ApplyChange(enumrator.Event);
+                    aggregate.Version = enumrator.Version;
                     enumrator = enumrator.NextInStream;
                 }
             }
@@ -116,18 +119,18 @@ namespace ESPlus.Repositories
 
             if (policy >= 0 && stream.Version != aggregate.Version - events.Count())
             {
-                throw new AggregateVersionException();
+                throw new WrongExpectedVersionException();
             }
             else if (policy == WritePolicy.NoStream && stream.Version != -1)
             {
-                throw new AggregateVersionException();
+                throw new WrongExpectedVersionException();
             }
 
             foreach (var @event in events)
             {
-                var node = new EventNode(@event);
+                var version = ++stream.Version;
+                var node = new EventNode(@event, version);
 
-                ++stream.Version;
                 if (stream.First == null)
                 {
                     stream.First = node;
@@ -156,6 +159,11 @@ namespace ESPlus.Repositories
             {
                 await subscriber.DispatchEventAsync(@event);
             }
+        }
+
+        public Task DeleteAsync(string streamName)
+        {
+            return Task.FromResult(0);
         }
     }
 }
