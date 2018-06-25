@@ -48,7 +48,7 @@ namespace ESPlus.Tests.Aggregates
         {
             var aggregate = new DummyAggreagate(_id);
 
-            Assert.Equal(0, aggregate.Version);
+            Assert.Equal(-1, aggregate.Version);
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace ESPlus.Tests.Aggregates
             var aggregate = new DummyAggreagate(_id);
 
             ((IAggregate)aggregate).ApplyChange(new object());
-            Assert.Equal(1, aggregate.Version);
+            Assert.Equal(0, aggregate.Version);
         }
 
         [Fact]

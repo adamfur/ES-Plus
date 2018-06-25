@@ -5,7 +5,7 @@ namespace ESPlus.Interfaces
 {
     public interface IAggregate
     {
-        int Version { get; }
+        long Version { get; set; }
         string Id { get; }
         void ApplyChange(object @event);
         IEnumerable<object> TakeUncommittedEvents();

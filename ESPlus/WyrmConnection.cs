@@ -3,20 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using ESPlus.Repositories;
 using EventStore.ClientAPI;
 
 namespace ESPlus
 {
-    public class LZ4
+    public class WyrmEvent2
     {
-        [DllImport("liblz4")]
-        public static extern int LZ4_compress_default(byte[] source, byte[] dest, int sourceSize, int maxDestSize);
-
-        [DllImport("liblz4")]
-        public static extern int LZ4_compressBound(int inputSize);
+        public long Offset { get; set; }
+        public long TotalOffset { get; set; }
+        public Guid EventId { get; set; }
+        public long Version { get; set; }
+        public DateTime Timestamp { get; set; }
+        public byte[] Metadata { get; set; }
+        public byte[] Data { get; set; }
     }
 
     public class WyrmConnection
@@ -31,6 +33,113 @@ namespace ESPlus
                 offset += array.Length;
             }
             return rv;
+        }
+
+        public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
+        {
+            var client = new TcpClient();
+
+            client.ConnectAsync("localhost", 8888).Wait();
+
+            var reader = new BinaryReader(client.GetStream());
+            var writer = new BinaryWriter(client.GetStream());
+            var name = Encoding.UTF8.GetBytes(streamName);
+            writer.Write(OperationType.READ_STREAM_FORWARD);
+            writer.Write(name.Length);
+            writer.Write(name, 0, name.Length);
+            writer.Write((int)0); //filter
+            writer.Flush();
+
+            while (true)
+            {
+                Console.WriteLine("-------------------");
+                var length = reader.ReadInt64();
+
+                if (length == 8)
+                {
+                    Console.WriteLine("reached end!");
+                    break;
+                }
+
+                Console.WriteLine($"length: {length}");
+                var position = reader.ReadBytes(32);
+                var offset = reader.ReadInt64();
+                var totalOffset = reader.ReadInt64();
+                var eventId = new Guid(reader.ReadBytes(16));
+                var version = reader.ReadInt64();
+                var uncompressedSize = reader.ReadInt64();
+                var compressedSize = reader.ReadInt64();
+                var encryptedSize = reader.ReadInt64();
+                var clock = reader.ReadInt64();
+                var ms = reader.ReadInt64();
+                var epooch = new DateTime(1970, 1, 1);
+                var time = epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
+                //var LengthOfMetadata = reader.ReadInt32();
+
+                // //Console.WriteLine($"position: {position}");
+                //Console.WriteLine($"offset: {offset}");
+                //Console.WriteLine($"totalOffset: {totalOffset}");
+                // Console.WriteLine($"eventId: {eventId}");
+                // Console.WriteLine($"version: {version}");
+                // Console.WriteLine($"uncompressedSize: {uncompressedSize}");
+                // Console.WriteLine($"compressedSize: {compressedSize}");
+                // Console.WriteLine($"encryptedSize: {encryptedSize}");
+                // Console.WriteLine($"time: {time:yyyy-MM-dd HH:mm:ss.ffffff}");
+                var metadata = new byte[0];
+                var data = new byte[0];
+                var compressed = reader.ReadBytes((int)compressedSize);
+                var payload = new byte[uncompressedSize];
+                var result = LZ4.LZ4_decompress_safe(payload, compressed, compressed.Length, payload.Length);
+                using (var ms2 = new BinaryReader(new MemoryStream(payload)))
+                {
+                    var lengthOfMetadata = ms2.ReadInt32();
+                    var lengthOfData = ms2.ReadInt32();
+                    metadata = ms2.ReadBytes(lengthOfMetadata);
+                    data = ms2.ReadBytes(lengthOfData);
+                }
+
+                yield return new WyrmEvent2
+                {
+                    Offset = offset,
+                    TotalOffset = totalOffset,
+                    EventId = eventId,
+                    Version = version,
+                    Timestamp = time,
+                    Metadata = metadata,
+                    Data = data
+                };
+            }
+
+            yield break;
+        }
+
+        public async Task DeleteAsync(string streamName)
+        {
+            var client = new TcpClient();
+
+            await client.ConnectAsync("localhost", 8888);
+
+            var reader = new BinaryReader(client.GetStream());
+            var writer = new BinaryWriter(client.GetStream());
+            var name = Encoding.UTF8.GetBytes(streamName);
+            writer.Write(OperationType.DELETE);
+            writer.Write(name.Length);
+            writer.Write(name, 0, name.Length);
+
+            var len = reader.ReadInt32();
+
+            if (len != 8)
+            {
+                throw new Exception("if (len != 8)");
+            }
+
+            var status = reader.ReadInt32();
+
+            if (status != 0)
+            {
+                throw new Exception($"if (status != 0): {status}");
+            }
+            await Task.FromResult(0);
         }
 
         public async Task Append(IEnumerable<WyrmEvent> events)
@@ -57,9 +166,9 @@ namespace ESPlus
 
             var status = reader.ReadInt32();
 
-            if (status != 200)
+            if (status != 0)
             {
-                throw new Exception("if (status != 200)");
+                throw new Exception($"if (status != 0): {status}");
             }
             await Task.FromResult(0);
         }
@@ -116,6 +225,6 @@ namespace ESPlus
             merged.Read(result, 0, result.Length);
 
             return result;
-        }        
+        }
     }
 }

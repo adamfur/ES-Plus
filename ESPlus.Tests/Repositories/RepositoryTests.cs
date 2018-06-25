@@ -3,7 +3,7 @@ using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using Xunit;
 
-namespace ESPlus.Tests
+namespace ESPlus.Tests.Repositories
 {
     public abstract class RepositoryTests
     {
@@ -81,14 +81,6 @@ namespace ESPlus.Tests
             {
                 await Repository.SaveNewAsync(new DummyAppendable("abc"));
             });
-        }
-    }
-
-    public class InMemoryRepositoryTests : RepositoryTests
-    {
-        protected override IRepository Create()
-        {
-            return new InMemoryRepository();
         }
     }
 }

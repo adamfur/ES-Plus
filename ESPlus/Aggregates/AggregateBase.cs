@@ -8,7 +8,7 @@ namespace ESPlus.Aggregates
     {
         private readonly LinkedList<object> _uncommitedEvents = new LinkedList<object>();
         private readonly ConventionEventRouter _router = new ConventionEventRouter();
-        public int Version { get; private set; } = 0;
+        public long Version { get; /*private*/ set; } = -1;
         public string Id { get; private set; }
 
         protected AggregateBase(string id)
