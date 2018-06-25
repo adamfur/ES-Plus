@@ -21,13 +21,35 @@ namespace ESPlus.Tests.Repositories
                 ApplyChange(new DummyEvent());
             }
 
-            //[NoReplay]
+            public void AttachFile()
+            {
+                ApplyChange(new FileMetadataAddedEvent());
+                ApplyChange(new FileAddedEvent());
+            }
+
             protected void Apply(DummyEvent @event)
+            {
+            }
+
+            [NoReplay]
+            protected void Apply(FileAddedEvent @event)
+            {
+            }
+
+            protected void Apply(FileMetadataAddedEvent @event)
             {
             }
         }
 
         public class DummyEvent
+        {
+        }
+
+        public class FileAddedEvent
+        {
+        }
+
+        public class FileMetadataAddedEvent
         {
         }
 
@@ -122,5 +144,18 @@ namespace ESPlus.Tests.Repositories
 
             Assert.Equal(aggregate.Version, copy.Version);
         }
+
+        [Fact]
+        public async Task GetAsync_WithNoReplayAttribute_Pass()
+        {
+            var id = Guid.NewGuid().ToString();
+            var aggregate = new DummyAggregate(id);
+
+            aggregate.AttachFile();
+            await Repository.SaveAsync(aggregate);
+            var copy = await Repository.GetByIdAsync<DummyAggregate>(id);
+
+            Assert.Equal(aggregate.Version, copy.Version);
+        }        
     }
 }

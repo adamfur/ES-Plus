@@ -139,14 +139,14 @@ namespace ESPlus.Repositories
                 {
                     var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.Event.EventType);
 
-                    applyAggregate.Version = evnt.Event.EventNumber;
-
                     if (type == null)
                     {
+                        applyAggregate.Version = evnt.Event.EventNumber;
                         continue;
                     }
 
                     applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.OriginalEvent.Data));
+                    applyAggregate.Version = evnt.Event.EventNumber;
                 }
             } while (version >= currentSlice.NextEventNumber && !currentSlice.IsEndOfStream);
 
