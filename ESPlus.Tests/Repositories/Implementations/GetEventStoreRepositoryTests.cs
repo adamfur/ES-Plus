@@ -2,7 +2,7 @@ using ESPlus.Interfaces;
 using ESPlus.Repositories;
 using EventStore.ClientAPI;
 
-namespace ESPlus.Tests.Repositories
+namespace ESPlus.Tests.Repositories.Implementations
 {
     public class GetEventStoreRepositoryTests : RepositoryTests
     {

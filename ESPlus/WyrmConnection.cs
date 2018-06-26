@@ -93,11 +93,11 @@ namespace ESPlus
                 var uncompressed = new byte[uncompressedSize];
                 var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
 
-                for (int i = 0; i < compressedSize; ++i)
-                {
-                    var c = compressed[i];
-                    Console.WriteLine("uncompress: " + (int)c + " " + (char)c);
-                }
+                // for (int i = 0; i < compressedSize; ++i)
+                // {
+                //     var c = compressed[i];
+                //     Console.WriteLine("uncompress: " + (int)c + " " + (char)c);
+                // }
 
                 //int LZ4_decompress_safe (const char* source, char* dest, int compressedSize, int maxOutputSize);
                 using (var mx = new MemoryStream(uncompressed))
@@ -194,7 +194,7 @@ namespace ESPlus
             await Task.FromResult(0);
         }
 
-        bool first = true;
+        // bool first = true;
         private byte[] Assemble(WyrmEvent @event)
         {
             var target = new MemoryStream();
@@ -210,16 +210,16 @@ namespace ESPlus
             var uncompressedLength = uncompressed.Length;
             var compressed = new byte[LZ4.LZ4_compressBound(uncompressedLength)];
             var compressedLength = LZ4.LZ4_compress_default(uncompressed, compressed, uncompressedLength, compressed.Length);
-            if (first)
-             for (int i = 0; i < compressedLength; ++i)
-                {
-                    var c = compressed[i];
-                    Console.WriteLine("compress: " + (int)c + " " + (char)c);
-                }
-            first = false;
+            // if (first)
+            //  for (int i = 0; i < compressedLength; ++i)
+            //     {
+            //         var c = compressed[i];
+            //         Console.WriteLine("compress: " + (int)c + " " + (char)c);
+            //     }
+            // first = false;
 
             Console.WriteLine($"Append: compressedLength {compressedLength}");
-            var length = compressedLength + 4 + 4 + 4 + 4 + 4 + 20 + streamName.Length + eventType.Length;
+            var length = compressedLength + 40 + streamName.Length + eventType.Length;
 
             writer.Write(length); //4
             writer.Write(streamName.Length); //8
