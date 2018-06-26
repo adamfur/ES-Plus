@@ -10,6 +10,7 @@
     <PackageReference Include="Quartz" Version="3.0.5" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
     <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
+    <PackageReference Include="xxHash.NET" Version="1.0.2" />
     <!--<PackageReference Include="Quartz" Version="3.0.0-alpha2" />-->
 
     

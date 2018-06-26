@@ -19,6 +19,7 @@ namespace ESPlus
         public DateTime Timestamp { get; set; }
         public byte[] Metadata { get; set; }
         public byte[] Data { get; set; }
+        public ulong EventTypeHash { get; set; }
     }
 
     public class WyrmConnection
@@ -62,6 +63,7 @@ namespace ESPlus
                 }
 
                 Console.WriteLine($"length: {length}");
+                var eventTypeHash = reader.ReadUInt64();
                 var position = reader.ReadBytes(32);
                 var offset = reader.ReadInt64();
                 var totalOffset = reader.ReadInt64();
@@ -81,22 +83,40 @@ namespace ESPlus
                 //Console.WriteLine($"totalOffset: {totalOffset}");
                 // Console.WriteLine($"eventId: {eventId}");
                 // Console.WriteLine($"version: {version}");
-                // Console.WriteLine($"uncompressedSize: {uncompressedSize}");
-                // Console.WriteLine($"compressedSize: {compressedSize}");
-                // Console.WriteLine($"encryptedSize: {encryptedSize}");
+                Console.WriteLine($"uncompressedSize: {uncompressedSize}");
+                Console.WriteLine($"compressedSize: {compressedSize}");
+                Console.WriteLine($"encryptedSize: {encryptedSize}");
                 // Console.WriteLine($"time: {time:yyyy-MM-dd HH:mm:ss.ffffff}");
                 var metadata = new byte[0];
                 var data = new byte[0];
                 var compressed = reader.ReadBytes((int)compressedSize);
-                var payload = new byte[uncompressedSize];
-                var result = LZ4.LZ4_decompress_safe(payload, compressed, compressed.Length, payload.Length);
-                using (var ms2 = new BinaryReader(new MemoryStream(payload)))
+                var uncompressed = new byte[uncompressedSize];
+                var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
+
+                for (int i = 0; i < compressedSize; ++i)
                 {
-                    var lengthOfMetadata = ms2.ReadInt32();
-                    var lengthOfData = ms2.ReadInt32();
-                    metadata = ms2.ReadBytes(lengthOfMetadata);
-                    data = ms2.ReadBytes(lengthOfData);
+                    var c = compressed[i];
+                    Console.WriteLine("uncompress: " + (int)c + " " + (char)c);
                 }
+
+                //int LZ4_decompress_safe (const char* source, char* dest, int compressedSize, int maxOutputSize);
+                using (var mx = new MemoryStream(uncompressed))
+                {
+                    mx.Seek(0, SeekOrigin.Begin);
+                    using (var ms2 = new BinaryReader(mx))
+                    {
+                        var lengthOfMetadata = ms2.ReadInt32();
+                        var lengthOfData = ms2.ReadInt32();
+                        Console.WriteLine($"lengthOfMetadata: {lengthOfMetadata}");
+                        Console.WriteLine($"lengthOfData: {lengthOfData}");
+                        Console.WriteLine($"uncompressed: {uncompressed.Length} vs. {result}");
+                        metadata = ms2.ReadBytes(lengthOfMetadata);
+                        data = ms2.ReadBytes(lengthOfData);
+                    }
+                }
+
+                Console.WriteLine($"Metadata: [{Encoding.UTF8.GetString(metadata)}]");
+                Console.WriteLine($"Data: [{Encoding.UTF8.GetString(data)}]");
 
                 yield return new WyrmEvent2
                 {
@@ -106,7 +126,8 @@ namespace ESPlus
                     Version = version,
                     Timestamp = time,
                     Metadata = metadata,
-                    Data = data
+                    Data = data,
+                    EventTypeHash = eventTypeHash
                 };
             }
 
@@ -173,6 +194,7 @@ namespace ESPlus
             await Task.FromResult(0);
         }
 
+        bool first = true;
         private byte[] Assemble(WyrmEvent @event)
         {
             var target = new MemoryStream();
@@ -188,6 +210,15 @@ namespace ESPlus
             var uncompressedLength = uncompressed.Length;
             var compressed = new byte[LZ4.LZ4_compressBound(uncompressedLength)];
             var compressedLength = LZ4.LZ4_compress_default(uncompressed, compressed, uncompressedLength, compressed.Length);
+            if (first)
+             for (int i = 0; i < compressedLength; ++i)
+                {
+                    var c = compressed[i];
+                    Console.WriteLine("compress: " + (int)c + " " + (char)c);
+                }
+            first = false;
+
+            Console.WriteLine($"Append: compressedLength {compressedLength}");
             var length = compressedLength + 4 + 4 + 4 + 4 + 4 + 20 + streamName.Length + eventType.Length;
 
             writer.Write(length); //4

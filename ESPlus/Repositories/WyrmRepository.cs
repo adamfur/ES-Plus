@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using EventStore.ClientAPI;
+using Extensions.Data;
 
 namespace ESPlus.Repositories
 {
@@ -66,6 +69,20 @@ namespace ESPlus.Repositories
         {
             _wyrmConnection = wyrmConnection;
             _eventSerializer = eventSerializer;
+        }
+
+        private void Index<TAggregate>()
+        {
+            typeof(TAggregate).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
+                .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
+                .Select(x => x.GetParameters().First().ParameterType)
+                .ToList()
+                .ForEach(t =>
+                {
+                    Console.WriteLine($"Register type: {t.FullName}");
+                    _types[t.FullName] = t;
+                });
         }
 
         private WyrmEvent ToEventData(Guid eventId, object evnt, string streamName, long version)
@@ -140,12 +157,22 @@ namespace ESPlus.Repositories
                 throw new ArgumentException("Cannot get version < 0");
             }
 
+            Index<TAggregate>();
+
             foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
-                applyAggregate.Version = evnt.Version;
-                //var type = _types.Values.First(x => x.FullName == evnt.EventType);
+                var type = _types.Values.FirstOrDefault(x => XXHash.XXH64(Encoding.UTF8.GetBytes(x.FullName)) == evnt.EventTypeHash);
 
-                //applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Body));
+                if (type == null)
+                {
+                    applyAggregate.Version = evnt.Version;
+                    continue;
+                }
+
+                Console.WriteLine($"TYPE: {type.FullName} :: {evnt.Data.Length}");
+
+                applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Data));
+                applyAggregate.Version = evnt.Version;
             }
 
             aggregate.TakeUncommittedEvents();
