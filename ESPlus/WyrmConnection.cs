@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using ESPlus.Repositories;
@@ -22,6 +23,52 @@ namespace ESPlus
         public ulong EventTypeHash { get; set; }
     }
 
+    public static class BinaryReaderExtentions
+    {
+        public static T FromBinaryReader<T>(this BinaryReader reader)
+        {
+
+            // Read in a byte array
+            byte[] bytes = reader.ReadBytes(Marshal.SizeOf(typeof(T)));
+
+            // Pin the managed memory while, copy it out the data, then unpin it
+            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            handle.Free();
+
+            return theStructure;
+        }
+    }
+
+    public static class StreamExtentions
+    {
+        public static async Task<byte[]> ReadBytesAsync(this Stream reader, int length)
+        {
+            var buffer = new byte[length];
+            var result = await reader.ReadAsync(buffer, 0, buffer.Length);
+
+            if (result != buffer.Length)
+            {
+                throw new Exception("public static async Task<T> ReadStructAsync<T>(this StreamReader reader)");
+            }
+
+            return buffer;
+        }
+
+        public static async Task<T> ReadStructAsync<T>(this Stream reader)
+        {
+            var size = Marshal.SizeOf(typeof(T));
+            var buffer = await reader.ReadBytesAsync(size);
+
+            // Pin the managed memory while, copy it out the data, then unpin it
+            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            handle.Free();
+
+            return theStructure;
+        }
+    }
+
     public class WyrmConnection
     {
         private byte[] Combine(params byte[][] arrays)
@@ -36,13 +83,38 @@ namespace ESPlus
             return rv;
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct Position
+        {
+            public Int64 A;
+            public Int64 B;
+            public Int64 C;
+            public Int64 D;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct Monkey
+        {
+            public UInt64 EventTypeHash;
+            public Position Position;
+            public Int64 Offset;
+            public Int64 TotalOffset;
+            public Guid EventId;
+            public Int64 Version;
+            public Int64 UncompressedSize;
+            public Int64 CompressedSize;
+            public Int64 EncryptedSize;
+            public Int64 Clock;
+            public Int64 Ms;
+        }
+
         public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
         {
             var client = new TcpClient();
 
             client.ConnectAsync("localhost", 8888).Wait();
 
-            var reader = new BinaryReader(client.GetStream());
+            var stream = client.GetStream();
             var writer = new BinaryWriter(client.GetStream());
             var name = Encoding.UTF8.GetBytes(streamName);
             writer.Write(OperationType.READ_STREAM_FORWARD);
@@ -53,7 +125,7 @@ namespace ESPlus
 
             while (true)
             {
-                var length = reader.ReadInt64();
+                var length = stream.ReadStructAsync<Int64>().Result;
 
                 if (length == 8)
                 {
@@ -61,44 +133,17 @@ namespace ESPlus
                     break;
                 }
 
-                // Console.WriteLine($"length: {length}");
-                var eventTypeHash = reader.ReadUInt64();
-                var position = reader.ReadBytes(32);
-                var offset = reader.ReadInt64();
-                var totalOffset = reader.ReadInt64();
-                var eventId = new Guid(reader.ReadBytes(16));
-                var version = reader.ReadInt64();
-                var uncompressedSize = reader.ReadInt64();
-                var compressedSize = reader.ReadInt64();
-                var encryptedSize = reader.ReadInt64();
-                var clock = reader.ReadInt64();
-                var ms = reader.ReadInt64();
+                var monkey = stream.ReadStructAsync<Monkey>().Result;
+                var eventTypeHash = monkey.EventTypeHash;
+                var position = monkey.Position;
                 var epooch = new DateTime(1970, 1, 1);
-                var time = epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
-                //var LengthOfMetadata = reader.ReadInt32();
-
-                // //Console.WriteLine($"position: {position}");
-                //Console.WriteLine($"offset: {offset}");
-                //Console.WriteLine($"totalOffset: {totalOffset}");
-                // Console.WriteLine($"eventId: {eventId}");
-                // Console.WriteLine($"version: {version}");
-                // Console.WriteLine($"uncompressedSize: {uncompressedSize}");
-                // Console.WriteLine($"compressedSize: {compressedSize}");
-                // Console.WriteLine($"encryptedSize: {encryptedSize}");
-                // Console.WriteLine($"time: {time:yyyy-MM-dd HH:mm:ss.ffffff}");
+                var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
                 var metadata = new byte[0];
                 var data = new byte[0];
-                var compressed = reader.ReadBytes((int)compressedSize);
-                var uncompressed = new byte[uncompressedSize];
+                var compressed = stream.ReadBytesAsync((int)monkey.CompressedSize).Result;
+                var uncompressed = new byte[monkey.UncompressedSize];
                 var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
 
-                // for (int i = 0; i < compressedSize; ++i)
-                // {
-                //     var c = compressed[i];
-                //     Console.WriteLine("uncompress: " + (int)c + " " + (char)c);
-                // }
-
-                //int LZ4_decompress_safe (const char* source, char* dest, int compressedSize, int maxOutputSize);
                 using (var mx = new MemoryStream(uncompressed))
                 {
                     mx.Seek(0, SeekOrigin.Begin);
@@ -106,23 +151,18 @@ namespace ESPlus
                     {
                         var lengthOfMetadata = ms2.ReadInt32();
                         var lengthOfData = ms2.ReadInt32();
-                        // Console.WriteLine($"lengthOfMetadata: {lengthOfMetadata}");
-                        // Console.WriteLine($"lengthOfData: {lengthOfData}");
-                        // Console.WriteLine($"uncompressed: {uncompressed.Length} vs. {result}");
+
                         metadata = ms2.ReadBytes(lengthOfMetadata);
                         data = ms2.ReadBytes(lengthOfData);
                     }
                 }
 
-                // Console.WriteLine($"Metadata: [{Encoding.UTF8.GetString(metadata)}]");
-                // Console.WriteLine($"Data: [{Encoding.UTF8.GetString(data)}]");
-
                 yield return new WyrmEvent2
                 {
-                    Offset = offset,
-                    TotalOffset = totalOffset,
-                    EventId = eventId,
-                    Version = version,
+                    Offset = monkey.Offset,
+                    TotalOffset = monkey.TotalOffset,
+                    EventId = monkey.EventId,
+                    Version = monkey.Version,
                     Timestamp = time,
                     Metadata = metadata,
                     Data = data,
