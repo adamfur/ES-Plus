@@ -4,7 +4,7 @@ using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using Xunit;
 
-namespace ESPlus.Tests.Repositories
+namespace ESPlus.IntegrationTests.Repositories
 {
     public abstract class RepositoryTests
     {

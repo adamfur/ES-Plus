@@ -1,7 +1,7 @@
 using ESPlus.Interfaces;
 using ESPlus.Repositories;
 
-namespace ESPlus.Tests.Repositories.Implementations
+namespace ESPlus.IntegrationTests.Repositories.Implementations
 {
     public class WyrmRepositoryTests : RepositoryTests
     {

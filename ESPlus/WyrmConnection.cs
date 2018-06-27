@@ -53,7 +53,6 @@ namespace ESPlus
 
             while (true)
             {
-                Console.WriteLine("-------------------");
                 var length = reader.ReadInt64();
 
                 if (length == 8)
@@ -62,7 +61,7 @@ namespace ESPlus
                     break;
                 }
 
-                Console.WriteLine($"length: {length}");
+                // Console.WriteLine($"length: {length}");
                 var eventTypeHash = reader.ReadUInt64();
                 var position = reader.ReadBytes(32);
                 var offset = reader.ReadInt64();
@@ -83,9 +82,9 @@ namespace ESPlus
                 //Console.WriteLine($"totalOffset: {totalOffset}");
                 // Console.WriteLine($"eventId: {eventId}");
                 // Console.WriteLine($"version: {version}");
-                Console.WriteLine($"uncompressedSize: {uncompressedSize}");
-                Console.WriteLine($"compressedSize: {compressedSize}");
-                Console.WriteLine($"encryptedSize: {encryptedSize}");
+                // Console.WriteLine($"uncompressedSize: {uncompressedSize}");
+                // Console.WriteLine($"compressedSize: {compressedSize}");
+                // Console.WriteLine($"encryptedSize: {encryptedSize}");
                 // Console.WriteLine($"time: {time:yyyy-MM-dd HH:mm:ss.ffffff}");
                 var metadata = new byte[0];
                 var data = new byte[0];
@@ -107,16 +106,16 @@ namespace ESPlus
                     {
                         var lengthOfMetadata = ms2.ReadInt32();
                         var lengthOfData = ms2.ReadInt32();
-                        Console.WriteLine($"lengthOfMetadata: {lengthOfMetadata}");
-                        Console.WriteLine($"lengthOfData: {lengthOfData}");
-                        Console.WriteLine($"uncompressed: {uncompressed.Length} vs. {result}");
+                        // Console.WriteLine($"lengthOfMetadata: {lengthOfMetadata}");
+                        // Console.WriteLine($"lengthOfData: {lengthOfData}");
+                        // Console.WriteLine($"uncompressed: {uncompressed.Length} vs. {result}");
                         metadata = ms2.ReadBytes(lengthOfMetadata);
                         data = ms2.ReadBytes(lengthOfData);
                     }
                 }
 
-                Console.WriteLine($"Metadata: [{Encoding.UTF8.GetString(metadata)}]");
-                Console.WriteLine($"Data: [{Encoding.UTF8.GetString(data)}]");
+                // Console.WriteLine($"Metadata: [{Encoding.UTF8.GetString(metadata)}]");
+                // Console.WriteLine($"Data: [{Encoding.UTF8.GetString(data)}]");
 
                 yield return new WyrmEvent2
                 {
@@ -218,7 +217,7 @@ namespace ESPlus
             //     }
             // first = false;
 
-            Console.WriteLine($"Append: compressedLength {compressedLength}");
+            // Console.WriteLine($"Append: compressedLength {compressedLength}");
             var length = compressedLength + 40 + streamName.Length + eventType.Length;
 
             writer.Write(length); //4

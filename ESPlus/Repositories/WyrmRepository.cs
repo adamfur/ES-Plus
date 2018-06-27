@@ -80,7 +80,7 @@ namespace ESPlus.Repositories
                 .ToList()
                 .ForEach(t =>
                 {
-                    Console.WriteLine($"Register type: {t.FullName}");
+                    //Console.WriteLine($"Register type: {t.FullName}");
                     _types[t.FullName] = t;
                 });
         }
@@ -169,7 +169,7 @@ namespace ESPlus.Repositories
                     continue;
                 }
 
-                Console.WriteLine($"TYPE: {type.FullName} :: {evnt.Data.Length}");
+                // Console.WriteLine($"TYPE: {type.FullName} :: {evnt.Data.Length}");
 
                 applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Data));
                 applyAggregate.Version = evnt.Version;

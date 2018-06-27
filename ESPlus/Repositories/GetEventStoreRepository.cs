@@ -97,7 +97,7 @@ namespace ESPlus.Repositories
                 .ToList()
                 .ForEach(t =>
                 {
-                    Console.WriteLine($"Register type: {t.FullName}");
+                    //Console.WriteLine($"Register type: {t.FullName}");
                     _types[t.FullName] = t;
                 });
         }
