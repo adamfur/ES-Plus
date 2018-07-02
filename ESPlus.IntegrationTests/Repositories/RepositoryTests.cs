@@ -127,18 +127,19 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task DeleteAsync_DeleteExistingStream_Pass()
         {
             var id = Guid.NewGuid().ToString();
-            var aggregate1 = new DummyAggregate(id);
+            var aggregate = new DummyAggregate(id);
 
-            await Repository.DeleteAsync(id);
+            await Repository.SaveAsync(aggregate);
+            await Repository.DeleteAsync(id, aggregate.Version);
         }
 
-        [Fact]
-        public async Task DeleteAsync_DeleteNonexistingStream_Pass()
-        {
-            var id = Guid.NewGuid().ToString();
+        // [Fact]
+        // public async Task DeleteAsync_DeleteNonexistingStream_Pass()
+        // {
+        //     var id = Guid.NewGuid().ToString();
 
-            await Repository.DeleteAsync(id);
-        }
+        //     await Repository.DeleteAsync(id);
+        // }
 
         [Fact]
         public async Task GetAsync_ReadOneEventFromExistingStream_Pass()
@@ -190,6 +191,18 @@ namespace ESPlus.IntegrationTests.Repositories
             var copy = await Repository.GetByIdAsync<DummyAggregate>(id);
 
             Assert.Equal(data, copy.Guid);
+        }        
+
+        [Fact]
+        public async Task DeleteAsync_DeleteExistingStream_Gone()
+        {
+            var id = Guid.NewGuid().ToString();
+            var aggregate = new DummyAggregate(id);
+
+            aggregate.AttachFile();
+            await Repository.SaveAsync(aggregate);
+            await Repository.DeleteAsync(id, aggregate.Version);
+            await Assert.ThrowsAsync<AggregateNotFoundException>(async () => await Repository.GetByIdAsync<DummyAggregate>(id));
         }        
     }
 }

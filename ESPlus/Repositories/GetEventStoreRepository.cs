@@ -170,9 +170,9 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 
-        public Task DeleteAsync(string streamName)
+        public async Task DeleteAsync(string streamName, long version)
         {
-            return Task.FromResult(0);
+            await _eventStoreConnection.DeleteStreamAsync(streamName, version);
         }
     }
 }

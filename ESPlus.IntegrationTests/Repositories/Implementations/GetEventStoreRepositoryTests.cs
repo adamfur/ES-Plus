@@ -11,6 +11,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
         static GetEventStoreRepositoryTests()
         {
             var connectionString = "ConnectTo=tcp://admin:changeit@127.0.0.1:1113; HeartBeatTimeout=500";
+            
             _eventStoreConnection = EventStoreConnection.Create(connectionString);
             _eventStoreConnection.ConnectAsync().Wait();
         }

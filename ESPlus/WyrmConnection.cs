@@ -135,7 +135,7 @@ namespace ESPlus
 
                 var monkey = stream.ReadStructAsync<Monkey>().Result;
                 var eventTypeHash = monkey.EventTypeHash;
-                var position = monkey.Position;
+                //var position = monkey.Position;
                 var epooch = new DateTime(1970, 1, 1);
                 var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
                 var metadata = new byte[0];

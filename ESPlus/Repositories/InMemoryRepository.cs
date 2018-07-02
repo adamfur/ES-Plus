@@ -82,6 +82,10 @@ namespace ESPlus.Repositories
                     enumrator = enumrator.NextInStream;
                 }
             }
+            else
+            {
+                throw new AggregateNotFoundException("", null);
+            }
 
             aggregate.TakeUncommittedEvents();
 
@@ -161,8 +165,9 @@ namespace ESPlus.Repositories
             }
         }
 
-        public Task DeleteAsync(string streamName)
+        public Task DeleteAsync(string streamName, long version)
         {
+            _streams.Remove(streamName);
             return Task.FromResult(0);
         }
     }

@@ -94,7 +94,7 @@ namespace ESPlus.Repositories
             return new WyrmEvent(eventId, typeName, data, metadata, streamName, (int)version);
         }
 
-        public async Task DeleteAsync(string id)
+        public async Task DeleteAsync(string id, long version)
         {
             await _wyrmConnection.DeleteAsync(id);
         }
@@ -151,6 +151,7 @@ namespace ESPlus.Repositories
         {
             var aggregate = ConstructAggregate<TAggregate>(id);
             var applyAggregate = (IAggregate)aggregate;
+            bool any = false;
 
             if (version <= 0)
             {
@@ -163,6 +164,7 @@ namespace ESPlus.Repositories
             {
                 var type = _types.Values.FirstOrDefault(x => XXHash.XXH64(Encoding.UTF8.GetBytes(x.FullName)) == evnt.EventTypeHash);
 
+                any = true;
                 if (type == null)
                 {
                     applyAggregate.Version = evnt.Version;
@@ -173,6 +175,11 @@ namespace ESPlus.Repositories
 
                 applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Data));
                 applyAggregate.Version = evnt.Version;
+            }
+
+            if (!any)
+            {
+                throw new AggregateNotFoundException("", null);
             }
 
             aggregate.TakeUncommittedEvents();
