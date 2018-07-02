@@ -20,24 +20,8 @@ namespace ESPlus
         public DateTime Timestamp { get; set; }
         public byte[] Metadata { get; set; }
         public byte[] Data { get; set; }
-        public ulong EventTypeHash { get; set; }
-    }
-
-    public static class BinaryReaderExtentions
-    {
-        public static T FromBinaryReader<T>(this BinaryReader reader)
-        {
-
-            // Read in a byte array
-            byte[] bytes = reader.ReadBytes(Marshal.SizeOf(typeof(T)));
-
-            // Pin the managed memory while, copy it out the data, then unpin it
-            GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
-            handle.Free();
-
-            return theStructure;
-        }
+        public string EventType { get; internal set; }
+        public string StreamName { get; internal set; }
     }
 
     public static class StreamExtentions
@@ -49,14 +33,16 @@ namespace ESPlus
 
             if (result != buffer.Length)
             {
-                throw new Exception("public static async Task<T> ReadStructAsync<T>(this StreamReader reader)");
+                throw new Exception($"ReadBytesAsync: wanted {length}, got: {result}");
             }
 
+            // Console.WriteLine($"ReadBytesAsync : {result}");
             return buffer;
         }
 
         public static async Task<T> ReadStructAsync<T>(this Stream reader)
         {
+            // Console.WriteLine($"ReadStructAsync: {typeof(T).FullName}");
             var size = Marshal.SizeOf(typeof(T));
             var buffer = await reader.ReadBytesAsync(size);
 
@@ -95,7 +81,6 @@ namespace ESPlus
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct Monkey
         {
-            public UInt64 EventTypeHash;
             public Position Position;
             public Int64 Offset;
             public Int64 TotalOffset;
@@ -106,6 +91,10 @@ namespace ESPlus
             public Int64 EncryptedSize;
             public Int64 Clock;
             public Int64 Ms;
+            public Int32 EventTypeLength;
+            public Int32 StreamNameLength;
+            public Int32 MetaDataLength;
+            public Int32 PayloadLength;
         }
 
         public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
@@ -125,21 +114,21 @@ namespace ESPlus
 
             while (true)
             {
-                var length = stream.ReadStructAsync<Int64>().Result;
+                var length = stream.ReadStructAsync<Int32>().Result;
 
                 if (length == 8)
                 {
-                    Console.WriteLine("reached end!");
+                    //Console.WriteLine("reached end!");
                     break;
                 }
 
                 var monkey = stream.ReadStructAsync<Monkey>().Result;
-                var eventTypeHash = monkey.EventTypeHash;
-                //var position = monkey.Position;
                 var epooch = new DateTime(1970, 1, 1);
                 var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
                 var metadata = new byte[0];
                 var data = new byte[0];
+                var streamName2 = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.StreamNameLength).Result);
+                var eventType = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.EventTypeLength).Result);
                 var compressed = stream.ReadBytesAsync((int)monkey.CompressedSize).Result;
                 var uncompressed = new byte[monkey.UncompressedSize];
                 var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
@@ -149,11 +138,8 @@ namespace ESPlus
                     mx.Seek(0, SeekOrigin.Begin);
                     using (var ms2 = new BinaryReader(mx))
                     {
-                        var lengthOfMetadata = ms2.ReadInt32();
-                        var lengthOfData = ms2.ReadInt32();
-
-                        metadata = ms2.ReadBytes(lengthOfMetadata);
-                        data = ms2.ReadBytes(lengthOfData);
+                        metadata = ms2.ReadBytes(monkey.MetaDataLength);
+                        data = ms2.ReadBytes(monkey.PayloadLength);
                     }
                 }
 
@@ -166,7 +152,8 @@ namespace ESPlus
                     Timestamp = time,
                     Metadata = metadata,
                     Data = data,
-                    EventTypeHash = eventTypeHash
+                    EventType = eventType,
+                    StreamName = streamName2
                 };
             }
 
@@ -258,7 +245,7 @@ namespace ESPlus
             // first = false;
 
             // Console.WriteLine($"Append: compressedLength {compressedLength}");
-            var length = compressedLength + 40 + streamName.Length + eventType.Length;
+            var length = compressedLength + 40 + streamName.Length + eventType.Length + 4 + 4;
 
             writer.Write(length); //4
             writer.Write(streamName.Length); //8
@@ -267,6 +254,8 @@ namespace ESPlus
             writer.Write(compressedLength); //20
             writer.Write(uncompressedLength); //24
             writer.Write(eventId.ToByteArray()); //40
+            writer.Write(metadata.Length); //40
+            writer.Write(body.Length); //40
             writer.Write(streamName); // 40+13=53
             writer.Write(eventType); // 53+10=61
             writer.Write(compressed, 0, compressedLength); // now 63
@@ -285,8 +274,6 @@ namespace ESPlus
             var merged = new MemoryStream();
             var merged_writer = new BinaryWriter(merged);
 
-            merged_writer.Write((Int32)metadata.Length);
-            merged_writer.Write((Int32)data.Length);
             merged_writer.Write(metadata);
             merged_writer.Write(data);
             merged_writer.Flush();

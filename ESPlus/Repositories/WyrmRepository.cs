@@ -162,7 +162,7 @@ namespace ESPlus.Repositories
 
             foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
-                var type = _types.Values.FirstOrDefault(x => XXHash.XXH64(Encoding.UTF8.GetBytes(x.FullName)) == evnt.EventTypeHash);
+                var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
 
                 any = true;
                 if (type == null)
@@ -171,7 +171,6 @@ namespace ESPlus.Repositories
                     continue;
                 }
 
-                // Console.WriteLine($"TYPE: {type.FullName} :: {evnt.Data.Length}");
 
                 applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Data));
                 applyAggregate.Version = evnt.Version;
