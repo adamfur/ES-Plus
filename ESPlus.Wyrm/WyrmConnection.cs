@@ -54,9 +54,9 @@ namespace ESPlus.Wyrm
             public Int64 TotalOffset;
             public Guid EventId;
             public Int64 Version;
-            public Int64 UncompressedSize;
-            public Int64 CompressedSize;
-            public Int64 EncryptedSize;
+            public Int32 UncompressedSize;
+            public Int32 CompressedSize;
+            public Int32 EncryptedSize;
             public Int64 Clock;
             public Int64 Ms;
             public Int32 EventTypeLength;
@@ -191,15 +191,15 @@ namespace ESPlus.Wyrm
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct Apa
         {
-            public int Length;
-            public int StreamNameLength;
-            public int EventTypeLength;
-            public int Version;
-            public int CompressedLength;
-            public int UncompressedLength;
+            public Int32 Length;
+            public Int32 StreamNameLength;
+            public Int32 EventTypeLength;
+            public Int64 Version;
+            public Int32 CompressedLength;
+            public Int32 UncompressedLength;
             public Guid EventId;
-            public int MetaDataLength;
-            public int BodyLength;
+            public Int32 MetaDataLength;
+            public Int32 BodyLength;
         }
 
         private byte[] Assemble(WyrmEvent @event)
@@ -220,7 +220,7 @@ namespace ESPlus.Wyrm
                 Length = length,
                 StreamNameLength = streamName.Length,
                 EventTypeLength = eventType.Length,
-                Version = (int)@event.Version,
+                Version = @event.Version,
                 CompressedLength = compressedLength,
                 UncompressedLength = uncompressedLength,
                 EventId = @event.EventId,
