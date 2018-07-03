@@ -15,6 +15,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ESPlus\ESPlus.csproj" />
+    <ProjectReference Include="..\ESPlus.Wyrm\ESPlus.Wyrm.csproj" />
+    <ProjectReference Include="..\ESPlus.EventStore\ESPlus.EventStore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

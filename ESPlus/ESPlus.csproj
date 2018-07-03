@@ -5,18 +5,9 @@
     <!-- <AllowUnsafeBlocks>true</AllowUnsafeBlocks> -->
   </PropertyGroup>
 
-    <ItemGroup>
-    <!--PackageReference Include="CoreCompat.Newtonsoft.Json" Version="9.0.2-beta001" /-->
+  <ItemGroup>
     <PackageReference Include="EventStore.ClientAPI.NetCore" Version="4.1.0.23" />
-    <PackageReference Include="Quartz" Version="3.0.5" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-    <PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
-    <PackageReference Include="xxHash.NET" Version="1.0.2" />
-    <!--<PackageReference Include="Quartz" Version="3.0.0-alpha2" />-->
-
-    
-
-    
   </ItemGroup>
 
     <ItemGroup>

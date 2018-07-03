@@ -1,3 +1,4 @@
+using ESPlus.EventStore;
 using ESPlus.Interfaces;
 using ESPlus.Repositories;
 using EventStore.ClientAPI;

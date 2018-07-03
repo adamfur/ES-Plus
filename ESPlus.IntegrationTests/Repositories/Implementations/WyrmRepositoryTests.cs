@@ -1,5 +1,6 @@
 using ESPlus.Interfaces;
 using ESPlus.Repositories;
+using ESPlus.Wyrm;
 
 namespace ESPlus.IntegrationTests.Repositories.Implementations
 {

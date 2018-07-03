@@ -7,7 +7,7 @@ using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using EventStore.ClientAPI;
 
-namespace ESPlus.Repositories
+namespace ESPlus.EventStore
 {
     public class GetEventStoreRepository : IRepository
     {
@@ -82,7 +82,7 @@ namespace ESPlus.Repositories
                     await transaction.CommitAsync();
                 }
             }
-            catch (EventStore.ClientAPI.Exceptions.WrongExpectedVersionException)
+            catch (global::EventStore.ClientAPI.Exceptions.WrongExpectedVersionException)
             {
                 throw new WrongExpectedVersionException();
             }

@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using EventStore.ClientAPI;
-using Extensions.Data;
 
-namespace ESPlus.Repositories
+namespace ESPlus.Wyrm
 {
     public static class OperationType
     {
@@ -53,11 +52,8 @@ namespace ESPlus.Repositories
 
     public class WyrmRepository : IRepository
     {
-        private readonly IEventStoreConnection _eventStoreConnection;
         private readonly IEventSerializer _eventSerializer;
         private readonly WyrmConnection _wyrmConnection;
-        private static int ReadPageSize = 512;
-        private static int WritePageSize = 512;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
 
         public static void Register<Type>()

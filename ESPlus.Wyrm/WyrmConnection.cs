@@ -6,10 +6,9 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using ESPlus.Repositories;
 using EventStore.ClientAPI;
 
-namespace ESPlus
+namespace ESPlus.Wyrm
 {
     public class WyrmEvent2
     {
@@ -20,39 +19,8 @@ namespace ESPlus
         public DateTime Timestamp { get; set; }
         public byte[] Metadata { get; set; }
         public byte[] Data { get; set; }
-        public string EventType { get; internal set; }
-        public string StreamName { get; internal set; }
-    }
-
-    public static class StreamExtentions
-    {
-        public static async Task<byte[]> ReadBytesAsync(this Stream reader, int length)
-        {
-            var buffer = new byte[length];
-            var result = await reader.ReadAsync(buffer, 0, buffer.Length);
-
-            if (result != buffer.Length)
-            {
-                throw new Exception($"ReadBytesAsync: wanted {length}, got: {result}");
-            }
-
-            // Console.WriteLine($"ReadBytesAsync : {result}");
-            return buffer;
-        }
-
-        public static async Task<T> ReadStructAsync<T>(this Stream reader)
-        {
-            // Console.WriteLine($"ReadStructAsync: {typeof(T).FullName}");
-            var size = Marshal.SizeOf(typeof(T));
-            var buffer = await reader.ReadBytesAsync(size);
-
-            // Pin the managed memory while, copy it out the data, then unpin it
-            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
-            handle.Free();
-
-            return theStructure;
-        }
+        public string EventType;
+        public string StreamName;
     }
 
     public class WyrmConnection
@@ -220,68 +188,61 @@ namespace ESPlus
             await Task.FromResult(0);
         }
 
-        // bool first = true;
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct Apa
+        {
+            public int Length;
+            public int StreamNameLength;
+            public int EventTypeLength;
+            public int Version;
+            public int CompressedLength;
+            public int UncompressedLength;
+            public Guid EventId;
+            public int MetaDataLength;
+            public int BodyLength;
+        }
+
         private byte[] Assemble(WyrmEvent @event)
         {
             var target = new MemoryStream();
-            var writer = new BinaryWriter(target); //tmp .vs networkStream
-
+            var writer = new BinaryWriter(target);
             var streamName = Encoding.UTF8.GetBytes(@event.StreamName);
             var eventType = Encoding.UTF8.GetBytes(@event.EventType);
-            var version = @event.Version;
             var metadata = @event.Metadata;
             var body = @event.Body;
-            var eventId = @event.EventId;
             var uncompressed = BuildPayload(metadata, body);
             var uncompressedLength = uncompressed.Length;
             var compressed = new byte[LZ4.LZ4_compressBound(uncompressedLength)];
             var compressedLength = LZ4.LZ4_compress_default(uncompressed, compressed, uncompressedLength, compressed.Length);
-            // if (first)
-            //  for (int i = 0; i < compressedLength; ++i)
-            //     {
-            //         var c = compressed[i];
-            //         Console.WriteLine("compress: " + (int)c + " " + (char)c);
-            //     }
-            // first = false;
+            var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
+            var apa = new Apa
+            {
+                Length = length,
+                StreamNameLength = streamName.Length,
+                EventTypeLength = eventType.Length,
+                Version = (int)@event.Version,
+                CompressedLength = compressedLength,
+                UncompressedLength = uncompressedLength,
+                EventId = @event.EventId,
+                MetaDataLength = metadata.Length,
+                BodyLength = body.Length
+            };
 
-            // Console.WriteLine($"Append: compressedLength {compressedLength}");
-            var length = compressedLength + 40 + streamName.Length + eventType.Length + 4 + 4;
-
-            writer.Write(length); //4
-            writer.Write(streamName.Length); //8
-            writer.Write(eventType.Length); //12
-            writer.Write((int)version); //16
-            writer.Write(compressedLength); //20
-            writer.Write(uncompressedLength); //24
-            writer.Write(eventId.ToByteArray()); //40
-            writer.Write(metadata.Length); //40
-            writer.Write(body.Length); //40
-            writer.Write(streamName); // 40+13=53
-            writer.Write(eventType); // 53+10=61
-            writer.Write(compressed, 0, compressedLength); // now 63
+            writer.WriteStruct(apa);
+            writer.Write(streamName);
+            writer.Write(eventType);
+            writer.Write(compressed, 0, compressedLength);
             writer.Flush();
 
             var result = new byte[target.Length];
             target.Seek(0, SeekOrigin.Begin);
             target.Read(result, 0, result.Length);
-
-            //Console.WriteLine($"length: {length} vs. {result.Length}");
             return result;
         }
 
         private byte[] BuildPayload(byte[] metadata, byte[] data)
         {
-            var merged = new MemoryStream();
-            var merged_writer = new BinaryWriter(merged);
-
-            merged_writer.Write(metadata);
-            merged_writer.Write(data);
-            merged_writer.Flush();
-            merged_writer.Seek(0, SeekOrigin.Begin);
-            var result = new byte[merged.Length];
-            merged.Read(result, 0, result.Length);
-
-            return result;
+            return metadata.Concat(data).ToArray();
         }
     }
 }
