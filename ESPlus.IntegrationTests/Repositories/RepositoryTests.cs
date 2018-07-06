@@ -133,13 +133,13 @@ namespace ESPlus.IntegrationTests.Repositories
             await Repository.DeleteAsync(id, aggregate.Version);
         }
 
-        // [Fact]
-        // public async Task DeleteAsync_DeleteNonexistingStream_Pass()
-        // {
-        //     var id = Guid.NewGuid().ToString();
-
-        //     await Repository.DeleteAsync(id);
-        // }
+        //////////////////////////////[Fact]
+        //////////////////////////////public async Task DeleteAsync_DeleteNonexistingStream_Pass()
+        //////////////////////////////{
+        //////////////////////////////    var id = Guid.NewGuid().ToString();
+        //////////////////////////////
+        //////////////////////////////    await Repository.DeleteAsync(id);
+        //////////////////////////////}
 
         [Fact]
         public async Task GetAsync_ReadOneEventFromExistingStream_Pass()

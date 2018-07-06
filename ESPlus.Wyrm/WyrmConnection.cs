@@ -124,8 +124,6 @@ namespace ESPlus.Wyrm
                     StreamName = streamName2
                 };
             }
-
-            yield break;
         }
 
         public async Task DeleteAsync(string streamName)
@@ -149,7 +147,6 @@ namespace ESPlus.Wyrm
             }
 
             var status = reader.ReadInt32();
-
             if (status != 0)
             {
                 throw new Exception($"if (status != 0): {status}");
@@ -200,6 +197,71 @@ namespace ESPlus.Wyrm
             public Guid EventId;
             public Int32 MetaDataLength;
             public Int32 BodyLength;
+        }
+
+        public IEnumerable<WyrmEvent2> EnumerateAll(string hex)
+        {
+            var client = new TcpClient();
+            var position = new byte[32];
+            // var position = Enumerable.Range(0, hex.Length)
+            //     .Where(x => x % 2 == 0)
+            //     .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+            //     .ToArray();
+            client.ConnectAsync("localhost", 8888).Wait();
+            var stream = client.GetStream();
+            var writer = new BinaryWriter(stream);
+
+            writer.Write(OperationType.SUBSCRIBE);
+            // Console.WriteLine($"Position: .Length = {position.Length}");
+            writer.Write(position);
+            writer.Flush();
+
+            while (true)
+            {
+                var length = stream.ReadStructAsync<Int32>().Result;
+
+                //Console.WriteLine($"Length: {length}");
+
+                // if (length == 8)
+                // {
+                //     //Console.WriteLine("reached end!");
+                //     break;
+                // }
+
+                var monkey = stream.ReadStructAsync<Monkey>().Result;
+                var epooch = new DateTime(1970, 1, 1);
+                var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
+                var metadata = new byte[0];
+                var data = new byte[0];
+                var streamName2 = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.StreamNameLength).Result);
+                var eventType = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.EventTypeLength).Result);
+                var compressed = stream.ReadBytesAsync((int)monkey.CompressedSize).Result;
+                var uncompressed = new byte[monkey.UncompressedSize];
+                // var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
+
+                // using (var mx = new MemoryStream(uncompressed))
+                // {
+                //     mx.Seek(0, SeekOrigin.Begin);
+                //     using (var ms2 = new BinaryReader(mx))
+                //     {
+                //         metadata = ms2.ReadBytes(monkey.MetaDataLength);
+                //         data = ms2.ReadBytes(monkey.PayloadLength);
+                //     }
+                // }
+
+                yield return new WyrmEvent2
+                {
+                    Offset = monkey.Offset,
+                    TotalOffset = monkey.TotalOffset,
+                    EventId = monkey.EventId,
+                    Version = monkey.Version,
+                    Timestamp = time,
+                    Metadata = metadata,
+                    Data = data,
+                    EventType = eventType,
+                    StreamName = streamName2
+                };
+            }
         }
 
         private byte[] Assemble(WyrmEvent @event)
