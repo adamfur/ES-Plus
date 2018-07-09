@@ -93,24 +93,18 @@ namespace ESPlus.Wyrm
                 var monkey = stream.ReadStructAsync<Monkey>().Result;
                 var epooch = new DateTime(1970, 1, 1);
                 var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
-                var metadata = new byte[0];
-                var data = new byte[0];
+
                 var streamName2 = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.StreamNameLength).Result);
                 var eventType = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.EventTypeLength).Result);
                 var compressed = stream.ReadBytesAsync((int)monkey.CompressedSize).Result;
                 var uncompressed = new byte[monkey.UncompressedSize];
                 var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
+                var metadata = new byte[monkey.MetaDataLength];
+                var data = new byte[monkey.PayloadLength];
 
-                using (var mx = new MemoryStream(uncompressed))
-                {
-                    mx.Seek(0, SeekOrigin.Begin);
-                    using (var ms2 = new BinaryReader(mx))
-                    {
-                        metadata = ms2.ReadBytes(monkey.MetaDataLength);
-                        data = ms2.ReadBytes(monkey.PayloadLength);
-                    }
-                }
-
+                Array.Copy(uncompressed, metadata, metadata.Length);
+                Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
+                
                 yield return new WyrmEvent2
                 {
                     Offset = monkey.Offset,
@@ -231,23 +225,16 @@ namespace ESPlus.Wyrm
                 var monkey = stream.ReadStructAsync<Monkey>().Result;
                 var epooch = new DateTime(1970, 1, 1);
                 var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
-                var metadata = new byte[0];
-                var data = new byte[0];
                 var streamName2 = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.StreamNameLength).Result);
                 var eventType = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.EventTypeLength).Result);
                 var compressed = stream.ReadBytesAsync((int)monkey.CompressedSize).Result;
                 var uncompressed = new byte[monkey.UncompressedSize];
-                // var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
+                var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
+                var metadata = new byte[monkey.MetaDataLength];
+                var data = new byte[monkey.PayloadLength];
 
-                // using (var mx = new MemoryStream(uncompressed))
-                // {
-                //     mx.Seek(0, SeekOrigin.Begin);
-                //     using (var ms2 = new BinaryReader(mx))
-                //     {
-                //         metadata = ms2.ReadBytes(monkey.MetaDataLength);
-                //         data = ms2.ReadBytes(monkey.PayloadLength);
-                //     }
-                // }
+                Array.Copy(uncompressed, metadata, metadata.Length);
+                Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
 
                 yield return new WyrmEvent2
                 {

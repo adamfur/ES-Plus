@@ -9,9 +9,9 @@ namespace ESPlus.Wyrm
         public static void WriteStruct<T>(this BinaryWriter writer, T data)
             where T : struct
         {
-            int size = Marshal.SizeOf(data);
-            byte[] arr = new byte[size];
-            IntPtr ptr = Marshal.AllocHGlobal(size);
+            var size = Marshal.SizeOf(data);
+            var arr = new byte[size];
+            var ptr = Marshal.AllocHGlobal(size);
 
             Marshal.StructureToPtr(data, ptr, true);
             Marshal.Copy(ptr, arr, 0, size);
