@@ -69,7 +69,7 @@ namespace ESPlus.Wyrm
         {
             var client = new TcpClient();
 
-            client.ConnectAsync("localhost", 8888).Wait();
+            client.ConnectAsync("pliance.wyrm", 8888).Wait();
 
             var stream = client.GetStream();
             var writer = new BinaryWriter(client.GetStream());
@@ -124,7 +124,7 @@ namespace ESPlus.Wyrm
         {
             var client = new TcpClient();
 
-            await client.ConnectAsync("localhost", 8888);
+            await client.ConnectAsync("pliance.wyrm", 8888);
 
             var reader = new BinaryReader(client.GetStream());
             var writer = new BinaryWriter(client.GetStream());
@@ -152,7 +152,7 @@ namespace ESPlus.Wyrm
         {
             var client = new TcpClient();
 
-            await client.ConnectAsync("localhost", 8888);
+            await client.ConnectAsync("pliance.wyrm", 8888);
             var reader = new BinaryReader(client.GetStream());
             var writer = new BinaryWriter(client.GetStream());
             var concat = Combine(events.Select(x => Assemble(x)).ToArray());
@@ -201,7 +201,7 @@ namespace ESPlus.Wyrm
             //     .Where(x => x % 2 == 0)
             //     .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
             //     .ToArray();
-            client.ConnectAsync("localhost", 8888).Wait();
+            client.ConnectAsync("pliance.wyrm", 8888).Wait();
             var stream = client.GetStream();
             var writer = new BinaryWriter(stream);
 

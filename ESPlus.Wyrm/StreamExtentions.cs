@@ -10,12 +10,18 @@ namespace ESPlus.Wyrm
         public static async Task<byte[]> ReadBytesAsync(this Stream reader, int length)
         {
             var buffer = new byte[length];
-            var result = await reader.ReadAsync(buffer, 0, buffer.Length);
+            var offset = 0;
 
-            if (result != buffer.Length)
+            do
             {
-                throw new Exception($"ReadBytesAsync: wanted {length}, got: {result}");
-            }
+                offset += await reader.ReadAsync(buffer, offset, buffer.Length - offset);
+            } while (offset != buffer.Length);
+
+
+            // if (result != buffer.Length)
+            // {
+            //     throw new Exception($"ReadBytesAsync: wanted {length}, got: {result}");
+            // }
 
             // Console.WriteLine($"ReadBytesAsync : {result}");
             return buffer;

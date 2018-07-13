@@ -24,12 +24,19 @@ namespace ESPlus.IntegrationTests2.Repositories
 
             foreach (var item in _connection.EnumerateAll("0000000000000000000000000000000000000000000000000000000000000000"))
             {
-                
-                Console.WriteLine($"{item.Offset} {item.EventType}");
+                if (item.Offset >= 1339250)
+                {
+                    //break;
+                }
+
+                // if (item.Offset % 1000 == 0)
+                {
+                    Console.WriteLine($"{item.Offset} {item.EventType}");
+                }
                 // ++count;
             }
 
             Console.WriteLine($"Elapsed: {watch.ElapsedMilliseconds}ms");
-        }        
+        }
     }
 }
