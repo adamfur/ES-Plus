@@ -120,7 +120,7 @@ namespace ESPlus.IntegrationTests.Repositories
             var aggregate2 = new DummyAggregate(id);
 
             await Repository.SaveAsync(aggregate1);
-            await Assert.ThrowsAsync<WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
+            await Assert.ThrowsAsync<ESPlus.WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
         }
 
         [Fact]
@@ -133,13 +133,13 @@ namespace ESPlus.IntegrationTests.Repositories
             await Repository.DeleteAsync(id, aggregate.Version);
         }
 
-        // //////////////////////////////[Fact]
-        // //////////////////////////////public async Task DeleteAsync_DeleteNonexistingStream_Pass()
-        // //////////////////////////////{
-        // //////////////////////////////    var id = Guid.NewGuid().ToString();
-        // //////////////////////////////
-        // //////////////////////////////    await Repository.DeleteAsync(id);
-        // //////////////////////////////}
+        // // //////////////////////////////[Fact]
+        // // //////////////////////////////public async Task DeleteAsync_DeleteNonexistingStream_Pass()
+        // // //////////////////////////////{
+        // // //////////////////////////////    var id = Guid.NewGuid().ToString();
+        // // //////////////////////////////
+        // // //////////////////////////////    await Repository.DeleteAsync(id);
+        // // //////////////////////////////}
 
         [Fact]
         public async Task GetAsync_ReadOneEventFromExistingStream_Pass()

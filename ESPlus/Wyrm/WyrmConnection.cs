@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using EventStore.ClientAPI;
 
 namespace ESPlus.Wyrm
 {
@@ -19,8 +18,9 @@ namespace ESPlus.Wyrm
         public DateTime Timestamp { get; set; }
         public byte[] Metadata { get; set; }
         public byte[] Data { get; set; }
-        public string EventType;
-        public string StreamName;
+        public string EventType { get; set; }
+        public string StreamName { get; set; }
+        public Position Position { get; internal set; }
     }
 
     public class WyrmConnection
@@ -35,15 +35,6 @@ namespace ESPlus.Wyrm
                 offset += array.Length;
             }
             return rv;
-        }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct Position
-        {
-            public Int64 A;
-            public Int64 B;
-            public Int64 C;
-            public Int64 D;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -114,6 +105,7 @@ namespace ESPlus.Wyrm
                     Timestamp = time,
                     Metadata = metadata,
                     Data = data,
+                    Position = monkey.Position,
                     EventType = eventType,
                     StreamName = streamName2
                 };
@@ -193,10 +185,10 @@ namespace ESPlus.Wyrm
             public Int32 BodyLength;
         }
 
-        public IEnumerable<WyrmEvent2> EnumerateAll(string hex)
+        public IEnumerable<WyrmEvent2> EnumerateAll(Position position)
         {
             var client = new TcpClient();
-            var position = new byte[32];
+            var pos = new byte[32];
             // var position = Enumerable.Range(0, hex.Length)
             //     .Where(x => x % 2 == 0)
             //     .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
@@ -207,7 +199,11 @@ namespace ESPlus.Wyrm
 
             writer.Write(OperationType.SUBSCRIBE);
             // Console.WriteLine($"Position: .Length = {position.Length}");
-            writer.Write(position);
+            // writer.Write(position.A);
+            // writer.Write(position.B);
+            // writer.Write(position.C);
+            // writer.Write(position.D);
+            writer.Write(pos);
             writer.Flush();
 
             while (true)

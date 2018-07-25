@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using ESPlus.Misc;
-using EventStore.ClientAPI;
 
 namespace ESPlus.EventHandlers
 {

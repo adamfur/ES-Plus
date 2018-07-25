@@ -1,6 +1,5 @@
 using System.Text;
 using ESPlus.Misc;
-using EventStore.ClientAPI;
 using Newtonsoft.Json;
 
 namespace ESPlus.Subscribers
@@ -48,6 +47,6 @@ namespace ESPlus.Subscribers
         public byte[] Meta { get; set; }
         public byte[] Payload { get; set; }
         public string EventType { get; set; }
-        public bool IsAhead { get; private set; } = false;
+        public bool IsAhead { get; set; } = false;
     }
 }

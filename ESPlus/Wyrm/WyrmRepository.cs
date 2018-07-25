@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Interfaces;
-using EventStore.ClientAPI;
 
 namespace ESPlus.Wyrm
 {

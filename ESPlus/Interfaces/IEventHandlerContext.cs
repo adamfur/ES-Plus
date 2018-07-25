@@ -1,10 +1,8 @@
-using EventStore.ClientAPI;
-
 namespace ESPlus.EventHandlers
 {
     public interface IEventHandlerContext
     {
-        Position Checkpoint { get; set; }
+        ESPlus.Position Checkpoint { get; set; }
         void Flush();
     }
 }

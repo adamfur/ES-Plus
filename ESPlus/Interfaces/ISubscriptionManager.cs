@@ -1,5 +1,4 @@
 using System.Threading;
-using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
 {

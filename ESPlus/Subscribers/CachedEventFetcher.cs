@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EventStore.ClientAPI;
 
 namespace ESPlus.Subscribers
 {

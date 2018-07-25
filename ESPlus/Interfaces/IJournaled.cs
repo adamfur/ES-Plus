@@ -1,6 +1,5 @@
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
-using EventStore.ClientAPI;
 
 namespace ESPlus.Storage
 {

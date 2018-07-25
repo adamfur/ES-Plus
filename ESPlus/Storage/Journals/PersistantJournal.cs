@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
-using EventStore.ClientAPI;
 using Newtonsoft.Json;
 
 namespace ESPlus.Storage

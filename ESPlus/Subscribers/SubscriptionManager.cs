@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using EventStore.ClientAPI;
+using ESPlus.Misc;
+using ESPlus.Wyrm;
 
 namespace ESPlus.Subscribers
 {
@@ -13,10 +14,14 @@ namespace ESPlus.Subscribers
         private object _mutex = new object();
         private IEventFetcher _eventFetcher;
         private int _workerThreads;
+        private readonly WyrmConnection _wyrmConnection;
+        private readonly IEventTypeResolver _eventTypeResolver;
 
-        public SubscriptionManager(IEventFetcher eventFetcher, int workerThreads = 1)
+        public SubscriptionManager(IEventFetcher eventFetcher, int workerThreads, WyrmConnection wyrmConnection, IEventTypeResolver eventTypeResolver)
         {
             _workerThreads = workerThreads;
+            this._wyrmConnection = wyrmConnection;
+            this._eventTypeResolver = eventTypeResolver;
             _barrier = new Barrier(workerThreads);
             _eventFetcher = eventFetcher;
             eventFetcher.OnEventReceived(() => TriggerNewEvent());
@@ -70,7 +75,7 @@ namespace ESPlus.Subscribers
                 _contexts.Add(context);
                 Monitor.Pulse(_mutex);
             }
-            return new SubscriptionClient(context);
+            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver);
         }
 
         public void TriggerContext(SubscriptionContext subscriptionContext)

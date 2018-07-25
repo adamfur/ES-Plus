@@ -14,16 +14,16 @@ namespace ESPlus.Wyrm
 
             do
             {
-                offset += await reader.ReadAsync(buffer, offset, buffer.Length - offset);
+                var length2 = await reader.ReadAsync(buffer, offset, buffer.Length - offset);
+
+                // if (length2 == 0)
+                // {
+                //     throw new Exception("if (length2 == 0)");
+                // }
+
+                offset += length2;
             } while (offset != buffer.Length);
 
-
-            // if (result != buffer.Length)
-            // {
-            //     throw new Exception($"ReadBytesAsync: wanted {length}, got: {result}");
-            // }
-
-            // Console.WriteLine($"ReadBytesAsync : {result}");
             return buffer;
         }
 

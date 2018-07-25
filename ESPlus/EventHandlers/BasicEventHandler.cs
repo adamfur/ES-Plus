@@ -7,7 +7,6 @@ using ESPlus.Aggregates;
 using ESPlus.Misc;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
-using EventStore.ClientAPI;
 
 namespace ESPlus.EventHandlers
 {
