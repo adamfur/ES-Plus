@@ -59,8 +59,19 @@ namespace ESPlus.Wyrm
         public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
         {
             var client = new TcpClient();
+            var eventstore = Environment.GetEnvironmentVariable("EVENTSTORE") ?? "pliance.wyrm:8888";
+            var host = "pliance.wyrm";
+            var port = 8888;
 
-            client.ConnectAsync("pliance.wyrm", 8888).Wait();
+            if (eventstore != null)
+            {
+                var parts = eventstore.Split(":");
+
+                host = parts[0];
+                port = int.Parse(parts[1]);
+            }
+
+            client.ConnectAsync(host, port).Wait();
 
             var stream = client.GetStream();
             var writer = new BinaryWriter(client.GetStream());
@@ -95,7 +106,7 @@ namespace ESPlus.Wyrm
 
                 Array.Copy(uncompressed, metadata, metadata.Length);
                 Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
-                
+
                 yield return new WyrmEvent2
                 {
                     Offset = monkey.Offset,
@@ -166,7 +177,7 @@ namespace ESPlus.Wyrm
 
             if (status != 0)
             {
-                throw new WrongExpectedVersionException($"if (status != 0): {status}");
+                throw new WrongExpectedVersionException($"Bad status: {status}");
             }
             await Task.FromResult(0);
         }
