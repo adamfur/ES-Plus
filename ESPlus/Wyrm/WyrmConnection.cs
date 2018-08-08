@@ -56,11 +56,11 @@ namespace ESPlus.Wyrm
             public Int32 PayloadLength;
         }
 
-        public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
+        private TcpClient Create()
         {
             var client = new TcpClient();
             var eventstore = Environment.GetEnvironmentVariable("EVENTSTORE") ?? "pliance.wyrm:8888";
-            var host = "pliance.wyrm";
+            var host = "127.0.0.1";
             var port = 8888;
 
             if (eventstore != null)
@@ -71,8 +71,16 @@ namespace ESPlus.Wyrm
                 port = int.Parse(parts[1]);
             }
 
+            Console.WriteLine($"Connection to {host}:{port}");
+
             client.ConnectAsync(host, port).Wait();
 
+            return client;
+        }
+
+        public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
+        {
+            var client = Create();
             var stream = client.GetStream();
             var writer = new BinaryWriter(client.GetStream());
             var name = Encoding.UTF8.GetBytes(streamName);
@@ -125,10 +133,7 @@ namespace ESPlus.Wyrm
 
         public async Task DeleteAsync(string streamName)
         {
-            var client = new TcpClient();
-
-            await client.ConnectAsync("pliance.wyrm", 8888);
-
+            var client = Create();
             var reader = new BinaryReader(client.GetStream());
             var writer = new BinaryWriter(client.GetStream());
             var name = Encoding.UTF8.GetBytes(streamName);
@@ -153,9 +158,7 @@ namespace ESPlus.Wyrm
 
         public async Task Append(IEnumerable<WyrmEvent> events)
         {
-            var client = new TcpClient();
-
-            await client.ConnectAsync("pliance.wyrm", 8888);
+            var client = Create();
             var reader = new BinaryReader(client.GetStream());
             var writer = new BinaryWriter(client.GetStream());
             var concat = Combine(events.Select(x => Assemble(x)).ToArray());
@@ -198,13 +201,12 @@ namespace ESPlus.Wyrm
 
         public IEnumerable<WyrmEvent2> EnumerateAll(Position position)
         {
-            var client = new TcpClient();
+            var client = Create();
             var pos = new byte[32];
             // var position = Enumerable.Range(0, hex.Length)
             //     .Where(x => x % 2 == 0)
             //     .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
             //     .ToArray();
-            client.ConnectAsync("pliance.wyrm", 8888).Wait();
             var stream = client.GetStream();
             var writer = new BinaryWriter(stream);
 
