@@ -59,8 +59,8 @@ namespace ESPlus.Wyrm
         private TcpClient Create()
         {
             var client = new TcpClient();
-            var eventstore = Environment.GetEnvironmentVariable("EVENTSTORE") ?? "pliance.wyrm:8888";
-            var host = "127.0.0.1";
+            var eventstore = Environment.GetEnvironmentVariable("EVENTSTORE") ?? "localhost:8888";
+            var host = "localhost";
             var port = 8888;
 
             if (eventstore != null)
