@@ -9,28 +9,6 @@ using MongoDB.Driver;
 
 namespace ESPlus.Storage.Raven
 {
-    public static class HashExtentions
-    {
-        public static string Sha256(this string data)
-        {
-            var message = Encoding.ASCII.GetBytes(data);
-            SHA256Managed hashString = new SHA256Managed();
-            string hex = "";
-
-            var hashValue = hashString.ComputeHash(message);
-            foreach (byte x in hashValue)
-            {
-                hex += String.Format("{0:x2}", x);
-            }
-            return hex;
-        }
-
-        public static string MongoHash(this string data)
-        {
-            return Sha256(data).Replace("-", "").Substring(0, 24);
-        }        
-    }
-
     public class MongoStorage : IStorage
     {
         private IMongoDatabase _mongoDatabase;
