@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using ESPlus.Interfaces;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
 namespace ESPlus.Storage.Raven
@@ -12,12 +13,14 @@ namespace ESPlus.Storage.Raven
     public class MongoStorage : IStorage
     {
         private IMongoDatabase _mongoDatabase;
+        private readonly string _collection;
         private Dictionary<string, object> _writeCache = new Dictionary<string, object>();
         private Dictionary<string, object> _cache = new Dictionary<string, object>();
 
-        public MongoStorage(IMongoDatabase mongoDatabase)
+        public MongoStorage(IMongoDatabase mongoDatabase, string collection)
         {
             _mongoDatabase = mongoDatabase;
+            this._collection = collection;
         }
 
         public void Flush()
@@ -31,7 +34,7 @@ namespace ESPlus.Storage.Raven
                     break;
                 }
 
-                var collection = _mongoDatabase.GetCollection<object>("helloworld");
+                var collection = _mongoDatabase.GetCollection<object>(_collection);
 
                 foreach (var item in page)
                 {
@@ -80,7 +83,7 @@ namespace ESPlus.Storage.Raven
                 return (T)_cache[path];
             }
 
-            var collection = _mongoDatabase.GetCollection<T>("helloworld");
+            var collection = _mongoDatabase.GetCollection<T>(_collection);
             var filter = Builders<T>.Filter.Eq("ReferenceId", path);
 
             return collection.Find(filter).FirstOrDefault();
