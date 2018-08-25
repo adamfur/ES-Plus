@@ -5,13 +5,14 @@ namespace ESPlus.Storage
 {
     public class InMemoryStorage : IStorage
     {
-        private readonly Dictionary<string, object> _data = new Dictionary<string, object>();
+        private readonly Dictionary<string, HasObjectId> _data = new Dictionary<string, HasObjectId>();
 
         public void Flush()
         {
         }
 
         public T Get<T>(string path)
+            where T : HasObjectId
         {
             if (_data.ContainsKey(path))
             {
@@ -20,7 +21,7 @@ namespace ESPlus.Storage
             return default (T);
         }
 
-        public void Put(string path, object item)
+        public void Put(string path, HasObjectId item)
         {
             _data[path] = item;
         }

@@ -13,7 +13,7 @@ namespace ESPlus.Storage
         protected readonly IStorage _dataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         protected readonly Dictionary<string, object> _cache = new Dictionary<string, object>();
-        protected readonly Dictionary<string, object> _dataWriteCache = new Dictionary<string, object>();
+        protected readonly Dictionary<string, HasObjectId> _dataWriteCache = new Dictionary<string, HasObjectId>();
         public Position Checkpoint { get; set; }
         private bool _changed = false;
 
@@ -64,7 +64,7 @@ namespace ESPlus.Storage
             Clean();
         }
 
-        public virtual void Put(string destination, object item)
+        public virtual void Put(string destination, HasObjectId item)
         {
             _cache[destination] = item;
             _dataWriteCache[destination] = item;
@@ -72,6 +72,7 @@ namespace ESPlus.Storage
         }
 
         public T Get<T>(string path)
+            where T : HasObjectId
         {
             try
             {
@@ -107,7 +108,7 @@ namespace ESPlus.Storage
             _metadataStorage.Flush();
         }
 
-        protected void WriteTo(IStorage storage, Dictionary<string, object> cache)
+        protected void WriteTo(IStorage storage, Dictionary<string, HasObjectId> cache)
         {
             foreach (var item in cache)
             {

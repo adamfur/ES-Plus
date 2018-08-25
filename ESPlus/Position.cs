@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace ESPlus
@@ -6,14 +7,14 @@ namespace ESPlus
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public struct Position : IEquatable<Position>, IComparable<Position>
     {
-        public UInt64 A;
-        public UInt64 B;
-        public UInt64 C;
-        public UInt64 D;
+        public Int64 A;
+        public Int64 B;
+        public Int64 C;
+        public Int64 D;
 
         public override string ToString() 
         {
-            return $"{A}:{B}:{C}:{D}";
+            return $"{new BigInteger(A):x2}{new BigInteger(B):x2}{new BigInteger(C):x2}{new BigInteger(D):x2}";
         }
 
         public static readonly Position Start = new Position();

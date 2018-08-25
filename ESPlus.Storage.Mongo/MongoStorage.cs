@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using ESPlus.Interfaces;
+using ESPlus.Storage.Mongo;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
@@ -14,8 +15,8 @@ namespace ESPlus.Storage.Raven
     {
         private IMongoDatabase _mongoDatabase;
         private readonly string _collection;
-        private Dictionary<string, object> _writeCache = new Dictionary<string, object>();
-        private Dictionary<string, object> _cache = new Dictionary<string, object>();
+        private Dictionary<string, HasObjectId> _writeCache = new Dictionary<string, HasObjectId>();
+        private Dictionary<string, HasObjectId> _cache = new Dictionary<string, HasObjectId>();
 
         public MongoStorage(IMongoDatabase mongoDatabase, string collection)
         {
@@ -34,42 +35,17 @@ namespace ESPlus.Storage.Raven
                     break;
                 }
 
-                var collection = _mongoDatabase.GetCollection<object>(_collection);
+                var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
 
                 foreach (var item in page)
                 {
-                    // try
-                    // {
-                    //     collection.DeleteOne(new BsonDocument { { "_id", ((dynamic)item.Value).ID } });
-                    // }
-                    // catch (Exception ex)
-                    // {
-                    //     Console.WriteLine(ex);
-                    // }
+                    var document = item.Value;
 
-                    // try
-                    // {
-                    //     collection.InsertOne(item.Value);
-                    // }
-                    // catch (Exception ex)
-                    // {
-                    //     Console.WriteLine(ex);
-                    // }
-
-                    try
+                    document.ID = ObjectId.Parse(item.Key.MongoHash());
+                    collection.ReplaceOne(f => f.ID == document.ID, document, new UpdateOptions
                     {
-                        var filter = new BsonDocument { { "_id", ((dynamic)item.Value).ID } };
-
-                        if (collection.Find(filter).Any())
-                        {
-                            collection.DeleteOne(filter);
-                        }
-                        collection.InsertOne(item.Value);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex);
-                    }
+                        IsUpsert = true
+                    });
                 }
             }
 
@@ -77,20 +53,22 @@ namespace ESPlus.Storage.Raven
         }
 
         public T Get<T>(string path)
+            where T : HasObjectId
         {
             if (_cache.ContainsKey(path))
             {
                 return (T)_cache[path];
             }
 
-            var collection = _mongoDatabase.GetCollection<T>(_collection);
-            var filter = Builders<T>.Filter.Eq("ReferenceId", path);
+            var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
+            var id = ObjectId.Parse(path.MongoHash());
 
-            return collection.Find(filter).FirstOrDefault();
+            return (T)collection.Find(f => f.ID.Equals(id)).FirstOrDefault();
         }
 
-        public void Put(string path, object item)
+        public void Put(string path, HasObjectId item)
         {
+            item.ID = ObjectId.Parse(path.MongoHash());
             _writeCache[path] = item;
             _cache[path] = item;
         }

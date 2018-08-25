@@ -23,7 +23,7 @@ namespace ESPlus.Storage
         }
 
         public void Patch<T>(string path, Action<T> action)
-            where T : new()
+            where T : HasObjectId, new()
         {
             var shard = Name<T>(path);
             var graph = Get<T>(shard);
@@ -43,7 +43,7 @@ namespace ESPlus.Storage
         }
 
         public T Get<T>(string path)
-            where T : new()
+            where T : HasObjectId, new()
         {
             var shard = Name<T>(path);
 
@@ -51,6 +51,7 @@ namespace ESPlus.Storage
         }
 
         public void Put<T>(string path, T graph)
+            where T : HasObjectId
         {
             var shard = Name<T>(path);
 
@@ -76,7 +77,7 @@ namespace ESPlus.Storage
         }
 
         public void Update<T>(string path, Action<T> action)
-            where T : new()
+            where T : HasObjectId, new()
         {
             T item = Get<T>(path);
 

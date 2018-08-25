@@ -41,6 +41,7 @@ namespace ESPlus.Storage.Raven
         }
 
         public T Get<T>(string path)
+            where T : HasObjectId
         {
             if (_cache.ContainsKey(path))
             {
@@ -53,7 +54,7 @@ namespace ESPlus.Storage.Raven
             }
         }
 
-        public void Put(string path, object item)
+        public void Put(string path, HasObjectId item)
         {
             _writeCache[path] = item;
             _cache[path] = item;

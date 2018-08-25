@@ -262,7 +262,8 @@ namespace ESPlus.Wyrm
                         Metadata = metadata,
                         Data = data,
                         EventType = eventType,
-                        StreamName = streamName2
+                        StreamName = streamName2,
+                        Position = monkey.Position
                     };
                 }
             }

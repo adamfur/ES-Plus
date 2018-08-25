@@ -6,7 +6,7 @@ namespace ESPlus.Storage
     public class ReplayableJournal : PersistantJournal
     {
         private readonly IStorage _stageStorage;
-        protected readonly Dictionary<string, object> _dataStageCache = new Dictionary<string, object>();
+        protected readonly Dictionary<string, HasObjectId> _dataStageCache = new Dictionary<string, HasObjectId>();
         protected readonly Dictionary<string, string> _map = new Dictionary<string, string>();
 
         public ReplayableJournal(IStorage metadataStorage, IStorage stageStorage, IStorage dataStorage)
@@ -22,7 +22,7 @@ namespace ESPlus.Storage
             WriteTo(_dataStorage, _dataWriteCache);
         }
 
-        public override void Put(string destinationPath, object item)
+        public override void Put(string destinationPath, HasObjectId item)
         {
             var stagePath = destinationPath;
 
