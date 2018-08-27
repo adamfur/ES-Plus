@@ -32,6 +32,7 @@ namespace ESPlus.Storage
         {
             JournalLog journal;
 
+            Console.WriteLine("LoadJournal()");
             try
             {
                 journal = _metadataStorage.Get<JournalLog>(JournalPath) ?? new JournalLog();

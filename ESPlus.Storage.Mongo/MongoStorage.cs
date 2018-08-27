@@ -8,6 +8,7 @@ using ESPlus.Storage.Mongo;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 
 namespace ESPlus.Storage.Raven
 {
@@ -26,6 +27,8 @@ namespace ESPlus.Storage.Raven
 
         public void Flush()
         {
+            var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
+
             for (var i = 0; ; ++i)
             {
                 var page = _writeCache.Skip(i * 30).Take(30);
@@ -35,17 +38,32 @@ namespace ESPlus.Storage.Raven
                     break;
                 }
 
-                var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
+                // var bulkOps = new List<WriteModel<HasObjectId>>();
+
+                // foreach (var item in page)
+                // {
+                //     var document = item.Value;
+                //     var upsertOne = new ReplaceOneModel<HasObjectId>(Builders<HasObjectId>.Filter.Where(x => x.ID == document.ID), document) { IsUpsert = true };
+
+                //     bulkOps.Add(upsertOne);
+                // }
+
+                // collection.BulkWrite(bulkOps);
 
                 foreach (var item in page)
                 {
                     var document = item.Value;
-
-                    document.ID = ObjectId.Parse(item.Key.MongoHash());
-                    collection.ReplaceOne(f => f.ID == document.ID, document, new UpdateOptions
+                    
+                    try
                     {
-                        IsUpsert = true
-                    });
+                        collection.ReplaceOne(f => f.ID == document.ID, document, new UpdateOptions
+                        {
+                            IsUpsert = true
+                        });
+                    }
+                    catch (System.Exception)
+                    {
+                    }
                 }
             }
 
@@ -59,11 +77,12 @@ namespace ESPlus.Storage.Raven
             {
                 return (T)_cache[path];
             }
-
-            var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
+            var collection = _mongoDatabase.GetCollection<T>(_collection);
             var id = ObjectId.Parse(path.MongoHash());
+            var result = (T)collection.Find(f => f.ID.Equals(id)).FirstOrDefault();
 
-            return (T)collection.Find(f => f.ID.Equals(id)).FirstOrDefault();
+            // Console.WriteLine($"xxx FOUND: {path} {JsonConvert.SerializeObject(result)}");
+            return result;
         }
 
         public void Put(string path, HasObjectId item)
