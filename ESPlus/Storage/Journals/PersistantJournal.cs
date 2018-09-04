@@ -35,11 +35,15 @@ namespace ESPlus.Storage
             Console.WriteLine("LoadJournal()");
             try
             {
-                journal = _metadataStorage.Get<JournalLog>(JournalPath) ?? new JournalLog();
+                journal = _metadataStorage.Get<JournalLog>(JournalPath);
+                Console.WriteLine($"IsNull {journal == null}");
+                journal = journal ?? new JournalLog();
+                Console.WriteLine($"Journal Read Success: {journal.Checkpoint}");
             }
             catch (Exception e)
             {
                 journal = new JournalLog();
+                Console.WriteLine($"Journal Read Failed: {journal.Checkpoint}");
             }
             Checkpoint = journal.Checkpoint;
 
@@ -107,6 +111,7 @@ namespace ESPlus.Storage
             };
             _metadataStorage.Put(JournalPath, journal);
             _metadataStorage.Flush();
+            Console.WriteLine($"Put Journal {Checkpoint.A}-{Checkpoint.B}-{Checkpoint.C}-{Checkpoint.D} :: {Checkpoint}");
         }
 
         protected void WriteTo(IStorage storage, Dictionary<string, HasObjectId> cache)

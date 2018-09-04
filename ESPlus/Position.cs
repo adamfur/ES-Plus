@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 namespace ESPlus
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Position : IEquatable<Position>, IComparable<Position>
+    public class Position : IEquatable<Position>, IComparable<Position>
     {
-        public Int64 A;
+        public Int64 A { get; set; }
         public Int64 B;
         public Int64 C;
         public Int64 D;
