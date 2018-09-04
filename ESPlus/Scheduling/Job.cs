@@ -1,31 +1,30 @@
 using System;
-using Cron;
+// using Cron;
 
 namespace ESPlus.Scheduling
 {
     public class Job
     {
-        public Guid Id { get; set; }
-        public DateTime? Next { get; set; }
-        public TimeSpan? Left => Next - Cron.SystemTime.UtcNow;
-        public DateTime? Last { get; set; }
-        public DateTime? Passed { get; set; }
-        public Action Action { get; set; }
-        public ICronScheduler Scheduler { get; set; }
+    //     public Guid Id { get; set; }
+    //     public DateTime? Next { get; set; }
+    //     public TimeSpan? Left => Next - Cron.SystemTime.UtcNow;
+    //     public DateTime? Last { get; set; }
+    //     public DateTime? Passed { get; set; }
+    //     public Action Action { get; set; }
+    //     public ICronScheduler Scheduler { get; set; }
 
-        public void Fire()
-        {
-            Action();
-            Next = Scheduler.Next();
-            Passed = Cron.SystemTime.UtcNow;
-        }
+    //     public void Fire()
+    //     {
+    //         Action();
+    //         Next = Scheduler.Next();
+    //         Passed = Cron.SystemTime.UtcNow;
+    //     }
 
-        public void Stop()
-        {
-            Next = null;
-        }
+    //     public void Stop()
+    //     {
+    //         Next = null;
+    //     }
     }
-
 }
 
 
