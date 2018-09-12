@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using ESPlus.Interfaces;
 using ESPlus.Storage.Mongo;
 using MongoDB.Bson;
@@ -49,7 +50,7 @@ namespace ESPlus.Storage.Raven
                     return new ReplaceOneModel<HasObjectId>(filter, d.Value) { IsUpsert = true };
                 });
 
-                collection.BulkWrite(updates);
+                Retry(() => collection.BulkWrite(updates));
             }
 
             _writeCache.Clear();
@@ -88,6 +89,22 @@ namespace ESPlus.Storage.Raven
 
         public void Reset()
         {
+        }
+
+        private void Retry(Action action)
+        {
+            for (var tries = 0; tries < 3; ++tries)
+            {
+                try
+                {
+                    action();
+                    break;
+                }
+                catch (System.Exception)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(1 << tries));
+                }
+            }
         }
     }
 }
