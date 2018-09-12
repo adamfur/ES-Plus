@@ -92,17 +92,17 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
-        public Task SaveAsync(AggregateBase aggregate)
+        public Task SaveAsync(AggregateBase aggregate, object headers)
         {
             return SaveImpl(aggregate, aggregate.Version);
         }
 
-        public Task AppendAsync(AggregateBase aggregate)
+        public Task AppendAsync(AggregateBase aggregate, object headers)
         {
             return SaveImpl(aggregate, WritePolicy.Any);
         }
 
-        public Task SaveNewAsync(IAggregate aggregate)
+        public Task SaveNewAsync(IAggregate aggregate, object headers)
         {
             return SaveImpl(aggregate, WritePolicy.EmptyStream);
         }

@@ -38,7 +38,7 @@ namespace ESPlus.EventStore
             return new EventData(eventId, typeName, true, data, metadata);
         }
 
-        public Task SaveAsync(AggregateBase aggregate)
+        public Task SaveAsync(AggregateBase aggregate, object headers)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count()/* - 1*/;
@@ -47,7 +47,7 @@ namespace ESPlus.EventStore
             return SaveAggregate(aggregate, newEvents, expectedVersion);
         }
 
-        public Task AppendAsync(AggregateBase aggregate)
+        public Task AppendAsync(AggregateBase aggregate, object headers)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
@@ -165,7 +165,7 @@ namespace ESPlus.EventStore
             return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
 
-        public Task SaveNewAsync(IAggregate aggregate)
+        public Task SaveNewAsync(IAggregate aggregate, object headers)
         {
             throw new NotImplementedException();
         }

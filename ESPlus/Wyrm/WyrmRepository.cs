@@ -23,10 +23,10 @@ namespace ESPlus.Wyrm
 
     public static class ExpectedVersion
     {
-        public const long Any = -2;         // This write should not conflict with anything and should always succeed.
-        public const long NoStream = -1;    // The stream being written to should not yet exist. If it does exist treat that as a concurrency problem.
-        public const long EmptyStream = -1; // The stream should exist and should be empty. If it does not exist or is not empty treat that as a concurrency problem.
-        public const long StreamExists = -4;    // The stream should exist. If it or a metadata stream does not exist treat that as a concurrency problem.
+        public const long Any = -2;          // This write should not conflict with anything and should always succeed.
+        public const long NoStream = -1;     // The stream being written to should not yet exist. If it does exist treat that as a concurrency problem.
+        public const long EmptyStream = -1;  // The stream should exist and should be empty. If it does not exist or is not empty treat that as a concurrency problem.
+        public const long StreamExists = -4; // The stream should exist. If it or a metadata stream does not exist treat that as a concurrency problem.
     }
 
     public class WyrmEvent
@@ -80,10 +80,10 @@ namespace ESPlus.Wyrm
                 });
         }
 
-        private WyrmEvent ToEventData(Guid eventId, object evnt, string streamName, long version)
+        private WyrmEvent ToEventData(Guid eventId, object evnt, string streamName, long version, object headers)
         {
             var data = _eventSerializer.Serialize(evnt);
-            var metadata = _eventSerializer.Serialize(new object()); //EventMetadata
+            var metadata = _eventSerializer.Serialize(headers);
             var typeName = evnt.GetType().FullName;
 
             return new WyrmEvent(eventId, typeName, data, metadata, streamName, (int)version);
@@ -94,21 +94,21 @@ namespace ESPlus.Wyrm
             await _wyrmConnection.DeleteAsync(id);
         }
 
-        public Task SaveAsync(AggregateBase aggregate)
+        public Task SaveAsync(AggregateBase aggregate, object headers)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
             var expectedVersion = originalVersion == -1 ? ExpectedVersion.NoStream : originalVersion;
 
-            return SaveAggregate(aggregate, newEvents, expectedVersion + 1);
+            return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers);
         }
 
-        public Task AppendAsync(AggregateBase aggregate)
+        public Task AppendAsync(AggregateBase aggregate, object headers)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
 
-            return SaveAggregate(aggregate, newEvents, expectedVersion);
+            return SaveAggregate(aggregate, newEvents, expectedVersion, headers);
         }
 
         public int Version(long first, int index)
@@ -134,10 +134,10 @@ namespace ESPlus.Wyrm
             }
         }
 
-        private async Task SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion)
+        private async Task SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
         {
             var streamName = aggregate.Id;
-            var eventsToSave = newEvents.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix))).ToList();
+            var eventsToSave = newEvents.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 
             await _wyrmConnection.Append(eventsToSave);
         }
@@ -166,7 +166,6 @@ namespace ESPlus.Wyrm
                     continue;
                 }
 
-
                 applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Data));
                 applyAggregate.Version = evnt.Version;
             }
@@ -187,7 +186,7 @@ namespace ESPlus.Wyrm
             return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
 
-        public Task SaveNewAsync(IAggregate aggregate)
+        public Task SaveNewAsync(IAggregate aggregate, object headers)
         {
             throw new NotImplementedException();
         }
