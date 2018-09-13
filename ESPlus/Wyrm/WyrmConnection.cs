@@ -162,6 +162,11 @@ namespace ESPlus.Wyrm
 
         public async Task Append(IEnumerable<WyrmEvent> events)
         {
+            if (!events.Any())
+            {
+                await Task.FromResult(0);
+            }
+
             using (var client = Create())
             {
                 var reader = new BinaryReader(client.GetStream());
