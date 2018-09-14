@@ -1,29 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using ESPlus.Interfaces;
-using ESPlus.Storage.Mongo;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
-using Newtonsoft.Json;
 
-namespace ESPlus.Storage.Raven
+namespace ESPlus.Storage.Mongo
 {
     public class MongoStorage : IStorage
     {
-        private IMongoDatabase _mongoDatabase;
+        private readonly IMongoDatabase _mongoDatabase;
         private readonly string _collection;
-        private Dictionary<ObjectId, HasObjectId> _writeCache = new Dictionary<ObjectId, HasObjectId>();
-        private Dictionary<ObjectId, HasObjectId> _cache = new Dictionary<ObjectId, HasObjectId>();
+        private readonly Dictionary<ObjectId, HasObjectId> _writeCache = new Dictionary<ObjectId, HasObjectId>();
+        private readonly Dictionary<ObjectId, HasObjectId> _cache = new Dictionary<ObjectId, HasObjectId>();
 
         public MongoStorage(IMongoDatabase mongoDatabase, string collection)
         {
             _mongoDatabase = mongoDatabase;
-            this._collection = collection;
+            _collection = collection;
         }
 
         public void Flush()
@@ -42,7 +37,7 @@ namespace ESPlus.Storage.Raven
 
                 var updates = _writeCache.Select(d =>
                 {
-                    var filter = new BsonDocument()
+                    var filter = new BsonDocument
                     {
                         {"_id", d.Key},
                         {"_t", d.Value.GetType().Name}
@@ -100,7 +95,7 @@ namespace ESPlus.Storage.Raven
                     action();
                     break;
                 }
-                catch (System.Exception)
+                catch (Exception)
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(1 << tries));
                 }

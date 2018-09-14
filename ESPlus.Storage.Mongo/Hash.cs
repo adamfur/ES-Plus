@@ -17,7 +17,7 @@ namespace ESPlus.Storage.Mongo
             var hashValue = hashString.ComputeHash(message);
             foreach (byte x in hashValue)
             {
-                hex += String.Format("{0:x2}", x);
+                hex += string.Format("{0:x2}", x);
             }
             return hex;
         }
