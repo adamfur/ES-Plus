@@ -22,7 +22,7 @@ namespace ESPlus.IntegrationTests2.Repositories
             int count = 0;
             var watch = Stopwatch.StartNew();
 
-            foreach (var item in _connection.EnumerateAll("0000000000000000000000000000000000000000000000000000000000000000"))
+            foreach (var item in _connection.EnumerateAll(Position.Start))
             {
                 if (item.Offset >= 1339250)
                 {

@@ -136,6 +136,11 @@ namespace ESPlus.Wyrm
 
         private async Task SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
         {
+            if (!newEvents.Any())
+            {
+                return;
+            }
+
             var streamName = aggregate.Id;
             var eventsToSave = newEvents.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 

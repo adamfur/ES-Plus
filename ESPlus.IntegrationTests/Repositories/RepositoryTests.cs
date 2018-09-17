@@ -101,6 +101,19 @@ namespace ESPlus.IntegrationTests.Repositories
         }
 
         [Fact]
+        public async Task SaveAsync_ReadExistingAndSave_Save()
+        {
+            var id = Guid.NewGuid().ToString();
+            var aggregate = new DummyAggregate(id);
+
+            await Repository.SaveAsync(aggregate);
+
+            aggregate = await this.Repository.GetByIdAsync<DummyAggregate>(id);
+            aggregate.Poke();
+            await Repository.SaveAsync(aggregate);
+        }        
+
+        [Fact]
         public async Task SaveAsync_AppendToExistingStreamV2_Save()
         {
             var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
