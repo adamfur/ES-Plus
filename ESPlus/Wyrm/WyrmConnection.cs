@@ -71,7 +71,7 @@ namespace ESPlus.Wyrm
                 port = int.Parse(parts[1]);
             }
 
-            Console.WriteLine($"Connection to {host}:{port}");
+//            Console.WriteLine($"Connection to {host}:{port}");
 
             client.ConnectAsync(host, port).Wait();
 
