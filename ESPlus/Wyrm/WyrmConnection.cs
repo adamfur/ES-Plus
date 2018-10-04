@@ -25,6 +25,22 @@ namespace ESPlus.Wyrm
 
     public class WyrmConnection
     {
+        private string _host;
+        private int _port;
+
+        public WyrmConnection()
+            : this(Environment.GetEnvironmentVariable("EVENTSTORE") ?? "localhost:8888")
+        {
+        }
+
+        public WyrmConnection(string connectionString)
+        {
+            var parts = connectionString.Split(":");
+
+            _host = parts[0];
+            _port = int.Parse(parts[1]);
+        }
+
         private byte[] Combine(params byte[][] arrays)
         {
             byte[] rv = new byte[arrays.Sum(a => a.Length)];
@@ -59,21 +75,8 @@ namespace ESPlus.Wyrm
         private TcpClient Create()
         {
             var client = new TcpClient();
-            var eventstore = Environment.GetEnvironmentVariable("EVENTSTORE") ?? "localhost:8888";
-            var host = "localhost";
-            var port = 8888;
 
-            if (eventstore != null)
-            {
-                var parts = eventstore.Split(":");
-
-                host = parts[0];
-                port = int.Parse(parts[1]);
-            }
-
-//            Console.WriteLine($"Connection to {host}:{port}");
-
-            client.ConnectAsync(host, port).Wait();
+            client.ConnectAsync(_host, _port).Wait();
 
             return client;
         }
