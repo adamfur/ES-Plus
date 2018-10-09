@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using LZ4;
 
 namespace ESPlus.Wyrm
 {
@@ -287,8 +288,9 @@ namespace ESPlus.Wyrm
             var body = @event.Body;
             var uncompressed = BuildPayload(metadata, body);
             var uncompressedLength = uncompressed.Length;
-            var compressed = new byte[LZ4.LZ4_compressBound(uncompressedLength)];
-            var compressedLength = LZ4.LZ4_compress_default(uncompressed, compressed, uncompressedLength, compressed.Length);
+            var compressed = new byte[LZ4Codec.MaximumOutputLength(uncompressedLength)];
+            var compressedLength = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressedLength);
+
             var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
             var apa = new Apa
             {
