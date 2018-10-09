@@ -26,6 +26,38 @@ namespace ESPlus.Aggregates
             Register(aggregate);
         }
 
+        // public virtual void Register(object aggregate, string route = "Apply")
+        // {
+        //     if (aggregate == null)
+        //         throw new ArgumentNullException("aggregate");
+
+        //     this.registered = aggregate;
+
+        //     // Get instance methods named Apply with one parameter returning void
+        //     var applyMethods = aggregate.GetType()
+        //         .GetRuntimeMethods()// (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+        //         .Where(m => m.Name == route && m.GetParameters().Length == 1 && m.ReturnParameter.ParameterType == typeof(void))
+        //         .Select(x =>
+        //         {
+        //             _handle.Add(x.GetParameters().Single().ParameterType.FullName);
+        //             return x;
+        //         })
+        //         .Select(m => new
+        //         {
+        //             Method = m,
+        //             MessageType = m.GetParameters().Single().ParameterType
+        //         });
+
+        //     foreach (var apply in applyMethods)
+        //     {
+        //         _handle.Add(apply.MessageType.FullName);
+
+        //         //MethodInfo applyMethod = apply.Method;
+        //         //this.handlers.Add(apply.MessageType, m => applyMethod.Invoke(aggregate, new[] { m as object }));
+        //         this.handlers.Add(apply.MessageType, Build((dynamic) Activator.CreateInstance(apply.MessageType, true), aggregate, apply.Method));
+        //     }
+        // }
+
         public virtual void Register(object aggregate, string route = "Apply")
         {
             if (aggregate == null)
@@ -52,13 +84,14 @@ namespace ESPlus.Aggregates
             {
                 _handle.Add(apply.MessageType.FullName);
 
-                //MethodInfo applyMethod = apply.Method;
-                //this.handlers.Add(apply.MessageType, m => applyMethod.Invoke(aggregate, new[] { m as object }));
-                this.handlers.Add(apply.MessageType, Build((dynamic) Activator.CreateInstance(apply.MessageType, true), aggregate, apply.Method));
-            }
-        }
+                var method = typeof(ConventionEventRouter).GetMethod("Build", BindingFlags.NonPublic | BindingFlags.Instance);
+                var generic = method.MakeGenericMethod(apply.MessageType);
 
-        private Action<object> Build<T>(T typeInstance, object instance, MethodInfo applyMethod)
+                this.handlers.Add(apply.MessageType, ar => generic.Invoke(this, new object[] { aggregate, apply.Method }));
+            }
+        }        
+
+        private Action<object> Build<T>(object instance, MethodInfo applyMethod)
         {
             var specificDelegate = ((Action<T>)Delegate.CreateDelegate(typeof(Action<T>), instance, applyMethod));
             var genericDelegate = (Action<object>)(x => specificDelegate((T)x));
