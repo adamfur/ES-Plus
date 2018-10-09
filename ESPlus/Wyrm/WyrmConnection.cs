@@ -289,7 +289,7 @@ namespace ESPlus.Wyrm
             var uncompressed = BuildPayload(metadata, body);
             var uncompressedLength = uncompressed.Length;
             var compressed = new byte[LZ4Codec.MaximumOutputLength(uncompressedLength)];
-            var compressedLength = LZ4Codec.Encode(compressed, 0, compressed.Length, uncompressed, 0, uncompressedLength);
+            var compressedLength = LZ4Codec.Encode(uncompressed, 0, uncompressedLength, compressed, 0, compressed.Length);
 
             var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
             var apa = new Apa
