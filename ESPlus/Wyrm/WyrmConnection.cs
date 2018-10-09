@@ -97,7 +97,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = stream.ReadStructAsync<Int32>().Result;
+                    var length = stream.ReadStruct<Int32>();
 
                     if (length == 8)
                     {
@@ -105,15 +105,15 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    var monkey = stream.ReadStructAsync<Monkey>().Result;
+                    var monkey = stream.ReadStruct<Monkey>();
                     var epooch = new DateTime(1970, 1, 1);
                     var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
 
-                    var streamName2 = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.StreamNameLength).Result);
-                    var eventType = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.EventTypeLength).Result);
-                    var compressed = stream.ReadBytesAsync((int)monkey.CompressedSize).Result;
+                    var streamName2 = Encoding.UTF8.GetString(stream.ReadBytes(monkey.StreamNameLength));
+                    var eventType = Encoding.UTF8.GetString(stream.ReadBytes(monkey.EventTypeLength));
+                    var compressed = stream.ReadBytes((int)monkey.CompressedSize);
                     var uncompressed = new byte[monkey.UncompressedSize];
-                    var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
+                    var result = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
                     var metadata = new byte[monkey.MetaDataLength];
                     var data = new byte[monkey.PayloadLength];
 
@@ -254,7 +254,7 @@ namespace ESPlus.Wyrm
                     var eventType = Encoding.UTF8.GetString(stream.ReadBytes(monkey.EventTypeLength));
                     var compressed = stream.ReadBytes((int)monkey.CompressedSize);
                     var uncompressed = new byte[monkey.UncompressedSize];
-                    var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
+                    var compressedLength = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
                     var metadata = new byte[monkey.MetaDataLength];
                     var data = new byte[monkey.PayloadLength];
 
@@ -289,7 +289,7 @@ namespace ESPlus.Wyrm
             var uncompressed = BuildPayload(metadata, body);
             var uncompressedLength = uncompressed.Length;
             var compressed = new byte[LZ4Codec.MaximumOutputLength(uncompressedLength)];
-            var compressedLength = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressedLength);
+            var compressedLength = LZ4Codec.Encode(compressed, 0, compressed.Length, uncompressed, 0, uncompressedLength);
 
             var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
             var apa = new Apa
