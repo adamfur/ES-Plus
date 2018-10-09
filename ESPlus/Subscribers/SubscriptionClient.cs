@@ -32,6 +32,7 @@ namespace ESPlus.Subscribers
                     }
                     yield return @event;
                 }
+                
                 if (!stream.IsArtificial)
                 {
                     _subscriptionContext.Position = stream.NextPosition;

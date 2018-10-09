@@ -84,20 +84,32 @@ namespace ESPlus.Aggregates
             {
                 _handle.Add(apply.MessageType.FullName);
 
-                var method = typeof(ConventionEventRouter).GetMethod("Build", BindingFlags.NonPublic | BindingFlags.Instance);
-                var generic = method.MakeGenericMethod(apply.MessageType);
+                // var method = this.GetType().GetMethod("Build", BindingFlags.NonPublic | BindingFlags.Instance);
+                // Console.WriteLine($"apply.MessageType: {apply.MessageType.Name}");
+                // var generic = method.MakeGenericMethod(apply.MessageType);
 
-                this.handlers.Add(apply.MessageType, ar => generic.Invoke(this, new object[] { aggregate, apply.Method }));
+                // this.handlers.Add(apply.MessageType, (Action<object>)generic.Invoke(this, new object[] { apply.Method }));
+
+                var applyMethod = apply.Method;
+                this.handlers.Add(apply.MessageType, payload => applyMethod.Invoke(aggregate, new[] { payload }));
+
+                // this.handlers.Add(apply.MessageType, (Action<object>)generic.Invoke(this, new object[] { apply.Method }));
             }
-        }        
-
-        private Action<object> Build<T>(object instance, MethodInfo applyMethod)
-        {
-            var specificDelegate = ((Action<T>)Delegate.CreateDelegate(typeof(Action<T>), instance, applyMethod));
-            var genericDelegate = (Action<object>)(x => specificDelegate((T)x));
-
-            return genericDelegate;
         }
+
+        // private Action<object> Build<T>(MethodInfo applyMethod)
+        // {
+        //     // var specificDelegate = ((Action<T>)Delegate.CreateDelegate(typeof(Action<T>), payload, applyMethod));
+        //     // var genericDelegate = (Action<object>)(x => specificDelegate((T)x));
+
+        //     // return genericDelegate;
+
+        //     var specificDelegate = (Action<T>)(payload => Delegate.CreateDelegate(typeof(Action<T>), payload, applyMethod));
+        //     // var specificDelegate = (Action<T>)(payload => Console.WriteLine($"[::] {payload.GetType().Name} vs. {typeof(T).Name}"));
+        //     var genericDelegate = (Action<object>)(payload => specificDelegate((T)payload));
+
+        //     return genericDelegate;
+        // }
 
         public virtual void Dispatch(object eventMessage)
         {
