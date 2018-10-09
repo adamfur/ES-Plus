@@ -236,7 +236,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = stream.ReadStructAsync<Int32>().Result;
+                    var length = stream.ReadStruct<Int32>();
 
                     //Console.WriteLine($"Length: {length}");
 
@@ -246,12 +246,12 @@ namespace ESPlus.Wyrm
                     //     break;
                     // }
 
-                    var monkey = stream.ReadStructAsync<Monkey>().Result;
+                    var monkey = stream.ReadStruct<Monkey>();
                     var epooch = new DateTime(1970, 1, 1);
                     var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
-                    var streamName2 = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.StreamNameLength).Result);
-                    var eventType = Encoding.UTF8.GetString(stream.ReadBytesAsync(monkey.EventTypeLength).Result);
-                    var compressed = stream.ReadBytesAsync((int)monkey.CompressedSize).Result;
+                    var streamName2 = Encoding.UTF8.GetString(stream.ReadBytes(monkey.StreamNameLength));
+                    var eventType = Encoding.UTF8.GetString(stream.ReadBytes(monkey.EventTypeLength));
+                    var compressed = stream.ReadBytes((int)monkey.CompressedSize);
                     var uncompressed = new byte[monkey.UncompressedSize];
                     var result = LZ4.LZ4_decompress_safe(compressed, uncompressed, compressed.Length, uncompressed.Length);
                     var metadata = new byte[monkey.MetaDataLength];
