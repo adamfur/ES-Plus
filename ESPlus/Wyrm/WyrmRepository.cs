@@ -18,6 +18,7 @@ namespace ESPlus.Wyrm
         public static byte SUBSCRIBE = 0x05;
         public static byte PUT = 0x06;
         public static byte DELETE = 0x07;
+        public static byte LIST_STREAMS = 0x08;
         public static byte FLOOD = (byte)'a';
     }
 

@@ -214,6 +214,32 @@ namespace ESPlus.Wyrm
             public Int32 BodyLength;
         }
 
+        public IEnumerable<string> EnumerateStreams()
+        {
+            using (var client = Create())
+            {
+                var stream = client.GetStream();
+                var writer = new BinaryWriter(stream);
+
+                writer.Write(OperationType.LIST_STREAMS);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = stream.ReadStruct<Int32>();
+
+                    if (length == 0)
+                    {
+                        yield break;
+                    }
+
+                    var buffer = stream.ReadBytes(length);
+
+                    yield return Encoding.UTF8.GetString(buffer);
+                }
+            }
+        }
+
         public IEnumerable<WyrmEvent2> EnumerateAll(Position position)
         {
             using (var client = Create())
@@ -227,11 +253,6 @@ namespace ESPlus.Wyrm
                 var writer = new BinaryWriter(stream);
 
                 writer.Write(OperationType.SUBSCRIBE);
-                // Console.WriteLine($"Position: .Length = {position.Length}");
-                // writer.Write(position.A);
-                // writer.Write(position.B);
-                // writer.Write(position.C);
-                // writer.Write(position.D);
                 writer.Write(pos);
                 writer.Flush();
 
