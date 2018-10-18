@@ -76,7 +76,7 @@ namespace ESPlus.Wyrm
         private TcpClient Create()
         {
             var client = new TcpClient();
-
+            client.NoDelay = false;
             client.ConnectAsync(_host, _port).Wait();
 
             return client;
