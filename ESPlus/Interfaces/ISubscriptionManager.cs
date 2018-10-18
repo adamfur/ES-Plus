@@ -4,7 +4,7 @@ namespace ESPlus.Subscribers
 {
     public interface ISubscriptionManager
     {
-        ISubscriptionClient Subscribe(Position position, CancellationToken cancellationToken, Priority priority = Priority.Normal);
+        ISubscriptionClient Subscribe(Position position, CancellationToken cancellationToken);
         void Start();
     }
 }

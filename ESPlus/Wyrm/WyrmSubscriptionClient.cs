@@ -19,12 +19,6 @@ namespace ESPlus.Wyrm
             _eventTypeResolver = eventTypeResolver;
         }
 
-        public Priority Priority
-        {
-            get => _subscriptionContext.Priority;
-            set => _subscriptionContext.Priority = value;
-        }
-
         public IEnumerator<Event> GetEnumerator()
         {
             foreach (var @event in _wyrmConnection.EnumerateAll(_subscriptionContext.Position))

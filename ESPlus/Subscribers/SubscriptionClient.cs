@@ -12,32 +12,9 @@ namespace ESPlus.Subscribers
             _subscriptionContext = subscriptionContext;
         }
 
-        public Priority Priority
-        {
-            get => _subscriptionContext.Priority;
-            set => _subscriptionContext.Priority = value;
-        }
-
         public IEnumerator<Event> GetEnumerator()
         {
-            while (true)
-            {
-                var stream = _subscriptionContext.Take();
-
-                foreach (var @event in stream.Events)
-                {
-                    if (!stream.IsArtificial)
-                    {
-                        _subscriptionContext.Position = @event.Position;
-                    }
-                    yield return @event;
-                }
-                
-                if (!stream.IsArtificial)
-                {
-                    _subscriptionContext.Position = stream.NextPosition;
-                }
-            }
+            yield break;
         }
 
         IEnumerator IEnumerable.GetEnumerator()
