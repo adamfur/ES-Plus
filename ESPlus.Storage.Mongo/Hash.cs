@@ -1,4 +1,5 @@
 using System;
+using System.Data.HashFunction.xxHash;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,7 +25,10 @@ namespace ESPlus.Storage.Mongo
 
         public static string MongoHash(this string data)
         {
-            return Sha256(data).Replace("-", "").Substring(0, 24);
-        }        
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
+            var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(data));
+
+            return hash.AsHexString() + "00000000"; // 24 bytes
+        }
     }
 }
