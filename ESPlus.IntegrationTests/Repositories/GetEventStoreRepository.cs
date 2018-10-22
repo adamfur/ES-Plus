@@ -7,7 +7,7 @@ using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using EventStore.ClientAPI;
 
-namespace ESPlus.EventStore
+namespace ESPlus.IntegrationTests.Repositories
 {
     public class GetEventStoreRepository : IRepository
     {

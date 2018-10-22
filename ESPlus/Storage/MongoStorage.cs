@@ -6,7 +6,7 @@ using ESPlus.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace ESPlus.Storage.Mongo
+namespace ESPlus.Storage
 {
     public class MongoStorage : IStorage
     {

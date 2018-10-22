@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ESPlus.Storage.Mongo
+namespace ESPlus
 {
     public static class Hash
     {
