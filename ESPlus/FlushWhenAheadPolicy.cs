@@ -11,7 +11,7 @@ namespace ESPlus
         private readonly int _ms;
         private object _mutex = new object();
         private bool _doFlush = false;
-        private const int _eventThreshold = 1000;
+        private const int _eventThreshold = 100;
         private int _events = 0;
 
         public FlushWhenAheadPolicy(int ms)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
+using ESPlus;
 using Newtonsoft.Json;
 
 namespace ESPlus.Storage
@@ -38,7 +39,7 @@ namespace ESPlus.Storage
                 journal = _metadataStorage.Get<JournalLog>(JournalPath);
                 Console.WriteLine($"IsNull {journal == null}");
                 journal = journal ?? new JournalLog();
-                Console.WriteLine($"Journal Read Success: {journal.Checkpoint}");
+                Console.WriteLine($"Journal Read Success: {journal.Checkpoint.AsHexString()}");
             }
             catch (Exception e)
             {
@@ -111,7 +112,7 @@ namespace ESPlus.Storage
             };
             _metadataStorage.Put(JournalPath, journal);
             _metadataStorage.Flush();
-            Console.WriteLine($"Put Journal {Checkpoint}");
+            // Console.WriteLine($"Put Journal {Checkpoint}");
         }
 
         protected void WriteTo(IStorage storage, Dictionary<string, HasObjectId> cache)

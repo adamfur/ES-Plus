@@ -25,15 +25,16 @@ namespace ESPlus.Storage
             var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
             var pageSize = 100;
 
-            for (var i = 0; ; ++i)
-            {
-                // Console.WriteLine($"Page: {i * 100}/{_writeCache.Count()}");
-                var page = _writeCache.Skip(i * pageSize).Take(pageSize);
+            // for (var i = 0; ; ++i)
+            // {
+            //     // Console.WriteLine($"Page: {i * 100}/{_writeCache.Count()}");
+            //     var page = _writeCache.Skip(i * pageSize).Take(pageSize);
 
-                if (!page.Any())
-                {
-                    break;
-                }
+            //     if (!page.Any())
+            //     {
+            //         break;
+            //     }
+            //var updates = page.Select(d =>
 
                 var updates = _writeCache.Select(d =>
                 {
@@ -46,7 +47,7 @@ namespace ESPlus.Storage
                 });
 
                 Retry(() => collection.BulkWrite(updates));
-            }
+            // }
 
             _writeCache.Clear();
         }

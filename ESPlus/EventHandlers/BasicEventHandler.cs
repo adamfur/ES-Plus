@@ -79,11 +79,14 @@ namespace ESPlus.EventHandlers
 
 
             Context.Checkpoint = @event.Position;
-            //if (_router.CanHandle(@event.EventType))
+            _once.Execute();
+            // Console.WriteLine($"if (_router.CanHandle(@event.EventType)): {@event.EventType}");
+            if (_router.CanHandle(@event.EventType))
             {
                 //var type = _eventTypeResolver.ResolveType(@event.EventType);
                 //var payload = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(@event.Payload), type);
 
+                //Console.WriteLine($":: {@event.EventType}");
                 DispatchEvent(@event.DeserializedItem());
                 return true;
             }
