@@ -4,7 +4,7 @@ namespace ESPlus.Subscribers
 {
     public class EventFetcher : IEventFetcher
     {
-        public EventStream GetFromPosition(Position position)
+        public EventStream GetFromPosition(byte[] position)
         {
             throw new NotImplementedException();
         }

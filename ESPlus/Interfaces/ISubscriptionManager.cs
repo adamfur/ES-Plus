@@ -4,7 +4,7 @@ namespace ESPlus.Subscribers
 {
     public interface ISubscriptionManager
     {
-        ISubscriptionClient Subscribe(Position position, CancellationToken cancellationToken);
+        ISubscriptionClient Subscribe(byte[] position, CancellationToken cancellationToken);
         void Start();
     }
 }

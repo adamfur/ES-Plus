@@ -13,7 +13,7 @@ namespace ESPlus.Subscribers
             IsArtificial = true
         };
         public List<Event> Events { get; set; } = new List<Event>();
-        public Position NextPosition { get; set; }
+        public byte[] NextPosition { get; set; }
         public bool IsArtificial { get; set; } = false;
     }
 }

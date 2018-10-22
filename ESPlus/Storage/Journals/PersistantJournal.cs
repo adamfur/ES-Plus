@@ -12,9 +12,9 @@ namespace ESPlus.Storage
         protected readonly IStorage _metadataStorage;
         protected readonly IStorage _dataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
-        protected readonly Dictionary<string, object> _cache = new Dictionary<string, object>();
+        protected readonly Dictionary<string, WeakReference> _cache = new Dictionary<string, WeakReference>();
         protected readonly Dictionary<string, HasObjectId> _dataWriteCache = new Dictionary<string, HasObjectId>();
-        public Position Checkpoint { get; set; }
+        public byte[] Checkpoint { get; set; }
         private bool _changed = false;
 
         public PersistantJournal(IStorage metadataStorage, IStorage dataStorage)
@@ -71,7 +71,7 @@ namespace ESPlus.Storage
 
         public virtual void Put(string destination, HasObjectId item)
         {
-            _cache[destination] = item;
+            _cache[destination] = new WeakReference(item, false);
             _dataWriteCache[destination] = item;
             _changed = true;
         }
@@ -83,7 +83,7 @@ namespace ESPlus.Storage
             {
                 if (_cache.ContainsKey(path))
                 {
-                    return (T)_cache[path];
+                    return _cache[path].Target as T;
                 }
 
                 if (SubscriptionMode == SubscriptionMode.Replay)
@@ -93,7 +93,7 @@ namespace ESPlus.Storage
 
                 var data = _dataStorage.Get<T>(path);
 
-                _cache[path] = data;
+                _cache[path] = new WeakReference(data, false);
                 return data;
             }
             catch (System.IO.DirectoryNotFoundException)
@@ -111,7 +111,7 @@ namespace ESPlus.Storage
             };
             _metadataStorage.Put(JournalPath, journal);
             _metadataStorage.Flush();
-            Console.WriteLine($"Put Journal {Checkpoint.A}-{Checkpoint.B}-{Checkpoint.C}-{Checkpoint.D} :: {Checkpoint}");
+            Console.WriteLine($"Put Journal {Checkpoint}");
         }
 
         protected void WriteTo(IStorage storage, Dictionary<string, HasObjectId> cache)

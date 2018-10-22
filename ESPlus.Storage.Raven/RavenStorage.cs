@@ -9,7 +9,6 @@ namespace ESPlus.Storage.Raven
     {
         private readonly IDocumentStore _documentStore;
         private Dictionary<string, object> _writeCache = new Dictionary<string, object>();
-        private Dictionary<string, object> _cache = new Dictionary<string, object>();
 
         public RavenStorage(IDocumentStore documentStore)
         {
@@ -43,11 +42,6 @@ namespace ESPlus.Storage.Raven
         public T Get<T>(string path)
             where T : HasObjectId
         {
-            if (_cache.ContainsKey(path))
-            {
-                return (T)_cache[path];
-            }
-
             using (var session = _documentStore.OpenSession())
             {
                 return session.Load<T>(path);
@@ -57,7 +51,6 @@ namespace ESPlus.Storage.Raven
         public void Put(string path, HasObjectId item)
         {
             _writeCache[path] = item;
-            _cache[path] = item;
         }
 
         public void Reset()

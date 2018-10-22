@@ -61,7 +61,7 @@ namespace ESPlus.Wyrm
             return theStructure;
         }
 
-        public static T ReadStruct<T>(this Stream reader)
+        public static T ReadStruct<T>(this BinaryReader reader)
         {
             // Console.WriteLine($"ReadStructAsync: {typeof(T).FullName}");
             var size = Marshal.SizeOf(typeof(T));

@@ -14,18 +14,20 @@ namespace ESPlus.Subscribers
         private IEventFetcher _eventFetcher;
         private readonly WyrmConnection _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
+        private readonly IEventSerializer _eventSerializer;
 
-        public SubscriptionManager(WyrmConnection wyrmConnection, IEventTypeResolver eventTypeResolver)
+        public SubscriptionManager(WyrmConnection wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {
-            this._wyrmConnection = wyrmConnection;
-            this._eventTypeResolver = eventTypeResolver;
+            _wyrmConnection = wyrmConnection;
+            _eventTypeResolver = eventTypeResolver;
+            _eventSerializer = eventSerializer;
         }
 
         public void Start()
         {
         }
 
-        public ISubscriptionClient Subscribe(Position position, CancellationToken cancellationToken)
+        public ISubscriptionClient Subscribe(byte[] position, CancellationToken cancellationToken)
         {
             var context = new SubscriptionContext
             {
@@ -42,7 +44,7 @@ namespace ESPlus.Subscribers
                 _contexts.Add(context);
                 Monitor.Pulse(_mutex);
             }
-            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver);
+            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver, _eventSerializer);
         }
     }
 }

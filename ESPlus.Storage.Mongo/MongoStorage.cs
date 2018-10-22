@@ -13,7 +13,6 @@ namespace ESPlus.Storage.Mongo
         private readonly IMongoDatabase _mongoDatabase;
         private readonly string _collection;
         private readonly Dictionary<ObjectId, HasObjectId> _writeCache = new Dictionary<ObjectId, HasObjectId>();
-        private readonly Dictionary<ObjectId, HasObjectId> _cache = new Dictionary<ObjectId, HasObjectId>();
 
         public MongoStorage(IMongoDatabase mongoDatabase, string collection)
         {
@@ -24,10 +23,11 @@ namespace ESPlus.Storage.Mongo
         public void Flush()
         {
             var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
-            var pageSize = 1000;
+            var pageSize = 100;
 
             for (var i = 0; ; ++i)
             {
+                // Console.WriteLine($"Page: {i * 100}/{_writeCache.Count()}");
                 var page = _writeCache.Skip(i * pageSize).Take(pageSize);
 
                 if (!page.Any())
@@ -55,12 +55,6 @@ namespace ESPlus.Storage.Mongo
             where T : HasObjectId
         {
             var id = ObjectId.Parse(path.MongoHash());
-
-            if (_cache.ContainsKey(id))
-            {
-                return (T)_cache[id];
-            }
-
             var collection = _mongoDatabase.GetCollection<T>(_collection);
             var filter = new BsonDocument
             {
@@ -79,7 +73,6 @@ namespace ESPlus.Storage.Mongo
 
             item.ID = id;
             _writeCache[id] = item;
-            _cache[id] = item;
         }
 
         public void Reset()
