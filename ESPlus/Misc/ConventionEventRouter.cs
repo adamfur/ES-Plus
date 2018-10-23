@@ -56,7 +56,6 @@ namespace ESPlus.Aggregates
             return _handle.Select(x => BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(x)).Hash, 0))
                 .OrderBy(x => x);
         }
-        
 
         public bool CanHandle(string type)
         {
