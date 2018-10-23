@@ -20,6 +20,12 @@ namespace ESPlus.EventHandlers
             _flushPolicy = flushPolicy;
         }
 
+        public byte[] Checkpoint
+        {
+            get => Context.Checkpoint;
+            set => Context.Checkpoint = value;
+        }
+
         public virtual void Initialize()
         {
         }

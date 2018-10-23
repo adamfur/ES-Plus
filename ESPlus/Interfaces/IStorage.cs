@@ -5,6 +5,7 @@ namespace ESPlus.Interfaces
     public interface IStorage : IFlushable
     {
         void Put(string path, HasObjectId item);
+        void Delete(string path);
         T Get<T>(string path) where T : HasObjectId;        
         void Reset();
     }

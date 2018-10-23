@@ -4,6 +4,7 @@ using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using ESPlus;
 using Newtonsoft.Json;
+using System.Runtime.CompilerServices;
 
 namespace ESPlus.Storage
 {
@@ -13,7 +14,7 @@ namespace ESPlus.Storage
         protected readonly IStorage _metadataStorage;
         protected readonly IStorage _dataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
-        protected readonly Dictionary<string, WeakReference> _cache = new Dictionary<string, WeakReference>();
+        protected readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
         protected readonly Dictionary<string, HasObjectId> _dataWriteCache = new Dictionary<string, HasObjectId>();
         public byte[] Checkpoint { get; set; }
         private bool _changed = false;
@@ -72,7 +73,7 @@ namespace ESPlus.Storage
 
         public virtual void Put(string destination, HasObjectId item)
         {
-            _cache[destination] = new WeakReference(item, false);
+            _cache.AddOrUpdate(destination, item);
             _dataWriteCache[destination] = item;
             _changed = true;
         }
@@ -82,19 +83,24 @@ namespace ESPlus.Storage
         {
             try
             {
-                if (_cache.ContainsKey(path))
+                if (_dataWriteCache.TryGetValue(path, out HasObjectId item1))
                 {
-                    return _cache[path].Target as T;
+                    return item1 as T;
                 }
 
-                if (SubscriptionMode == SubscriptionMode.Replay)
+                if (_cache.TryGetValue(path, out HasObjectId item2))
                 {
-                    return default(T);
+                    return item2 as T;
                 }
+
+                // if (SubscriptionMode == SubscriptionMode.Replay)
+                // {
+                //     return default(T);
+                // }
 
                 var data = _dataStorage.Get<T>(path);
 
-                _cache[path] = new WeakReference(data, false);
+                _cache.AddOrUpdate(path, data);
                 return data;
             }
             catch (System.IO.DirectoryNotFoundException)
@@ -145,6 +151,13 @@ namespace ESPlus.Storage
         public void Reset()
         {
             throw new System.NotImplementedException();
+        }
+
+        public void Delete(string path)
+        {
+            _cache.Remove(path);
+            _dataWriteCache.Remove(path);
+            _dataStorage.Delete(path);
         }
     }
 }

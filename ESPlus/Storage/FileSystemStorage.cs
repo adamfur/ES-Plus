@@ -140,5 +140,10 @@ namespace ESPlus.Storage
             }
             _pathExits.Clear();
         }
+
+        public void Delete(string path)
+        {
+            Directory.Delete(path);
+        }
     }
 }

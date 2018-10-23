@@ -54,24 +54,6 @@ namespace ESPlus.Wyrm
             return rv;
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct Monkey
-        {
-            public Int64 Offset;
-            public Int64 TotalOffset;
-            public Guid EventId;
-            public Int64 Version;
-            public Int32 UncompressedSize;
-            public Int32 CompressedSize;
-            public Int32 EncryptedSize;
-            public Int64 Clock;
-            public Int64 Ms;
-            public Int32 EventTypeLength;
-            public Int32 StreamNameLength;
-            public Int32 MetaDataLength;
-            public Int32 PayloadLength;
-        }
-
         private TcpClient Create()
         {
             var client = new TcpClient();
@@ -173,38 +155,6 @@ namespace ESPlus.Wyrm
                 StreamName = streamName,
                 Position = position
             };
-
-
-            /*
-                        var position = reader.ReadBytes(32);
-                        var monkey = reader.ReadStruct<Monkey>();
-                        var epooch = new DateTime(1970, 1, 1);
-                        var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
-                        var streamName2 = Encoding.UTF8.GetString(reader.ReadBytes(monkey.StreamNameLength));
-                        var eventType = Encoding.UTF8.GetString(reader.ReadBytes(monkey.EventTypeLength));
-                        var compressed = reader.ReadBytes((int)monkey.CompressedSize);
-                        var uncompressed = new byte[monkey.UncompressedSize];
-                        var result = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
-                        var metadata = new byte[monkey.MetaDataLength];
-                        var data = new byte[monkey.PayloadLength];
-
-                        Array.Copy(uncompressed, metadata, metadata.Length);
-                        Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
-
-                        return new WyrmEvent2
-                        {
-                            Offset = monkey.Offset,
-                            TotalOffset = monkey.TotalOffset,
-                            EventId = monkey.EventId,
-                            Version = monkey.Version,
-                            Timestamp = time,
-                            Metadata = metadata,
-                            Data = data,
-                            Position = position,
-                            EventType = eventType,
-                            StreamName = streamName2
-                        };
-            */
         }
 
         public async Task DeleteAsync(string streamName)
@@ -313,6 +263,7 @@ namespace ESPlus.Wyrm
 
         public IEnumerable<WyrmEvent2> EnumerateAll(byte[] from)
         {
+            Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
             using (var client = Create())
             {
                 var stream = client.GetStream();

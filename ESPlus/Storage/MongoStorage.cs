@@ -20,34 +20,35 @@ namespace ESPlus.Storage
             _collection = collection;
         }
 
+        public void Delete(string path)
+        {
+            var id = ObjectId.Parse(path.MongoHash());
+
+            _writeCache[id] = null;
+        }
+
         public void Flush()
         {
             var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
-            var pageSize = 100;
-
-            // for (var i = 0; ; ++i)
-            // {
-            //     // Console.WriteLine($"Page: {i * 100}/{_writeCache.Count()}");
-            //     var page = _writeCache.Skip(i * pageSize).Take(pageSize);
-
-            //     if (!page.Any())
-            //     {
-            //         break;
-            //     }
-            //var updates = page.Select(d =>
-
-                var updates = _writeCache.Select(d =>
+            var updates = _writeCache.Select(d =>
+            {
+                var filter = new BsonDocument
                 {
-                    var filter = new BsonDocument
-                    {
-                        {"_id", d.Key},
-                        {"_t", d.Value.GetType().Name}
-                    };
-                    return new ReplaceOneModel<HasObjectId>(filter, d.Value) { IsUpsert = true };
-                });
+                    {"_id", d.Key},
+                    {"_t", d.Value.GetType().Name}
+                };
 
-                Retry(() => collection.BulkWrite(updates));
-            // }
+                if (d.Value != null)
+                {
+                    return (WriteModel<HasObjectId>) new ReplaceOneModel<HasObjectId>(filter, d.Value) { IsUpsert = true };
+                }
+                else
+                {
+                    return (WriteModel<HasObjectId>) new DeleteOneModel<HasObjectId>(filter);
+                }
+            });
+
+            Retry(() => collection.BulkWrite(updates));
 
             _writeCache.Clear();
         }
@@ -60,7 +61,7 @@ namespace ESPlus.Storage
             var filter = new BsonDocument
             {
                 {"_id", id},
-                //{"_t", typeof(T).GetType().Name}
+                {"_t", typeof(T).Name}
             };
 
             var result = (T)collection.Find(filter).FirstOrDefault();
@@ -88,6 +89,10 @@ namespace ESPlus.Storage
                 {
                     action();
                     break;
+                }
+                catch (OutOfMemoryException)
+                {
+                    throw;
                 }
                 catch (Exception)
                 {

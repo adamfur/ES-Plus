@@ -11,6 +11,7 @@ namespace ESPlus.EventHandlers
         bool Dispatch(Event @event);
         void Initialize();
         void Flush();
+        byte[] Checkpoint { get; set; }
         IEnumerable<object> TakeEmittedEvents();
         IEnumerable<object> TakeEmittedOnSubmitEvents();
     }

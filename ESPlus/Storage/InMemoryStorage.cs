@@ -7,6 +7,11 @@ namespace ESPlus.Storage
     {
         private readonly Dictionary<string, HasObjectId> _data = new Dictionary<string, HasObjectId>();
 
+        public void Delete(string path)
+        {
+            _data.Remove(path);
+        }
+
         public void Flush()
         {
         }
