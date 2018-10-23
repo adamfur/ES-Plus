@@ -85,7 +85,7 @@ namespace ESPlus.Wyrm
         {
             using (var client = Create())
             {
-                //var stream = client.GetStream();
+                var stream = client.GetStream();
                 var writer = new BinaryWriter(client.GetStream());
                 var reader = new BinaryReader(client.GetStream());
                 var name = Encoding.UTF8.GetBytes(streamName);
@@ -105,41 +105,106 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(reader);
+                    yield return ReadEvent(stream, length - sizeof(Int32));
                 }
             }
         }
 
-        public WyrmEvent2 ReadEvent(BinaryReader reader)
+        public WyrmEvent2 ReadEvent(Stream reader, int length)
         {
-            var position = reader.ReadBytes(32);
-            var monkey = reader.ReadStruct<Monkey>();
+            ReadOnlySpan<byte> payload = reader.ReadBytes(length);// stackalloc byte[length];
+
+            // reader.ReadBytes(payload, length);
+
+            int disp = 0;
+            var position = payload.Slice(disp, 32).ToArray();
+            disp += 32;
+            var offset = BitConverter.ToInt64(payload.Slice(disp, 8));
+            disp += 8;
+            var totalOffset = BitConverter.ToInt64(payload.Slice(disp, 8));
+            disp += 8;
+            var eventId = new Guid(payload.Slice(disp, 16));
+            disp += 16;
+            var version = BitConverter.ToInt64(payload.Slice(disp, 8));
+            disp += 8;
+            var uncompressedSize = BitConverter.ToInt32(payload.Slice(disp, 4));
+            disp += 4;
+            var compressedSize = BitConverter.ToInt32(payload.Slice(disp, 4));
+            disp += 4;
+            var encryptedSize = BitConverter.ToInt32(payload.Slice(disp, 4));
+            disp += 4;
+            var clock = BitConverter.ToInt64(payload.Slice(disp, 8));
+            disp += 8;
+            var ms = BitConverter.ToInt64(payload.Slice(disp, 8));
+            disp += 8;
+            var eventTypeLength = BitConverter.ToInt32(payload.Slice(disp, 4));
+            disp += 4;
+            var streamNameLength = BitConverter.ToInt32(payload.Slice(disp, 4));
+            disp += 4;
+            var metaDataLength = BitConverter.ToInt32(payload.Slice(disp, 4));
+            disp += 4;
+            var payloadLength = BitConverter.ToInt32(payload.Slice(disp, 4));
+            disp += 4;
+            var streamName = Encoding.UTF8.GetString(payload.Slice(disp, (int)streamNameLength));
+            disp += (int)streamNameLength;
+            var eventType = Encoding.UTF8.GetString(payload.Slice(disp, (int)eventTypeLength));
+            disp += (int)eventTypeLength;
             var epooch = new DateTime(1970, 1, 1);
-            var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
-            var streamName2 = Encoding.UTF8.GetString(reader.ReadBytes(monkey.StreamNameLength));
-            var eventType = Encoding.UTF8.GetString(reader.ReadBytes(monkey.EventTypeLength));
-            var compressed = reader.ReadBytes((int)monkey.CompressedSize);
-            var uncompressed = new byte[monkey.UncompressedSize];
-            var result = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
-            var metadata = new byte[monkey.MetaDataLength];
-            var data = new byte[monkey.PayloadLength];
+            var time = epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
+            var compressed = payload.Slice(disp, (int)compressedSize).ToArray();
+            var uncompressed = new byte[uncompressedSize];
+            var compressedLength = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
+            var metadata = new byte[metaDataLength];
+            var data = new byte[payloadLength];
 
             Array.Copy(uncompressed, metadata, metadata.Length);
             Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
 
             return new WyrmEvent2
             {
-                Offset = monkey.Offset,
-                TotalOffset = monkey.TotalOffset,
-                EventId = monkey.EventId,
-                Version = monkey.Version,
+                Offset = offset,
+                TotalOffset = totalOffset,
+                EventId = eventId,
+                Version = version,
                 Timestamp = time,
                 Metadata = metadata,
                 Data = data,
-                Position = position,
                 EventType = eventType,
-                StreamName = streamName2
+                StreamName = streamName,
+                Position = position
             };
+
+
+            /*
+                        var position = reader.ReadBytes(32);
+                        var monkey = reader.ReadStruct<Monkey>();
+                        var epooch = new DateTime(1970, 1, 1);
+                        var time = epooch.AddSeconds(monkey.Clock).AddMilliseconds(monkey.Ms).ToLocalTime();
+                        var streamName2 = Encoding.UTF8.GetString(reader.ReadBytes(monkey.StreamNameLength));
+                        var eventType = Encoding.UTF8.GetString(reader.ReadBytes(monkey.EventTypeLength));
+                        var compressed = reader.ReadBytes((int)monkey.CompressedSize);
+                        var uncompressed = new byte[monkey.UncompressedSize];
+                        var result = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
+                        var metadata = new byte[monkey.MetaDataLength];
+                        var data = new byte[monkey.PayloadLength];
+
+                        Array.Copy(uncompressed, metadata, metadata.Length);
+                        Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
+
+                        return new WyrmEvent2
+                        {
+                            Offset = monkey.Offset,
+                            TotalOffset = monkey.TotalOffset,
+                            EventId = monkey.EventId,
+                            Version = monkey.Version,
+                            Timestamp = time,
+                            Metadata = metadata,
+                            Data = data,
+                            Position = position,
+                            EventType = eventType,
+                            StreamName = streamName2
+                        };
+            */
         }
 
         public async Task DeleteAsync(string streamName)
@@ -268,7 +333,7 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(reader);
+                    yield return ReadEvent(stream, length - sizeof(Int32));
                 }
             }
         }

@@ -45,7 +45,7 @@ namespace ESPlus.Wyrm
             } while (offset != buffer.Length);
 
             return buffer;
-        }        
+        }
 
         public static async Task<T> ReadStructAsync<T>(this Stream reader)
         {
@@ -73,6 +73,23 @@ namespace ESPlus.Wyrm
             handle.Free();
 
             return theStructure;
-        }        
+        }
+
+        // public static void ReadBytes(this Stream reader, byte[] buffer, int length)
+        // {
+        //     var offset = 0;
+
+        //     do
+        //     {
+        //         var length2 = reader.Read(buffer, offset, buffer.Length - offset);
+
+        //         // if (length2 == 0)
+        //         // {
+        //         //     throw new Exception("if (length2 == 0)");
+        //         // }
+
+        //         offset += length2;
+        //     } while (offset != buffer.Length);
+        // }
     }
 }
