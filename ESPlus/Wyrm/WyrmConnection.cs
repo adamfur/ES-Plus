@@ -87,12 +87,12 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(stream, length - sizeof(Int32));
+                    yield return ReadEvent(reader, length - sizeof(Int32));
                 }
             }
         }
 
-        public WyrmEvent2 ReadEvent(Stream reader, int length)
+        public WyrmEvent2 ReadEvent(BinaryReader reader, int length)
         {
             ReadOnlySpan<byte> payload = reader.ReadBytes(length);// stackalloc byte[length];
 
@@ -284,7 +284,7 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(stream, length - sizeof(Int32));
+                    yield return ReadEvent(reader, length - sizeof(Int32));
                 }
             }
         }
