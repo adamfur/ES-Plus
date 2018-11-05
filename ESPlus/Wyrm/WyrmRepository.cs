@@ -53,7 +53,7 @@ namespace ESPlus.Wyrm
     public class WyrmRepository : IRepository
     {
         private readonly IEventSerializer _eventSerializer;
-        private readonly WyrmConnection _wyrmConnection;
+        private readonly WyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
 
         public static void Register<Type>()
@@ -61,10 +61,10 @@ namespace ESPlus.Wyrm
             _types[typeof(Type).FullName] = typeof(Type);
         }
 
-        public WyrmRepository(WyrmConnection wyrmConnection, IEventSerializer eventSerializer)
+        public WyrmRepository(WyrmDriver wyrmConnection)
         {
             _wyrmConnection = wyrmConnection;
-            _eventSerializer = eventSerializer;
+            _eventSerializer = wyrmConnection.Serializer;
         }
 
         private void Index<TAggregate>()

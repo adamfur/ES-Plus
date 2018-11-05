@@ -9,11 +9,11 @@ namespace ESPlus.Wyrm
     public class WyrmSubscriptionClient : ISubscriptionClient
     {
         private SubscriptionContext _subscriptionContext;
-        private readonly WyrmConnection _wyrmConnection;
+        private readonly WyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
         private readonly IEventSerializer _eventSerializer;
 
-        public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, WyrmConnection wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
+        public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, WyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {
             _subscriptionContext = subscriptionContext;
             _wyrmConnection = wyrmConnection;
@@ -25,7 +25,7 @@ namespace ESPlus.Wyrm
         {
             foreach (var @event in _wyrmConnection.EnumerateAll(_subscriptionContext.Position))
             {
-                yield return new Event(_eventTypeResolver, _eventSerializer)
+                yield return new Event(_eventTypeResolver, @event.Serializer)
                 {
                     Position = @event.Position,
                     Meta = @event.Metadata,
@@ -36,7 +36,7 @@ namespace ESPlus.Wyrm
 
                 if (@event.Offset == @event.TotalOffset)
                 {
-                    yield return new Event(_eventTypeResolver, _eventSerializer)
+                    yield return new Event(_eventTypeResolver, @event.Serializer)
                     {
                         IsAhead = true
                     };

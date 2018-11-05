@@ -9,11 +9,11 @@ namespace ESPlus.IntegrationTests2.Repositories
 {
     public class RepositoryTests
     {
-        private WyrmConnection _connection;
+        private WyrmDriver _connection;
 
         public RepositoryTests()
         {
-            _connection = new WyrmConnection();
+            _connection = new WyrmDriver(Environment.GetEnvironmentVariable("EVENTSTORE") ?? "localhost:8888", new EventJsonSerializer());
         }
 
         [Fact]

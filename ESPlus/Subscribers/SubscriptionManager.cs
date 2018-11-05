@@ -11,11 +11,11 @@ namespace ESPlus.Subscribers
     {
         private readonly List<SubscriptionContext> _contexts = new List<SubscriptionContext>();
         private object _mutex = new object();
-        private readonly WyrmConnection _wyrmConnection;
+        private readonly WyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
         private readonly IEventSerializer _eventSerializer;
 
-        public SubscriptionManager(WyrmConnection wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
+        public SubscriptionManager(WyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {
             _wyrmConnection = wyrmConnection;
             _eventTypeResolver = eventTypeResolver;

@@ -22,24 +22,27 @@ namespace ESPlus.Wyrm
         public string EventType { get; set; }
         public string StreamName { get; set; }
         public byte[] Position { get; set; }
+        public IEventSerializer Serializer { get; set; }
     }
 
-    public class WyrmConnection
+    public class WyrmDriver
     {
         private string _host;
         private int _port;
+        public IEventSerializer Serializer { get; }
 
-        public WyrmConnection()
-            : this(Environment.GetEnvironmentVariable("EVENTSTORE") ?? "localhost:8888")
-        {
-        }
+        // public WyrmDriver()
+        //     : this(Environment.GetEnvironmentVariable("EVENTSTORE") ?? "localhost:8888")
+        // {
+        // }
 
-        public WyrmConnection(string connectionString)
+        public WyrmDriver(string connectionString, IEventSerializer eventSerializer)
         {
             var parts = connectionString.Split(":");
 
             _host = parts[0];
             _port = int.Parse(parts[1]);
+            Serializer = eventSerializer;
         }
 
         private byte[] Combine(params byte[][] arrays)
@@ -153,7 +156,8 @@ namespace ESPlus.Wyrm
                 Data = data,
                 EventType = eventType,
                 StreamName = streamName,
-                Position = position
+                Position = position,
+                Serializer = Serializer
             };
         }
 
