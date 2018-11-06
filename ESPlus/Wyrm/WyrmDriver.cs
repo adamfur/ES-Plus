@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.HashFunction.xxHash;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -238,8 +239,10 @@ namespace ESPlus.Wyrm
             public Int32 BodyLength;
         }
 
-        public IEnumerable<string> EnumerateStreams()
+        public IEnumerable<string> EnumerateStreams(params Type[] filters)
         {
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
+
             using (var client = Create())
             {
                 var stream = client.GetStream();
@@ -247,6 +250,11 @@ namespace ESPlus.Wyrm
                 var reader = new BinaryReader(stream);
 
                 writer.Write(OperationType.LIST_STREAMS);
+                writer.Write(filters.Length);
+                foreach (var filter in filters)
+                {
+                    writer.Write(BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(filter.FullName)).Hash));
+                }
                 writer.Flush();
 
                 while (true)
