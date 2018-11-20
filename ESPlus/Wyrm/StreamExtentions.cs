@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -27,24 +28,34 @@ namespace ESPlus.Wyrm
             return buffer;
         }
 
-        public static byte[] ReadBytes(this Stream reader, int length)
+        public static byte[] ReadBytes(this NetworkStream reader, int length)
         {
             var buffer = new byte[length];
             var offset = 0;
+            var remaining = length;
 
-            do
+            while (remaining > 0)
             {
-                var length2 = reader.Read(buffer, offset, buffer.Length - offset);
+                var read = reader.Read(buffer, offset, remaining);
 
-                // if (length2 == 0)
-                // {
-                //     throw new Exception("if (length2 == 0)");
-                // }
+                if (read < 0)
+                {
+                    // Console.WriteLine($"End of stream reached with {remaining} bytes left to read, ReadTimeout: {reader.ReadTimeout}");
+                    throw new EndOfStreamException($"End of stream reached with {remaining} bytes left to read");
+                }
 
-                offset += length2;
-            } while (offset != buffer.Length);
+                remaining -= read;
+                offset += read;
+            }
 
             return buffer;
+        }
+
+        public static Int32 ReadInt32(this NetworkStream reader)
+        {
+            var bytes = ReadBytes(reader, sizeof(Int32));
+
+            return BitConverter.ToInt32(bytes);
         }
 
         public static async Task<T> ReadStructAsync<T>(this Stream reader)

@@ -73,7 +73,6 @@ namespace ESPlus.Wyrm
             {
                 var stream = client.GetStream();
                 var writer = new BinaryWriter(client.GetStream());
-                var reader = new BinaryReader(client.GetStream());
                 var name = Encoding.UTF8.GetBytes(streamName);
                 writer.Write(OperationType.READ_STREAM_FORWARD);
                 writer.Write(name.Length);
@@ -83,7 +82,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
+                    var length = stream.ReadInt32();
 
                     if (length == 8)
                     {
@@ -91,12 +90,12 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(reader, length - sizeof(Int32));
+                    yield return ReadEvent(stream, length - sizeof(Int32));
                 }
             }
         }
 
-        public WyrmEvent2 ReadEvent(BinaryReader reader, int length)
+        public WyrmEvent2 ReadEvent(NetworkStream reader, int length)
         {
             ReadOnlySpan<byte> payload = reader.ReadBytes(length);// stackalloc byte[length];
 
@@ -166,21 +165,21 @@ namespace ESPlus.Wyrm
         {
             using (var client = Create())
             {
-                var reader = new BinaryReader(client.GetStream());
-                var writer = new BinaryWriter(client.GetStream());
+                var stream = client.GetStream();
+                var writer = new BinaryWriter(stream);
                 var name = Encoding.UTF8.GetBytes(streamName);
                 writer.Write(OperationType.DELETE);
                 writer.Write(name.Length);
                 writer.Write(name, 0, name.Length);
 
-                var len = reader.ReadInt32();
+                var len = stream.ReadInt32();
 
                 if (len != 8)
                 {
                     throw new Exception("if (len != 8)");
                 }
 
-                var status = reader.ReadInt32();
+                var status = stream.ReadInt32();
                 if (status != 0)
                 {
                     throw new Exception($"if (status != 0): {status}");
@@ -198,8 +197,8 @@ namespace ESPlus.Wyrm
 
             using (var client = Create())
             {
-                var reader = new BinaryReader(client.GetStream());
-                var writer = new BinaryWriter(client.GetStream());
+                var stream = client.GetStream();
+                var writer = new BinaryWriter(stream);
                 var concat = Combine(events.Select(x => Assemble(x)).ToArray());
                 int length = concat.Length;
 
@@ -208,14 +207,14 @@ namespace ESPlus.Wyrm
                 writer.Write(concat, 0, length);
                 writer.Flush();
 
-                var len = reader.ReadInt32();
+                var len = stream.ReadInt32();
 
                 if (len != 8)
                 {
                     throw new Exception("if (len != 8)");
                 }
 
-                var status = reader.ReadInt32();
+                var status = stream.ReadInt32();
 
                 if (status != 0)
                 {
@@ -247,7 +246,6 @@ namespace ESPlus.Wyrm
             {
                 var stream = client.GetStream();
                 var writer = new BinaryWriter(stream);
-                var reader = new BinaryReader(stream);
 
                 writer.Write(OperationType.LIST_STREAMS);
                 writer.Write(filters.Length);
@@ -259,7 +257,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
+                    var length = stream.ReadInt32();
 
                     if (length == 0)
                     {
@@ -280,23 +278,34 @@ namespace ESPlus.Wyrm
             {
                 var stream = client.GetStream();
                 var writer = new BinaryWriter(stream);
-                var reader = new BinaryReader(stream);
 
+                // stream.ReadTimeout = System.Threading.Timeout.Infinite;
                 writer.Write(OperationType.SUBSCRIBE);
                 writer.Write(from);
                 writer.Flush();
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
+                    WyrmEvent2 evt = null;
 
-                    if (length == 8)
+                    try
                     {
-                        //Console.WriteLine("reached end!");
-                        break;
+                        var length = stream.ReadInt32();
+
+                        if (length == 8)
+                        {
+                            //Console.WriteLine("reached end!");
+                            break;
+                        }
+
+                        evt = ReadEvent(stream, length - sizeof(Int32));
+                    }
+                    catch (System.IO.EndOfStreamException)
+                    {
+                        throw;
                     }
 
-                    yield return ReadEvent(reader, length - sizeof(Int32));
+                    yield return evt;
                 }
             }
         }

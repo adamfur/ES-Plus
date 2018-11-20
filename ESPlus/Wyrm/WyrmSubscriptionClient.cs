@@ -34,7 +34,7 @@ namespace ESPlus.Wyrm
                     IsAhead = false
                 };
 
-                if (@event.Offset == @event.TotalOffset)
+                if (@event.Offset >= @event.TotalOffset)
                 {
                     yield return new Event(_eventTypeResolver, @event.Serializer)
                     {
