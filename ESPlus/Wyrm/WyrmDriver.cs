@@ -32,11 +32,6 @@ namespace ESPlus.Wyrm
         private int _port;
         public IEventSerializer Serializer { get; }
 
-        // public WyrmDriver()
-        //     : this(Environment.GetEnvironmentVariable("EVENTSTORE") ?? "localhost:8888")
-        // {
-        // }
-
         public WyrmDriver(string connectionString, IEventSerializer eventSerializer)
         {
             var parts = connectionString.Split(":");
@@ -48,13 +43,15 @@ namespace ESPlus.Wyrm
 
         private byte[] Combine(params byte[][] arrays)
         {
-            byte[] rv = new byte[arrays.Sum(a => a.Length)];
-            int offset = 0;
-            foreach (byte[] array in arrays)
+            var rv = new byte[arrays.Sum(a => a.Length)];
+            var offset = 0;
+
+            foreach (var array in arrays)
             {
-                System.Buffer.BlockCopy(array, 0, rv, offset, array.Length);
+                Buffer.BlockCopy(array, 0, rv, offset, array.Length);
                 offset += array.Length;
             }
+
             return rv;
         }
 

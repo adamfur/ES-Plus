@@ -2,48 +2,31 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ESPlus.Wyrm
 {
     public static class StreamExtentions
     {
-        public static async Task<byte[]> ReadBytesAsync(this Stream reader, int length)
+        public static async Task<byte[]> ReadBytesAsync(this Stream stream, int length)
         {
             var buffer = new byte[length];
             var offset = 0;
+            var remaining = length;
 
-            do
+            while (remaining > 0)
             {
-                var length2 = await reader.ReadAsync(buffer, offset, buffer.Length - offset);
+                var result = await stream.ReadAsync(buffer, offset, remaining);
 
-                // if (length2 == 0)
-                // {
-                //     throw new Exception("if (length2 == 0)");
-                // }
+                if (result < 0)
+                {
+                    throw new Exception($"ReadBytes, result: {result}");
+                }
 
-                offset += length2;
-            } while (offset != buffer.Length);
-
-            return buffer;
-        }
-
-        public static byte[] ReadBytes(this Stream reader, int length)
-        {
-            var buffer = new byte[length];
-            var offset = 0;
-
-            do
-            {
-                var length2 = reader.Read(buffer, offset, buffer.Length - offset);
-
-                // if (length2 == 0)
-                // {
-                //     throw new Exception("if (length2 == 0)");
-                // }
-
-                offset += length2;
-            } while (offset != buffer.Length);
+                offset += result;
+                remaining -= result;
+            }
 
             return buffer;
         }
@@ -55,8 +38,9 @@ namespace ESPlus.Wyrm
             var buffer = await reader.ReadBytesAsync(size);
 
             // Pin the managed memory while, copy it out the data, then unpin it
-            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            var theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+
             handle.Free();
 
             return theStructure;
@@ -69,8 +53,9 @@ namespace ESPlus.Wyrm
             var buffer = reader.ReadBytes(size);
 
             // Pin the managed memory while, copy it out the data, then unpin it
-            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            T theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            var theStructure = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+
             handle.Free();
 
             return theStructure;
@@ -88,7 +73,7 @@ namespace ESPlus.Wyrm
 
                 if (result < 0)
                 {
-                    throw new Exception();
+                    throw new Exception($"ReadBytes, result: {result}");
                 }
 
                 offset += result;
@@ -104,22 +89,5 @@ namespace ESPlus.Wyrm
 
             return BitConverter.ToInt32(payload);
         }
-
-        // public static void ReadBytes(this Stream reader, byte[] buffer, int length)
-        // {
-        //     var offset = 0;
-
-        //     do
-        //     {
-        //         var length2 = reader.Read(buffer, offset, buffer.Length - offset);
-
-        //         // if (length2 == 0)
-        //         // {
-        //         //     throw new Exception("if (length2 == 0)");
-        //         // }
-
-        //         offset += length2;
-        //     } while (offset != buffer.Length);
-        // }
     }
 }
