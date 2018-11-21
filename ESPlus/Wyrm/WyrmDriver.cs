@@ -72,7 +72,7 @@ namespace ESPlus.Wyrm
             using (var client = Create())
             {
                 var stream = client.GetStream();
-                var writer = new BinaryWriter(client.GetStream());
+                var writer = new BinaryWriter(stream);
                 var name = Encoding.UTF8.GetBytes(streamName);
                 writer.Write(OperationType.READ_STREAM_FORWARD);
                 writer.Write(name.Length);
@@ -279,33 +279,21 @@ namespace ESPlus.Wyrm
                 var stream = client.GetStream();
                 var writer = new BinaryWriter(stream);
 
-                // stream.ReadTimeout = System.Threading.Timeout.Infinite;
                 writer.Write(OperationType.SUBSCRIBE);
                 writer.Write(from);
                 writer.Flush();
 
                 while (true)
                 {
-                    WyrmEvent2 evt = null;
+                    var length = stream.ReadInt32();
 
-                    try
+                    if (length == 8)
                     {
-                        var length = stream.ReadInt32();
-
-                        if (length == 8)
-                        {
-                            //Console.WriteLine("reached end!");
-                            break;
-                        }
-
-                        evt = ReadEvent(stream, length - sizeof(Int32));
-                    }
-                    catch (System.IO.EndOfStreamException)
-                    {
-                        throw;
+                        //Console.WriteLine("reached end!");
+                        break;
                     }
 
-                    yield return evt;
+                    yield return ReadEvent(stream, length - sizeof(Int32));
                 }
             }
         }

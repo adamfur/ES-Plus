@@ -28,34 +28,24 @@ namespace ESPlus.Wyrm
             return buffer;
         }
 
-        public static byte[] ReadBytes(this NetworkStream reader, int length)
+        public static byte[] ReadBytes(this Stream reader, int length)
         {
             var buffer = new byte[length];
             var offset = 0;
-            var remaining = length;
 
-            while (remaining > 0)
+            do
             {
-                var read = reader.Read(buffer, offset, remaining);
+                var length2 = reader.Read(buffer, offset, buffer.Length - offset);
 
-                if (read < 0)
-                {
-                    // Console.WriteLine($"End of stream reached with {remaining} bytes left to read, ReadTimeout: {reader.ReadTimeout}");
-                    throw new EndOfStreamException($"End of stream reached with {remaining} bytes left to read");
-                }
+                // if (length2 == 0)
+                // {
+                //     throw new Exception("if (length2 == 0)");
+                // }
 
-                remaining -= read;
-                offset += read;
-            }
+                offset += length2;
+            } while (offset != buffer.Length);
 
             return buffer;
-        }
-
-        public static Int32 ReadInt32(this NetworkStream reader)
-        {
-            var bytes = ReadBytes(reader, sizeof(Int32));
-
-            return BitConverter.ToInt32(bytes);
         }
 
         public static async Task<T> ReadStructAsync<T>(this Stream reader)
@@ -84,6 +74,35 @@ namespace ESPlus.Wyrm
             handle.Free();
 
             return theStructure;
+        }
+
+        public static byte[] ReadBytes(this NetworkStream stream, int length)
+        {
+            var buffer = new byte[length];
+            var offset = 0;
+            var remaining = length;
+
+            while (remaining > 0)
+            {
+                var result = stream.Read(buffer, offset, remaining);
+
+                if (result < 0)
+                {
+                    throw new Exception();
+                }
+
+                offset += result;
+                remaining -= result;
+            }
+
+            return buffer;
+        }
+
+        public static Int32 ReadInt32(this NetworkStream stream)
+        {
+            var payload = stream.ReadBytes(sizeof(Int32));
+
+            return BitConverter.ToInt32(payload);
         }
 
         // public static void ReadBytes(this Stream reader, byte[] buffer, int length)
