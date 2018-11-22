@@ -13,17 +13,12 @@ namespace ESPlus.Subscribers
         public byte[] Meta { get; set; }
         public byte[] Payload { get; set; }
         public string EventType { get; set; }
-        public bool IsAhead { get; set; } = false;
+        public bool IsAhead { get; set; }
 
         public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {
             _eventTypeResolver = eventTypeResolver;
             _eventSerializer = eventSerializer;
-        }
-
-        public Event(bool isAhead)
-        {
-            IsAhead = isAhead;
         }
 
         public object DeserializedItem()
