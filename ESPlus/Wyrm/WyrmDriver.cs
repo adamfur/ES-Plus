@@ -89,7 +89,11 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(reader, length - sizeof(Int32));
+                    var evt = ReadEvent(reader, length - sizeof(Int32));
+
+                    Console.WriteLine($"Stream: [{streamName}] {evt.StreamName}.({evt.Version}){evt.EventType}");
+
+                    yield return evt;
                 }
             }
         }
