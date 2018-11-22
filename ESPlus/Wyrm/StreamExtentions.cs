@@ -60,34 +60,5 @@ namespace ESPlus.Wyrm
 
             return theStructure;
         }
-
-        public static byte[] ReadBytes(this NetworkStream stream, int length)
-        {
-            var buffer = new byte[length];
-            var offset = 0;
-            var remaining = length;
-
-            while (remaining > 0)
-            {
-                var result = stream.Read(buffer, offset, remaining);
-
-                if (result < 0)
-                {
-                    throw new Exception($"ReadBytes, result: {result}");
-                }
-
-                offset += result;
-                remaining -= result;
-            }
-
-            return buffer;
-        }
-
-        public static Int32 ReadInt32(this NetworkStream stream)
-        {
-            var payload = stream.ReadBytes(sizeof(Int32));
-
-            return BitConverter.ToInt32(payload);
-        }
     }
 }

@@ -70,6 +70,7 @@ namespace ESPlus.Wyrm
             using (var client = Create())
             {
                 var stream = client.GetStream();
+                var reader = new BinaryReader(stream);
                 var writer = new BinaryWriter(stream);
                 var name = Encoding.UTF8.GetBytes(streamName);
                 writer.Write(OperationType.READ_STREAM_FORWARD);
@@ -80,7 +81,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = stream.ReadInt32();
+                    var length = reader.ReadInt32();
 
                     if (length == 8)
                     {
@@ -88,12 +89,12 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(stream, length - sizeof(Int32));
+                    yield return ReadEvent(reader, length - sizeof(Int32));
                 }
             }
         }
 
-        public WyrmEvent2 ReadEvent(NetworkStream reader, int length)
+        public WyrmEvent2 ReadEvent(BinaryReader reader, int length)
         {
             ReadOnlySpan<byte> payload = reader.ReadBytes(length);// stackalloc byte[length];
 
@@ -167,20 +168,21 @@ namespace ESPlus.Wyrm
             using (var client = Create())
             {
                 var stream = client.GetStream();
+                var reader = new BinaryReader(stream);
                 var writer = new BinaryWriter(stream);
                 var name = Encoding.UTF8.GetBytes(streamName);
                 writer.Write(OperationType.DELETE);
                 writer.Write(name.Length);
                 writer.Write(name, 0, name.Length);
 
-                var len = stream.ReadInt32();
+                var len = reader.ReadInt32();
 
                 if (len != 8)
                 {
                     throw new Exception("if (len != 8)");
                 }
 
-                var status = stream.ReadInt32();
+                var status = reader.ReadInt32();
                 if (status != 0)
                 {
                     throw new Exception($"if (status != 0): {status}");
@@ -199,6 +201,7 @@ namespace ESPlus.Wyrm
             using (var client = Create())
             {
                 var stream = client.GetStream();
+                var reader = new BinaryReader(stream);
                 var writer = new BinaryWriter(stream);
                 var concat = Combine(events.Select(x => Assemble(x)).ToArray());
                 int length = concat.Length;
@@ -208,14 +211,14 @@ namespace ESPlus.Wyrm
                 writer.Write(concat, 0, length);
                 writer.Flush();
 
-                var len = stream.ReadInt32();
+                var len = reader.ReadInt32();
 
                 if (len != 8)
                 {
                     throw new Exception("if (len != 8)");
                 }
 
-                var status = stream.ReadInt32();
+                var status = reader.ReadInt32();
 
                 if (status != 0)
                 {
@@ -246,6 +249,7 @@ namespace ESPlus.Wyrm
             using (var client = Create())
             {
                 var stream = client.GetStream();
+                var reader = new BinaryReader(stream);
                 var writer = new BinaryWriter(stream);
 
                 writer.Write(OperationType.LIST_STREAMS);
@@ -258,14 +262,14 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = stream.ReadInt32();
+                    var length = reader.ReadInt32();
 
                     if (length == 0)
                     {
                         yield break;
                     }
 
-                    var buffer = stream.ReadBytes(length);
+                    var buffer = reader.ReadBytes(length);
 
                     yield return Encoding.UTF8.GetString(buffer);
                 }
@@ -278,6 +282,7 @@ namespace ESPlus.Wyrm
             using (var client = Create())
             {
                 var stream = client.GetStream();
+                var reader = new BinaryReader(stream);
                 var writer = new BinaryWriter(stream);
 
                 writer.Write(OperationType.SUBSCRIBE);
@@ -286,7 +291,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = stream.ReadInt32();
+                    var length = reader.ReadInt32();
 
                     if (length == 8)
                     {
@@ -294,7 +299,7 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(stream, length - sizeof(Int32));
+                    yield return ReadEvent(reader, length - sizeof(Int32));
                 }
             }
         }
