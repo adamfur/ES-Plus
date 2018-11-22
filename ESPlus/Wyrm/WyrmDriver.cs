@@ -24,7 +24,7 @@ namespace ESPlus.Wyrm
         public string StreamName { get; set; }
         public byte[] Position { get; set; }
         public IEventSerializer Serializer { get; set; }
-        public bool Ahead { get; set; }
+        public bool IsAhead { get; set; }
     }
 
     public class WyrmDriver
@@ -60,7 +60,7 @@ namespace ESPlus.Wyrm
         {
             var client = new TcpClient();
             client.NoDelay = false;
-            client.ConnectAsync(_host, _port).Wait();
+            client.Connect(_host, _port);
 
             return client;
         }
@@ -159,7 +159,7 @@ namespace ESPlus.Wyrm
                 StreamName = streamName,
                 Position = position,
                 Serializer = Serializer,
-                Ahead = ahead
+                IsAhead = ahead
             };
         }
 

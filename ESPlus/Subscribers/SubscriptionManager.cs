@@ -34,7 +34,6 @@ namespace ESPlus.Subscribers
                 RequestStatus = RequestStatus.Initialized,
                 Manager = this,
                 Future = position,
-                SynchronizedAction = a => {},
                 CancellationToken = cancellationToken
             };
 
@@ -43,7 +42,8 @@ namespace ESPlus.Subscribers
                 _contexts.Add(context);
                 Monitor.Pulse(_mutex);
             }
-            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver, _eventSerializer);
+            
+            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver);
         }
     }
 }

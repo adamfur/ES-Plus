@@ -11,19 +11,18 @@ namespace ESPlus.Wyrm
         private SubscriptionContext _subscriptionContext;
         private readonly WyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
-        private readonly IEventSerializer _eventSerializer;
 
-        public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, WyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
+        public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, WyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver)
         {
             _subscriptionContext = subscriptionContext;
             _wyrmConnection = wyrmConnection;
             _eventTypeResolver = eventTypeResolver;
-            _eventSerializer = eventSerializer;
         }
 
         public IEnumerator<Event> GetEnumerator()
         {
-            foreach (var @event in _wyrmConnection.EnumerateAll(_subscriptionContext.Position))
+            //foreach (var @event in _wyrmConnection.EnumerateAll(_subscriptionContext.Position))
+            foreach (var @event in _wyrmConnection.EnumerateAll(Position.Start))
             {
                 yield return new Event(_eventTypeResolver, @event.Serializer)
                 {
@@ -31,16 +30,8 @@ namespace ESPlus.Wyrm
                     Meta = @event.Metadata,
                     Payload = @event.Data,
                     EventType = @event.EventType,
-                    IsAhead = false
+                    IsAhead = @event.IsAhead
                 };
-
-                if (@event.Ahead)
-                {
-                    yield return new Event(_eventTypeResolver, @event.Serializer)
-                    {
-                        IsAhead = true
-                    };
-                }
             }
         }
 
