@@ -22,16 +22,11 @@ namespace ESPlus.Subscribers
             _eventSerializer = eventSerializer;
         }
 
-        public void Start()
-        {
-        }
-
         public ISubscriptionClient Subscribe(byte[] position, CancellationToken cancellationToken)
         {
             var context = new SubscriptionContext
             {
                 Position = position,
-                RequestStatus = RequestStatus.Initialized,
                 Manager = this,
                 Future = position,
                 CancellationToken = cancellationToken
@@ -42,7 +37,7 @@ namespace ESPlus.Subscribers
                 _contexts.Add(context);
                 Monitor.Pulse(_mutex);
             }
-            
+
             return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver);
         }
     }

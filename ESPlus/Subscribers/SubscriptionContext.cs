@@ -6,7 +6,6 @@ namespace ESPlus.Subscribers
 {
     public class SubscriptionContext : IComparable<SubscriptionContext>
     {
-        public RequestStatus RequestStatus { get; set; }
         public byte[] Position { get; set; }
         public SubscriptionManager Manager { get; set; }
         public byte[] Future { get; set; }
