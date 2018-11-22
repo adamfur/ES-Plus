@@ -24,6 +24,7 @@ namespace ESPlus.Wyrm
         public string StreamName { get; set; }
         public byte[] Position { get; set; }
         public IEventSerializer Serializer { get; set; }
+        public bool Ahead { get; set; }
     }
 
     public class WyrmDriver
@@ -105,6 +106,8 @@ namespace ESPlus.Wyrm
             disp += 8;
             var totalOffset = BitConverter.ToInt64(payload.Slice(disp, 8));
             disp += 8;
+            var ahead = BitConverter.ToBoolean(payload.Slice(disp, 1));
+            disp += 1;
             var eventId = new Guid(payload.Slice(disp, 16));
             disp += 16;
             var version = BitConverter.ToInt64(payload.Slice(disp, 8));
@@ -154,7 +157,8 @@ namespace ESPlus.Wyrm
                 EventType = eventType,
                 StreamName = streamName,
                 Position = position,
-                Serializer = Serializer
+                Serializer = Serializer,
+                Ahead = ahead
             };
         }
 
