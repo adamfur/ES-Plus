@@ -44,6 +44,10 @@ namespace ESPlus.EventHandlers
         public abstract bool Dispatch(Event @event);
         public abstract Task<bool> DispatchEventAsync(object @event);
 
+        public virtual void Ahead()
+        {
+        }        
+
         public void FlushWhenAhead()
         {
             _flushPolicy.FlushWhenAhead();

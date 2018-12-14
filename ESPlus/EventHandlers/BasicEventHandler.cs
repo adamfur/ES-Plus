@@ -84,6 +84,12 @@ namespace ESPlus.EventHandlers
                 DispatchEvent(@event.DeserializedItem());
                 return true;
             }
+
+            if (@event.IsAhead)
+            {
+                Ahead();
+            }
+
             return false;
         }
 
