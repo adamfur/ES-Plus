@@ -19,21 +19,16 @@ namespace ESPlus.IntegrationTests2.Repositories
         [Fact]
         public async Task xyz_xyz_xyz()
         {
-            int count = 0;
             var watch = Stopwatch.StartNew();
 
             foreach (var item in _connection.EnumerateAll(Position.Start))
             {
-                if (item.Offset >= 1339250)
-                {
-                    //break;
-                }
+                Console.WriteLine($"{item.Offset} {item.EventType}");
 
-                // if (item.Offset % 1000 == 0)
+                if (item.IsAhead)
                 {
-                    Console.WriteLine($"{item.Offset} {item.EventType}");
+                    break;
                 }
-                // ++count;
             }
 
             Console.WriteLine($"Elapsed: {watch.ElapsedMilliseconds}ms");

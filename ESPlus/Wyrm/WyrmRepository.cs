@@ -9,27 +9,6 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Wyrm
 {
-    public static class OperationType
-    {
-        public static byte READ_STREAM_FORWARD = 0x01;
-        public static byte READ_STREAM_BACKWARD = 0x02;
-        public static byte READ_ALL_FORWARD = 0x03;
-        public static byte READ_ALL_BACKWARD = 0x04;
-        public static byte SUBSCRIBE = 0x05;
-        public static byte PUT = 0x06;
-        public static byte DELETE = 0x07;
-        public static byte LIST_STREAMS = 0x08;
-        public static byte FLOOD = (byte)'a';
-    }
-
-    public static class ExpectedVersion
-    {
-        public const long Any = -2;          // This write should not conflict with anything and should always succeed.
-        public const long NoStream = -1;     // The stream being written to should not yet exist. If it does exist treat that as a concurrency problem.
-        public const long EmptyStream = -1;  // The stream should exist and should be empty. If it does not exist or is not empty treat that as a concurrency problem.
-        public const long StreamExists = -4; // The stream should exist. If it or a metadata stream does not exist treat that as a concurrency problem.
-    }
-
     public class WyrmEvent
     {
         public WyrmEvent(Guid eventId, string eventType, byte[] body, byte[] metadata, string streamName, int version)

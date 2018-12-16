@@ -11,7 +11,11 @@ namespace ESPlus.EventHandlers
         protected TContext Context { get; private set; }
         protected object Mutex = new object();
 
-        IEventHandler IFlushPolicy.EventHandler { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        IEventHandler IFlushPolicy.EventHandler
+        {
+            get => throw new System.NotImplementedException();
+            set => throw new System.NotImplementedException();
+        }
 
         public EventHandlerBase(TContext context, IFlushPolicy flushPolicy)
         {
@@ -46,7 +50,7 @@ namespace ESPlus.EventHandlers
 
         public virtual void Ahead()
         {
-        }        
+        }
 
         public void FlushWhenAhead()
         {

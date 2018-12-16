@@ -77,12 +77,14 @@ namespace ESPlus.EventHandlers
                 Initialize();
             }
 
+            var status = false;
+
             Context.Checkpoint = @event.Position;
             _once.Execute();
             if (_router.CanHandle(@event.EventType))
             {
                 DispatchEvent(@event.DeserializedItem());
-                return true;
+                status = true;
             }
 
             if (@event.IsAhead)
@@ -90,7 +92,7 @@ namespace ESPlus.EventHandlers
                 Ahead();
             }
 
-            return false;
+            return status;
         }
 
         public override Task<bool> DispatchEventAsync(object @event)
