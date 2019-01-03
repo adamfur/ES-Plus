@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using ESPlus.EventHandlers;
+using ESPlus.FlushPolicies;
 using ESPlus.Misc;
 using NSubstitute;
 using Xunit;

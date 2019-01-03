@@ -5,6 +5,7 @@ using ESPlus.Interfaces;
 using ESPlus;
 using Newtonsoft.Json;
 using System.Runtime.CompilerServices;
+using ESPlus.Extentions;
 
 namespace ESPlus.Storage
 {
@@ -47,6 +48,7 @@ namespace ESPlus.Storage
                 journal = new JournalLog();
                 Console.WriteLine($"Journal Read Failed: {journal.Checkpoint}");
             }
+            
             Checkpoint = journal.Checkpoint;
 
             if (journal.Checkpoint == Position.Start)

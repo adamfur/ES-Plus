@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ESPlus.FlushPolicies;
 using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers

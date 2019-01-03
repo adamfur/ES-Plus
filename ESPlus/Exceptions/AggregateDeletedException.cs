@@ -4,8 +4,8 @@ namespace ESPlus
 {
     public class AggregateDeletedException : AggregateException
     {
-        public string Id { get; private set; }
-        public Type Type { get; private set; }
+        public string Id { get; }
+        public Type Type { get; }
 
         public AggregateDeletedException(string id, Type type)
         {

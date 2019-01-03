@@ -17,10 +17,5 @@ namespace ESPlus
             : base(message)
         {
         }
-
-        // protected AggregateException(SerializationInfo info, StreamingContext context)
-        //     : base(info, context)
-        // {
-        // }
     }      
 }

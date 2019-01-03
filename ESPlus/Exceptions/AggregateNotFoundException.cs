@@ -4,8 +4,8 @@ namespace ESPlus
 {
     public class AggregateNotFoundException : AggregateException
     {
-        public string Id { get; private set; }
-        public Type Type { get; private set; }
+        public string Id { get; }
+        public Type Type { get; }
 
         public AggregateNotFoundException(string id, Type type)
         {

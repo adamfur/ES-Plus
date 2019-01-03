@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ESPlus.Wyrm
+namespace ESPlus.Extentions
 {
     public static class StreamExtentions
     {

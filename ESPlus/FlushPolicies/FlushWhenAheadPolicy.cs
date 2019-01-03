@@ -3,7 +3,7 @@ using ESPlus.Subscribers;
 using System;
 using System.Threading;
 
-namespace ESPlus
+namespace ESPlus.FlushPolicies
 {
     public class FlushWhenAheadPolicy : IFlushPolicy
     {

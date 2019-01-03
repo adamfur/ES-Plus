@@ -1,9 +1,9 @@
 using ESPlus.EventHandlers;
 using ESPlus.Subscribers;
 
-namespace ESPlus
+namespace ESPlus.FlushPolicies
 {
-    public class AlwaysFlushPolicy : IFlushPolicy
+    public class NullFlushPolicy : IFlushPolicy
     {
         public IEventHandler EventHandler { get; set; }
 
@@ -13,11 +13,10 @@ namespace ESPlus
 
         public void FlushOnEvent()
         {
-            EventHandler.Flush();
         }
 
         public void FlushWhenAhead()
         {
         }
-    }    
+    }
 }

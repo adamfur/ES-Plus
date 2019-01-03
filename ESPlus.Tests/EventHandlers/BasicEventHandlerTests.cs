@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using ESPlus.EventHandlers;
+using ESPlus.FlushPolicies;
 using NSubstitute;
 using Xunit;
 

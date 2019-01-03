@@ -13,15 +13,15 @@ namespace ESPlus
         {
             var message = Encoding.ASCII.GetBytes(data);
             var hashString = new SHA256Managed();
-            var hex = "";
+            var result = new StringBuilder();
             var hashValue = hashString.ComputeHash(message);
 
             foreach (byte x in hashValue)
             {
-                hex += string.Format("{0:x2}", x);
+                result.Append(string.Format("{0:x2}", x));
             }
             
-            return hex;
+            return result.ToString();
         }
 
         public static string MongoHash(this string data)

@@ -25,10 +25,10 @@ namespace ESPlus.Aggregates
             }
 
             ApplyChange(new ProcessManagerProcessed
-            {
-                CorrolationId = Id,
-                EventId = eventId
-            });
+            (
+                corrolationId: Id,
+                eventId: eventId
+            ));
             
             return true;
         }
@@ -40,11 +40,11 @@ namespace ESPlus.Aggregates
         protected void Dispatch<T>(T command)
         {
             ApplyChange(new ProcessManagerCommand
-            {
-                CorrolationId = Id,
-                Type = typeof (T).FullName,
-                Payload = command
-            });
+            (
+                corrolationId: Id,
+                type: typeof (T).FullName,
+                payload: command
+            ));
         }
 
         protected void SetAlarm(TimeSpan timeSpan, string token)
@@ -55,19 +55,19 @@ namespace ESPlus.Aggregates
         protected void SetAlarm(DateTime alarm, string token)
         {
             ApplyChange(new ProcessManagerAlarm
-            {
-                CorrolationId = Id,
-                Alarm = alarm,
-                Token = token
-            });
+            (
+                corrolationId: Id,
+                alarm: alarm,
+                token: token
+            ));
         }
 
         protected void PoisonPill()
         {
             ApplyChange(new ProcessManagerPoisonPill
-            {
-                CorrolationId = Id
-            });
+            (
+                corrolationId: Id
+            ));
         }
 
         private void Apply(ProcessManagerPoisonPill @event)

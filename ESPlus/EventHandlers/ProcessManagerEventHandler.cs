@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
+using ESPlus.FlushPolicies;
 using ESPlus.Interfaces;
 using ESPlus.Misc;
 
