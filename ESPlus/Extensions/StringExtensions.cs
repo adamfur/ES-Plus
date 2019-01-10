@@ -1,8 +1,8 @@
-using System.Text;
+﻿using System.Text;
 
 namespace ESPlus.Extentions
 {
-    public static class StringExtentions
+    public static class StringExtensions
     {
         public static string AsHexString(this byte[] bytes)
         {

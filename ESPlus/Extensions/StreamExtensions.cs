@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ESPlus.Extentions
 {
-    public static class StreamExtentions
+    public static class StreamExtensions
     {
         public static async Task<byte[]> ReadBytesAsync(this Stream stream, int length)
         {

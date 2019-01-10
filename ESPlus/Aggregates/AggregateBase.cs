@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ESPlus.Interfaces;
 
@@ -19,7 +20,15 @@ namespace ESPlus.Aggregates
 
         protected virtual void Invoke(object @event)
         {
-            _router.Dispatch(@event);
+            try
+            {
+                _router.Dispatch(@event);
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine($":: {@event.GetType().Name} {ex}");
+                throw;
+            }
         }
 
         void IAggregate.ApplyChange(object @event)
@@ -31,7 +40,7 @@ namespace ESPlus.Aggregates
 
         protected void ApplyChange(object @event)
         {
-            ((IAggregate) this).ApplyChange(@event);
+            ((IAggregate)this).ApplyChange(@event);
         }
 
         public IEnumerable<object> TakeUncommittedEvents()
