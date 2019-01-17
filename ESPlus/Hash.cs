@@ -12,6 +12,12 @@ namespace ESPlus
         public static string Sha256(this string data)
         {
             var message = Encoding.ASCII.GetBytes(data);
+            
+            return message.Sha256();
+        }
+
+        public static string Sha256(this byte[] message)
+        {
             var hashString = new SHA256Managed();
             var result = new StringBuilder();
             var hashValue = hashString.ComputeHash(message);
@@ -20,7 +26,7 @@ namespace ESPlus
             {
                 result.Append(string.Format("{0:x2}", x));
             }
-            
+
             return result.ToString();
         }
 
