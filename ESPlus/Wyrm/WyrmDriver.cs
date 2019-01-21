@@ -76,7 +76,7 @@ namespace ESPlus.Wyrm
 
                     var evt = ReadEvent(reader, length - sizeof(Int32));
 
-                    Console.WriteLine($"Stream: [{streamName}] {evt.StreamName}.({evt.Version}){evt.EventType}");
+                    Console.WriteLine($"Stream: {evt.StreamName}.({evt.Version}){evt.EventType}");
 
                     yield return evt;
                 }
