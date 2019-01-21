@@ -17,6 +17,7 @@ namespace ESPlus.Wyrm
         private string _host;
         private int _port;
         public IEventSerializer Serializer { get; }
+        private static DateTime Epooch = new DateTime(1970, 1, 1);
 
         public WyrmDriver(string connectionString, IEventSerializer eventSerializer)
         {
@@ -124,8 +125,7 @@ namespace ESPlus.Wyrm
             disp += (int)streamNameLength;
             var eventType = Encoding.UTF8.GetString(payload.Slice(disp, (int)eventTypeLength));
             disp += (int)eventTypeLength;
-            var epooch = new DateTime(1970, 1, 1);
-            var time = epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
+            var time = Epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
             var compressed = payload.Slice(disp, (int)compressedSize).ToArray();
             var uncompressed = new byte[uncompressedSize];
             var compressedLength = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);

@@ -1,33 +1,69 @@
 using System;
+using System.Threading;
 
 namespace ESPlus.Lazy
 {
     public class LazyReload<T>
     {
-        private T _instance;
+        private T _instance = default(T);
         private readonly Func<T> _func;
-        private DateTime _deadline;
-        private readonly TimeSpan _timeToLive;
+        private readonly Thread _thread;
+        private readonly Mutex _mutex = new Mutex();
+        private bool _invalidated = true;
 
-        public LazyReload(Func<T> func, TimeSpan timeToLive)
+        public LazyReload(Func<T> func)
         {
-            _timeToLive = timeToLive;
             _func = func;
+            _thread = new Thread(Worker);
+            _thread.Start();
         }
 
         public T Get()
         {
             if (_instance != null)
             {
-                if (_deadline < DateTime.Now)
-                {
-                    return _instance;
-                }
+                return _instance;
             }
 
-            _instance = _func();
-            _deadline = DateTime.Now.Add(_timeToLive);
+            lock (_mutex)
+            {
+                while (_instance == null)
+                {
+                    Monitor.Wait(_mutex);
+                }
+            }
             return _instance;
+        }
+
+        public void Invalidate()
+        {
+            lock (_mutex)
+            {
+                if (_invalidated == true)
+                {
+                    return;
+                }
+                
+                _invalidated = true;
+                Monitor.Pulse(_mutex);
+            }
+        }
+
+        private void Worker()
+        {
+            while (true)
+            {
+                lock (_mutex)
+                {
+                    while (_invalidated == false)
+                    {
+                        Monitor.Wait(_mutex);
+                    }
+
+                    _instance = _func();
+                    _invalidated = false;
+                }
+            }
         }
     }
 }
