@@ -43,9 +43,9 @@ namespace ESPlus.Lazy
                 {
                     return;
                 }
-                
+
                 _invalidated = true;
-                Monitor.Pulse(_mutex);
+                Monitor.PulseAll(_mutex);
             }
         }
 
@@ -60,8 +60,10 @@ namespace ESPlus.Lazy
                         Monitor.Wait(_mutex);
                     }
 
+                    Console.WriteLine("Worker: _instance = _func();");
                     _instance = _func();
                     _invalidated = false;
+                    Monitor.PulseAll(_mutex);
                 }
             }
         }
