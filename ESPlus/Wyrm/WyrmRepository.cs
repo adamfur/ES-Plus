@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Interfaces;
+using Newtonsoft.Json;
 
 namespace ESPlus.Wyrm
 {
@@ -131,7 +132,7 @@ namespace ESPlus.Wyrm
                     continue;
                 }
 
-                applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Data));
+                applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
                 applyAggregate.Version = evnt.Version;
             }
 
