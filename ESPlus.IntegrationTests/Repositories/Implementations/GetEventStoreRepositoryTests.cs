@@ -4,22 +4,22 @@ using EventStore.ClientAPI;
 
 namespace ESPlus.IntegrationTests.Repositories.Implementations
 {
-    // public class GetEventStoreRepositoryTests : RepositoryTests
-    // {
-    //     private static IEventStoreConnection _eventStoreConnection;
+    public class GetEventStoreRepositoryTests : RepositoryTests
+    {
+        private static IEventStoreConnection _eventStoreConnection;
 
-    //     static GetEventStoreRepositoryTests()
-    //     {
-    //         var connectionString = "ConnectTo=tcp://admin:changeit@127.0.0.1:1113; HeartBeatTimeout=500";
+        static GetEventStoreRepositoryTests()
+        {
+            var connectionString = "ConnectTo=tcp://admin:changeit@127.0.0.1:1113; HeartBeatTimeout=500";
             
-    //         _eventStoreConnection = EventStoreConnection.Create(connectionString);
-    //         _eventStoreConnection.ConnectAsync().Wait();
-    //     }
-    //     protected override IRepository Create()
-    //     {
-    //         var eventSerializer = new EventJsonSerializer();
+            _eventStoreConnection = EventStoreConnection.Create(connectionString);
+            _eventStoreConnection.ConnectAsync().Wait();
+        }
+        protected override IRepository Create()
+        {
+            var eventSerializer = new EventJsonSerializer();
 
-    //         return new GetEventStoreRepository(_eventStoreConnection, eventSerializer);
-    //     }
-    // }
+            return new GetEventStoreRepository(_eventStoreConnection, eventSerializer);
+        }
+    }
 }

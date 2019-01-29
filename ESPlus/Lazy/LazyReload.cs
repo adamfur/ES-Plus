@@ -60,7 +60,6 @@ namespace ESPlus.Lazy
                         Monitor.Wait(_mutex);
                     }
 
-                    Console.WriteLine("Worker: _instance = _func();");
                     _instance = _func();
                     _invalidated = false;
                     Monitor.PulseAll(_mutex);
