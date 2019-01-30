@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using ESPlus.Interfaces;
 
 namespace ESPlus.Specification
@@ -56,7 +57,15 @@ namespace ESPlus.Specification
 
             if (_index != _emittedEvents.Count)
             {
-                throw new Exception($"Did not match all events {_index} vs. {_emittedEvents.Count}");
+                var count = 0;
+                var builder = new StringBuilder();
+
+                foreach (var evt in _emittedEvents)
+                {
+                    builder.AppendLine($"{count++}. {evt.GetType().FullName}");
+                }
+
+                throw new Exception($"Did not match all events {_index} vs. {_emittedEvents.Count}\n{builder}");
             }
         }
 
@@ -185,13 +194,14 @@ namespace ESPlus.Specification
 
         protected void Is<T>(Expression<Predicate<T>> expr)
         {
-            var @event = _index <= _emittedEvents.Count ? _emittedEvents[_index] : null;
+            var @event = _index < _emittedEvents.Count ? _emittedEvents[_index] : null;
             var compiled = expr.Compile();
 
             ++_index;
 
             if (@event == null)
             {
+                _faulted = true;
                 throw new Exception($"Expected event of type {typeof(T).FullName} got nothing");
             }
 
