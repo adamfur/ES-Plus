@@ -207,6 +207,7 @@ namespace ESPlus.Specification
 
             if (@event.GetType() != typeof(T) || !compiled(((T)@event)))
             {
+                _faulted = true;
                 throw new Exception($"Didn't find event of type {typeof(T).FullName} w/ {expr}");
             }
         }
