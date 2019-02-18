@@ -54,10 +54,10 @@ namespace ESPlus.Wyrm
         public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
         {
             using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using(var writer = new BinaryWriter(stream))
             {
-                var stream = client.GetStream();
-                var reader = new BinaryReader(stream);
-                var writer = new BinaryWriter(stream);
                 var name = Encoding.UTF8.GetBytes(streamName);
                 writer.Write(OperationType.READ_STREAM_FORWARD);
                 writer.Write(name.Length);
@@ -155,10 +155,10 @@ namespace ESPlus.Wyrm
         public async Task DeleteAsync(string streamName)
         {
             using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
             {
-                var stream = client.GetStream();
-                var reader = new BinaryReader(stream);
-                var writer = new BinaryWriter(stream);
                 var name = Encoding.UTF8.GetBytes(streamName);
                 writer.Write(OperationType.DELETE);
                 writer.Write(name.Length);
@@ -188,10 +188,10 @@ namespace ESPlus.Wyrm
             }
 
             using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
             {
-                var stream = client.GetStream();
-                var reader = new BinaryReader(stream);
-                var writer = new BinaryWriter(stream);
                 var concat = Combine(events.Select(x => Assemble(x)).ToArray());
                 int length = concat.Length;
 
@@ -236,11 +236,10 @@ namespace ESPlus.Wyrm
             var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
 
             using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
             {
-                var stream = client.GetStream();
-                var reader = new BinaryReader(stream);
-                var writer = new BinaryWriter(stream);
-
                 writer.Write(OperationType.LIST_STREAMS);
                 writer.Write(filters.Length);
                 foreach (var filter in filters)
@@ -269,11 +268,10 @@ namespace ESPlus.Wyrm
         {
             Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
             using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
             {
-                var stream = client.GetStream();
-                var reader = new BinaryReader(stream);
-                var writer = new BinaryWriter(stream);
-
                 writer.Write(OperationType.SUBSCRIBE);
                 writer.Write(from);
                 writer.Flush();
@@ -295,41 +293,43 @@ namespace ESPlus.Wyrm
 
         private byte[] Assemble(WyrmEvent @event)
         {
-            var target = new MemoryStream();
-            var writer = new BinaryWriter(target);
-            var streamName = Encoding.UTF8.GetBytes(@event.StreamName);
-            var eventType = Encoding.UTF8.GetBytes(@event.EventType);
-            var metadata = @event.Metadata;
-            var body = @event.Body;
-            var uncompressed = BuildPayload(metadata, body);
-            var uncompressedLength = uncompressed.Length;
-            var compressed = new byte[LZ4Codec.MaximumOutputLength(uncompressedLength)];
-            var compressedLength = LZ4Codec.Encode(uncompressed, 0, uncompressedLength, compressed, 0, compressed.Length);
-
-            var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
-            var apa = new Apa
+            using (var target = new MemoryStream())
+            using (var writer = new BinaryWriter(target))
             {
-                Length = length,
-                StreamNameLength = streamName.Length,
-                EventTypeLength = eventType.Length,
-                Version = @event.Version,
-                CompressedLength = compressedLength,
-                UncompressedLength = uncompressedLength,
-                EventId = @event.EventId,
-                MetaDataLength = metadata.Length,
-                BodyLength = body.Length
-            };
+                var streamName = Encoding.UTF8.GetBytes(@event.StreamName);
+                var eventType = Encoding.UTF8.GetBytes(@event.EventType);
+                var metadata = @event.Metadata;
+                var body = @event.Body;
+                var uncompressed = BuildPayload(metadata, body);
+                var uncompressedLength = uncompressed.Length;
+                var compressed = new byte[LZ4Codec.MaximumOutputLength(uncompressedLength)];
+                var compressedLength = LZ4Codec.Encode(uncompressed, 0, uncompressedLength, compressed, 0, compressed.Length);
 
-            writer.WriteStruct(apa);
-            writer.Write(streamName);
-            writer.Write(eventType);
-            writer.Write(compressed, 0, compressedLength);
-            writer.Flush();
+                var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
+                var apa = new Apa
+                {
+                    Length = length,
+                    StreamNameLength = streamName.Length,
+                    EventTypeLength = eventType.Length,
+                    Version = @event.Version,
+                    CompressedLength = compressedLength,
+                    UncompressedLength = uncompressedLength,
+                    EventId = @event.EventId,
+                    MetaDataLength = metadata.Length,
+                    BodyLength = body.Length
+                };
 
-            var result = new byte[target.Length];
-            target.Seek(0, SeekOrigin.Begin);
-            target.Read(result, 0, result.Length);
-            return result;
+                writer.WriteStruct(apa);
+                writer.Write(streamName);
+                writer.Write(eventType);
+                writer.Write(compressed, 0, compressedLength);
+                writer.Flush();
+
+                var result = new byte[target.Length];
+                target.Seek(0, SeekOrigin.Begin);
+                target.Read(result, 0, result.Length);
+                return result;
+            }
         }
 
         private byte[] BuildPayload(byte[] metadata, byte[] data)
