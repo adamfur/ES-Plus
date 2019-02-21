@@ -291,6 +291,34 @@ namespace ESPlus.Wyrm
             }
         }
 
+        public IEnumerable<WyrmEvent2> EnumerateAllByStreams(byte[] from)
+        {
+            Console.WriteLine($"EnumerateAllByStreams: {from.AsHexString()}");
+            using (var client = Create())
+            {
+                var stream = client.GetStream();
+                var reader = new BinaryReader(stream);
+                var writer = new BinaryWriter(stream);
+
+                writer.Write(OperationType.READ_ALL_STREAMS_FORWARD);
+                writer.Write(from);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = reader.ReadInt32();
+
+                    if (length == 8)
+                    {
+                        //Console.WriteLine("reached end!");
+                        break;
+                    }
+
+                    yield return ReadEvent(reader, length - sizeof(Int32));
+                }
+            }
+        }
+
         private byte[] Assemble(WyrmEvent @event)
         {
             using (var target = new MemoryStream())

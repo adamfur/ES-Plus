@@ -15,6 +15,7 @@ namespace ESPlus.Wyrm
         private readonly IEventSerializer _eventSerializer;
         private readonly WyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
+        private object _lock = new object();
 
         public static void Register<Type>()
         {
@@ -29,16 +30,19 @@ namespace ESPlus.Wyrm
 
         private void Index<TAggregate>()
         {
-            typeof(TAggregate).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
-                .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
-                .Select(x => x.GetParameters().First().ParameterType)
-                .ToList()
-                .ForEach(t =>
-                {
-                    //Console.WriteLine($"Register type: {t.FullName}");
-                    _types[t.FullName] = t;
-                });
+            lock (_lock)
+            {
+                typeof(TAggregate).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
+                    .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
+                    .Select(x => x.GetParameters().First().ParameterType)
+                    .ToList()
+                    .ForEach(t =>
+                    {
+                        //Console.WriteLine($"Register type: {t.FullName}");
+                        _types[t.FullName] = t;
+                    });
+            }
         }
 
         private WyrmEvent ToEventData(Guid eventId, object evnt, string streamName, long version, object headers)
@@ -123,7 +127,12 @@ namespace ESPlus.Wyrm
 
             foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
-                var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
+                Type type;
+
+                lock (_lock)
+                {
+                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
+                }
 
                 any = true;
                 if (type == null)
@@ -145,6 +154,50 @@ namespace ESPlus.Wyrm
             await Task.FromResult(0);
 
             return aggregate;
+        }
+
+        public IEnumerable<TAggregate> GetAllByAggregateType<TAggregate>() where TAggregate : IAggregate
+        {
+            var aggregate = default(TAggregate);
+            var stream = default(string);
+            var applyAggregate = default(IAggregate);
+
+            Index<TAggregate>();
+            foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(Position.Start))
+            {
+                if (evnt.StreamName != stream)
+                {
+                    if (!ReferenceEquals(aggregate, default(TAggregate)))
+                    {
+                        aggregate.TakeUncommittedEvents();
+                        yield return aggregate;
+                    }
+
+                    stream = evnt.StreamName;
+                    aggregate = ConstructAggregate<TAggregate>(evnt.StreamName);
+                    applyAggregate = (IAggregate)aggregate;
+                }
+
+                Type type;
+
+                lock (_lock)
+                {
+                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
+                }
+
+                if (type != null)
+                {
+                    applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
+                }
+
+                applyAggregate.Version = evnt.Version;
+
+                if (evnt.IsAhead)
+                {
+                    aggregate.TakeUncommittedEvents();
+                    yield return aggregate;
+                }
+            }
         }
 
         private static TAggregate ConstructAggregate<TAggregate>(string id)
