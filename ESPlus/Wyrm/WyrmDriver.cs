@@ -56,7 +56,7 @@ namespace ESPlus.Wyrm
             using (var client = Create())
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
-            using(var writer = new BinaryWriter(stream))
+            using (var writer = new BinaryWriter(stream))
             {
                 var name = Encoding.UTF8.GetBytes(streamName);
                 writer.Write(OperationType.READ_STREAM_FORWARD);
@@ -291,17 +291,22 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public IEnumerable<WyrmEvent2> EnumerateAllByStreams(byte[] from)
+        public IEnumerable<WyrmEvent2> EnumerateAllByStreams(params Type[] filters)
         {
-            Console.WriteLine($"EnumerateAllByStreams: {from.AsHexString()}");
-            using (var client = Create())
-            {
-                var stream = client.GetStream();
-                var reader = new BinaryReader(stream);
-                var writer = new BinaryWriter(stream);
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
 
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
                 writer.Write(OperationType.READ_ALL_STREAMS_FORWARD);
-                writer.Write(from);
+                writer.Write(filters.Length);
+                foreach (var filter in filters)
+                {
+                    writer.Write(BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(filter.FullName)).Hash));
+                }
+
                 writer.Flush();
 
                 while (true)

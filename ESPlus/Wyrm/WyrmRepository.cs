@@ -156,14 +156,14 @@ namespace ESPlus.Wyrm
             return aggregate;
         }
 
-        public IEnumerable<TAggregate> GetAllByAggregateType<TAggregate>() where TAggregate : IAggregate
+        public IEnumerable<TAggregate> GetAllByAggregateType<TAggregate>(params Type[] filters) where TAggregate : IAggregate
         {
             var aggregate = default(TAggregate);
             var stream = default(string);
             var applyAggregate = default(IAggregate);
 
             Index<TAggregate>();
-            foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(Position.Start))
+            foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(filters))
             {
                 if (evnt.StreamName != stream)
                 {
