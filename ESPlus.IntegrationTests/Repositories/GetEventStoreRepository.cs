@@ -174,5 +174,15 @@ namespace ESPlus.IntegrationTests.Repositories
         {
             await _eventStoreConnection.DeleteStreamAsync(streamName, version);
         }
+
+        Task<byte[]> IRepository.SaveAsync(AggregateBase aggregate, object headers)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<byte[]> IRepository.AppendAsync(AggregateBase aggregate, object headers)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

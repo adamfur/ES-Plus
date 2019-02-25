@@ -5,8 +5,8 @@ namespace ESPlus.Interfaces
 {
     public interface IRepository
     {
-        Task SaveAsync(AggregateBase aggregate, object headers = null);
-        Task AppendAsync(AggregateBase aggregate, object headers = null);
+        Task<byte[]> SaveAsync(AggregateBase aggregate, object headers = null);
+        Task<byte[]> AppendAsync(AggregateBase aggregate, object headers = null);
         Task SaveNewAsync(IAggregate aggregate, object headers = null);
         Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate;
         Task DeleteAsync(string streamName, long version = 0);

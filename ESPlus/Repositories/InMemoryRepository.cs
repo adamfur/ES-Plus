@@ -92,9 +92,10 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
-        public Task SaveAsync(AggregateBase aggregate, object headers)
+        public async Task<byte[]> SaveAsync(AggregateBase aggregate, object headers)
         {
-            return SaveImpl(aggregate, aggregate.Version);
+            await SaveImpl(aggregate, aggregate.Version);
+            return Position.Start;
         }
 
         public Task AppendAsync(AggregateBase aggregate, object headers)
@@ -169,6 +170,11 @@ namespace ESPlus.Repositories
         {
             _streams.Remove(streamName);
             return Task.FromResult(0);
+        }
+
+        Task<byte[]> IRepository.AppendAsync(AggregateBase aggregate, object headers)
+        {
+            throw new NotImplementedException();
         }
     }
 }

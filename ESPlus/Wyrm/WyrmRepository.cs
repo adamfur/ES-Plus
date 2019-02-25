@@ -59,7 +59,7 @@ namespace ESPlus.Wyrm
             await _wyrmConnection.DeleteAsync(id);
         }
 
-        public Task SaveAsync(AggregateBase aggregate, object headers)
+        public Task<byte[]> SaveAsync(AggregateBase aggregate, object headers)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
@@ -68,7 +68,7 @@ namespace ESPlus.Wyrm
             return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers);
         }
 
-        public Task AppendAsync(AggregateBase aggregate, object headers)
+        public Task<byte[]> AppendAsync(AggregateBase aggregate, object headers)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
@@ -99,17 +99,17 @@ namespace ESPlus.Wyrm
             }
         }
 
-        private async Task SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
+        private async Task<byte[]> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
         {
             if (!newEvents.Any())
             {
-                return;
+                return Position.Start;
             }
 
             var streamName = aggregate.Id;
             var eventsToSave = newEvents.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 
-            await _wyrmConnection.Append(eventsToSave);
+            return await _wyrmConnection.Append(eventsToSave);
         }
 
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate

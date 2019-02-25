@@ -180,11 +180,11 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public async Task Append(IEnumerable<WyrmEvent> events)
+        public Task<byte[]> Append(IEnumerable<WyrmEvent> events)
         {
             if (!events.Any())
             {
-                await Task.FromResult(0);
+                return Task.FromResult(Position.Start);
             }
 
             using (var client = Create())
@@ -202,18 +202,20 @@ namespace ESPlus.Wyrm
 
                 var len = reader.ReadInt32();
 
-                if (len != 8)
+                if (len != 8 + 32)
                 {
-                    throw new Exception("if (len != 8)");
+                    throw new Exception("if (len != 8 + 32)");
                 }
 
                 var status = reader.ReadInt32();
+                var hash = reader.ReadBytes(32);
 
                 if (status != 0)
                 {
                     throw new WrongExpectedVersionException($"Bad status: {status}");
                 }
-                await Task.FromResult(0);
+
+                return Task.FromResult(hash);
             }
         }
 
