@@ -9,7 +9,6 @@ namespace ESPlus.Subscribers
         public byte[] Position { get; set; }
         public SubscriptionManager Manager { get; set; }
         public byte[] Future { get; set; }
-        public CancellationToken CancellationToken { get; set; }
         public bool Ahead { get; private set; } = false;
 
         public int CompareTo(SubscriptionContext other)

@@ -22,14 +22,13 @@ namespace ESPlus.Subscribers
             _eventSerializer = eventSerializer;
         }
 
-        public ISubscriptionClient Subscribe(byte[] position, CancellationToken cancellationToken)
+        public ISubscriptionClient Subscribe(byte[] position)
         {
             var context = new SubscriptionContext
             {
                 Position = position,
                 Manager = this,
-                Future = position,
-                CancellationToken = cancellationToken
+                Future = position
             };
 
             lock (_mutex)
