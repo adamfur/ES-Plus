@@ -10,7 +10,7 @@ namespace ESPlus.Specification
     public abstract class Specification<TAggregate> : IDisposable
         where TAggregate : IAggregate
     {
-        private List<object> _emittedEvents = new List<object>();
+        private readonly List<object> _emittedEvents = new List<object>();
         protected TAggregate Aggregate = default(TAggregate);
         private Action _given = null;
         private Action _when = null;

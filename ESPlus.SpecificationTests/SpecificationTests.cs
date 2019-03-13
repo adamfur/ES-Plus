@@ -320,7 +320,7 @@ namespace ESPlus.SpecificationTests
                 Dispose();
             });
 
-            Assert.Equal("Did not match all events 0 vs. 1", exception.Message);
+			Assert.StartsWith("Did not match all events 0 vs. 1", exception.Message);
         }
 
         [Fact]
