@@ -10,7 +10,7 @@ namespace ESPlus
         {
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(graph, new JsonSerializerSettings()
             {
-                TypeNameHandling = TypeNameHandling.All,
+                TypeNameHandling = TypeNameHandling.Auto,
             }));
         }
 
@@ -18,7 +18,7 @@ namespace ESPlus
         {
             return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(buffer), type, new JsonSerializerSettings()
             {
-                TypeNameHandling = TypeNameHandling.All,
+                TypeNameHandling = TypeNameHandling.Auto,
             });
         }
     }
