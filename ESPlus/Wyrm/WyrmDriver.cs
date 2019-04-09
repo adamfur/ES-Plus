@@ -266,9 +266,9 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public IEnumerable<WyrmEvent2> EnumerateAll(byte[] from)
+        public IEnumerable<WyrmEvent2> Subscribe(byte[] from)
         {
-            Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
+            Console.WriteLine($"Subscribe: {from.AsHexString()}");
             using (var client = Create())
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
@@ -292,6 +292,33 @@ namespace ESPlus.Wyrm
                 }
             }
         }
+
+        public IEnumerable<WyrmEvent2> EnumerateAll(byte[] from)
+        {
+            Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write(OperationType.READ_ALL_FORWARD);
+                writer.Write(from);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = reader.ReadInt32();
+
+                    if (length == 8)
+                    {
+                        //Console.WriteLine("reached end!");
+                        break;
+                    }
+
+                    yield return ReadEvent(reader, length - sizeof(Int32));
+                }
+            }
+        }        
 
         public IEnumerable<WyrmEvent2> EnumerateAllByStreams(params Type[] filters)
         {
