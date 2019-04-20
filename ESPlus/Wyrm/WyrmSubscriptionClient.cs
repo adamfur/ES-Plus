@@ -22,7 +22,7 @@ namespace ESPlus.Wyrm
 
         public IEnumerator<Event> GetEnumerator()
         {
-            foreach (var @event in _wyrmConnection.EnumerateAll(_subscriptionContext.Position))
+            foreach (var @event in _wyrmConnection.Subscribe(_subscriptionContext.Position))
             {
                 yield return new Event(_eventTypeResolver, @event.Serializer)
                 {
