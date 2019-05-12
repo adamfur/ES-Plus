@@ -12,7 +12,7 @@ namespace ESPlus
         public static string Sha256(this string data)
         {
             var message = Encoding.ASCII.GetBytes(data);
-            
+
             return message.Sha256();
         }
 
@@ -36,6 +36,14 @@ namespace ESPlus
             var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(data));
 
             return hash.AsHexString() + "00000000"; // 24 bytes
+        }
+
+        public static Int64 XXH64(this string data)
+        {
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
+            var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(data));
+
+            return BitConverter.ToInt64(hash.Hash, 0);
         }
     }
 }
