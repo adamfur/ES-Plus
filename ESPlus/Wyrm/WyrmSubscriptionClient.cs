@@ -30,7 +30,8 @@ namespace ESPlus.Wyrm
                     Meta = @event.Metadata,
                     Payload = @event.Data,
                     EventType = @event.EventType,
-                    IsAhead = @event.IsAhead
+                    IsAhead = @event.IsAhead,
+                    StreamName = @event.StreamName
                 };
             }
         }

@@ -14,6 +14,7 @@ namespace ESPlus.Subscribers
         public byte[] Payload { get; set; }
         public string EventType { get; set; }
         public bool IsAhead { get; set; }
+        public string StreamName { get; set; }
 
         public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {

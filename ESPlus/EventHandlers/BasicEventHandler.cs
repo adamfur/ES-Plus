@@ -7,6 +7,7 @@ using ESPlus.Aggregates;
 using ESPlus.Misc;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
+using Wyrm;
 
 namespace ESPlus.EventHandlers
 {
@@ -81,7 +82,13 @@ namespace ESPlus.EventHandlers
 
             Context.Checkpoint = @event.Position;
             _once.Execute();
-            if (_router.CanHandle(@event.EventType))
+
+            if (@event.EventType == typeof(StreamDeleted).FullName)
+            {
+                DispatchEvent(new StreamDeleted(@event.StreamName));
+                status = true;
+            }
+            else if (_router.CanHandle(@event.EventType))
             {
                 DispatchEvent(@event.DeserializedItem());
                 status = true;
