@@ -23,6 +23,16 @@ namespace ESPlus.Storage
         public void Delete(string path)
         {
             var id = ObjectId.Parse(path.MongoHash());
+            var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
+            var updates = new List<WriteModel<HasObjectId>>();
+            var filter = new BsonDocument
+            {
+                {"_id", id}
+            };
+
+            updates.Add(new DeleteOneModel<HasObjectId>(filter));
+
+            Retry(() => collection.BulkWrite(updates));
 
             _writeCache[id] = null;
         }
@@ -40,11 +50,11 @@ namespace ESPlus.Storage
 
                 if (d.Value != null)
                 {
-                    return (WriteModel<HasObjectId>) new ReplaceOneModel<HasObjectId>(filter, d.Value) { IsUpsert = true };
+                    return (WriteModel<HasObjectId>)new ReplaceOneModel<HasObjectId>(filter, d.Value) { IsUpsert = true };
                 }
                 else
                 {
-                    return (WriteModel<HasObjectId>) new DeleteOneModel<HasObjectId>(filter);
+                    return (WriteModel<HasObjectId>)new DeleteOneModel<HasObjectId>(filter);
                 }
             });
 
