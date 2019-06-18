@@ -152,7 +152,7 @@ namespace ESPlus.Wyrm
             };
         }
 
-        public async Task DeleteAsync(string streamName)
+        public async Task DeleteAsync(string streamName, long version)
         {
             using (var client = Create())
             using (var stream = client.GetStream())

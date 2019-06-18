@@ -102,7 +102,7 @@ namespace ESPlus.IntegrationTests.Repositories
                 });
         }
 
-        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate
+        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate
         {
             if (version <= 0)
             {

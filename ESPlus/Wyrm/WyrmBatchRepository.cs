@@ -8,19 +8,20 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Wyrm
 {
-    public class WyrmRepository : IRepository
+    public class WyrmBatchRepository : IBatchRepository
     {
         private readonly IEventSerializer _eventSerializer;
         private readonly WyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
         private object _lock = new object();
+        private List<WyrmEvent> _batch = new List<WyrmEvent>();
 
         public static void Register<Type>()
         {
             _types[typeof(Type).FullName] = typeof(Type);
         }
 
-        public WyrmRepository(WyrmDriver wyrmConnection)
+        public WyrmBatchRepository(WyrmDriver wyrmConnection)
         {
             _wyrmConnection = wyrmConnection;
             _eventSerializer = wyrmConnection.Serializer;
@@ -54,7 +55,9 @@ namespace ESPlus.Wyrm
 
         public async Task DeleteAsync(string id, long version)
         {
-            await _wyrmConnection.DeleteAsync(id, version);
+            //await _wyrmConnection.DeleteAsync(id, version);
+            // _batch.Add();
+            throw new NotImplementedException();
         }
 
         public Task<byte[]> SaveAsync(AggregateBase aggregate, object headers)
@@ -107,7 +110,16 @@ namespace ESPlus.Wyrm
             var streamName = aggregate.Id;
             var eventsToSave = newEvents.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 
-            return await _wyrmConnection.Append(eventsToSave);
+            _batch.AddRange(eventsToSave);
+            return await Task.FromResult(Position.Start);
+        }
+
+        public async Task<byte[]> Commit()
+        {
+            var result = await _wyrmConnection.Append(_batch);
+
+            _batch.Clear();
+            return result;
         }
 
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate
