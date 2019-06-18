@@ -14,6 +14,7 @@ namespace ESPlus.Wyrm
         private readonly WyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
         private object _lock = new object();
+        private RepositoryTransaction _transaction = null;
 
         public static void Register<Type>()
         {
@@ -107,7 +108,15 @@ namespace ESPlus.Wyrm
             var streamName = aggregate.Id;
             var eventsToSave = newEvents.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 
-            return await _wyrmConnection.Append(eventsToSave);
+            if (_transaction != null)
+            {
+                _transaction.Append(eventsToSave);
+                return Position.Start;
+            }
+            else
+            {
+                return await _wyrmConnection.Append(eventsToSave);
+            }
         }
 
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate
@@ -206,6 +215,29 @@ namespace ESPlus.Wyrm
         public Task SaveNewAsync(IAggregate aggregate, object headers)
         {
             throw new NotImplementedException();
+        }
+
+        public RepositoryTransaction BeginTransaction()
+        {
+            var currentTransaction = _transaction;
+            var transaction = new RepositoryTransaction(this, () => _transaction = currentTransaction);
+
+            _transaction = transaction;
+            return transaction;
+        }
+
+        public async Task<byte[]> Commit()
+        {
+            if (_transaction != null)
+            {
+                var result = await _wyrmConnection.Append(_transaction.Events);
+
+                return result;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

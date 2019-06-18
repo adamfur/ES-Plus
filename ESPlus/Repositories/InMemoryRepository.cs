@@ -176,5 +176,15 @@ namespace ESPlus.Repositories
         {
             throw new NotImplementedException();
         }
+
+        public RepositoryTransaction BeginTransaction()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<byte[]> Commit()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -10,13 +10,7 @@ namespace ESPlus.Interfaces
         Task SaveNewAsync(IAggregate aggregate, object headers = null);
         Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate;
         Task DeleteAsync(string streamName, long version = -1);
-    }
-
-    public static class WritePolicy
-    {
-        public static long Any = -2;
-        public static long NoStream = -1;
-        public static long EmptyStream = -1;
-        public static long StreamExists = -4;
+        RepositoryTransaction BeginTransaction();
+        Task<byte[]> Commit();
     }
 }
