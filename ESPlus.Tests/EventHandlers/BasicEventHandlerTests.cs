@@ -99,8 +99,8 @@ namespace ESPlus.Tests.EventHandlers
             var pass1 = eventHandler.TakeEmittedEvents().ToList();
             var pass2 = eventHandler.TakeEmittedEvents().ToList();
 
-            Assert.Equal(1, pass1.Count());
-            Assert.Equal(0, pass2.Count());
+            Assert.NotEmpty(pass1);
+            Assert.Empty(pass2);
         }
 
         [Fact]
@@ -113,8 +113,8 @@ namespace ESPlus.Tests.EventHandlers
             var pass1 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
             var pass2 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
 
-            Assert.Equal(1, pass1.Count());
-            Assert.Equal(0, pass2.Count());
+            Assert.NotEmpty(pass1);
+            Assert.Empty(pass2);
         }        
     }
 }
