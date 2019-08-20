@@ -7,6 +7,7 @@ using ESPlus.Aggregates;
 using ESPlus.Misc;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
+using Newtonsoft.Json;
 using Wyrm;
 
 namespace ESPlus.EventHandlers
@@ -85,6 +86,11 @@ namespace ESPlus.EventHandlers
 
 //            {
 //                Console.WriteLine($"{@event.StreamName}: {@event.EventType}, Offset: {@event.Offset}, Ahead: {@event.IsAhead}");
+//
+//                if (@event.EventType != typeof(StreamDeleted).FullName)
+//                {
+//                    Console.WriteLine(JsonConvert.SerializeObject(@event.DeserializedItem(), Formatting.Indented));
+//                }
 //            }
    
             if (@event.EventType == typeof(StreamDeleted).FullName)
@@ -97,6 +103,10 @@ namespace ESPlus.EventHandlers
                 DispatchEvent(@event.DeserializedItem());
                 status = true;
             }
+//            else
+//            {
+//                Console.WriteLine("Cannot handle!!!");
+//            }
 
             if (@event.IsAhead)
             {

@@ -45,5 +45,10 @@ namespace ESPlus
         {
             return _data.SequenceEqual(other._data);
         }
+
+        public override string ToString()
+        {
+            return AsHexString();
+        }
     }
 }

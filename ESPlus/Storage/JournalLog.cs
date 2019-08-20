@@ -8,5 +8,6 @@ namespace ESPlus.Storage
     {
         public Position Checkpoint { get; set; } = Position.Start;
         public Dictionary<string, string> Map = new Dictionary<string, string>();
+        public HashSet<string> Deletes { get; set; } = new HashSet<string>();
     }
 }

@@ -28,7 +28,7 @@ namespace ESPlus.Tests.Storage
                 }
             };
 
-            _metadataStorage.Get<JournalLog>(PersistantJournal.JournalPath).Returns(replayLog);
+            _metadataStorage.Get<JournalLog>(PersistentJournal.JournalPath).Returns(replayLog);
             _stageStorage.Get<HasObjectId>("stage/1/file1").Returns(_payload);
 
             // Act
@@ -62,9 +62,10 @@ namespace ESPlus.Tests.Storage
             // Assert
             Received.InOrder(() =>
             {
-                _stageStorage.Received().Put(Arg.Is<string>(p => p == "prod/file1"), payload);
+                _dataStorage.Received().Flush();
+                _stageStorage.Received().Put(Arg.Is<string>(p => p == "stage/prod/file1"), payload);
                 _stageStorage.Received().Flush();
-                _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => true));
+                _metadataStorage.Received().Put(PersistentJournal.JournalPath, Arg.Is<JournalLog>(p => true));
                 _metadataStorage.Received().Flush();
                 _dataStorage.Received().Put(Arg.Is<string>(p => p == "prod/file1"), payload);
                 _dataStorage.Received().Flush();
@@ -85,7 +86,7 @@ namespace ESPlus.Tests.Storage
             _journal.Flush();
 
             // Assert
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(12))
+            _metadataStorage.Received().Put(PersistentJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(12))
                && p.Map.Count == 1
                && p.Map.First().Key == "prod/file1"
                && p.Map.First().Value == destination));
@@ -132,7 +133,7 @@ namespace ESPlus.Tests.Storage
         {
             var path = "path/1";
 
-            _metadataStorage.Get<HasObjectId>(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
+            _metadataStorage.Get<HasObjectId>(PersistentJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
             _dataStorage.Get<HasObjectId>(path).Returns(_payload);
 
             _journal.Initialize();
@@ -155,8 +156,8 @@ namespace ESPlus.Tests.Storage
             _journal.Put(path2, _payload);
             _journal.Flush();
 
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(12)) && p.Map.Count == 1));
-            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(13)) && p.Map.Count == 1));
+            _metadataStorage.Received().Put(PersistentJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(12)) && p.Map.Count == 1));
+            _metadataStorage.Received().Put(PersistentJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(13)) && p.Map.Count == 1));
         }
 
         [Fact]
@@ -186,8 +187,8 @@ namespace ESPlus.Tests.Storage
             _journal.Put("path/2", _payload);
             _journal.Flush();
 
-            _stageStorage.Received(1).Put("path/1", Arg.Any<HasObjectId>());
-            _stageStorage.Received(1).Put("path/2", Arg.Any<HasObjectId>());
+            _stageStorage.Received(1).Put("stage/path/1", Arg.Any<HasObjectId>());
+            _stageStorage.Received(1).Put("stage/path/2", Arg.Any<HasObjectId>());
         } 
 
         [Fact]

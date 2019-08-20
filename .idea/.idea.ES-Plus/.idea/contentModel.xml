@@ -101,16 +101,12 @@
         <e p="Storage" t="Include">
           <e p="CamelCaseExceptDictionaryKeysResolver.cs" t="Include" />
           <e p="FileSystemStorage.cs" t="Include" />
-          <e p="Future" t="Include">
-            <e p="AzureBlobStorage.cs" t="Include" />
-            <e p="SqlCheckpointStorage.cs" t="Include" />
-          </e>
-          <e p="IHasObjectId.cs" t="Include" />
+          <e p="HasObjectId.cs" t="Include" />
           <e p="InMemoryStorage.cs" t="Include" />
           <e p="JournalLog.cs" t="Include" />
           <e p="Journals" t="Include">
             <e p="CheckpointJournal.cs" t="Include" />
-            <e p="PersistantJournal.cs" t="Include" />
+            <e p="PersistentJournal.cs" t="Include" />
             <e p="ReplayableJournal.cs" t="Include" />
           </e>
           <e p="MongoStorage.cs" t="Include" />
@@ -155,6 +151,9 @@
             <e p="WyrmRepositoryTests.cs" t="Include" />
           </e>
           <e p="RepositoryTests.cs" t="Include" />
+        </e>
+        <e p="Storage" t="Include">
+          <e p="MongoStorageTests.cs" t="Include" />
         </e>
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive">

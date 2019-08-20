@@ -35,7 +35,7 @@ namespace ESPlus.Tests.Storage
         [Fact]
         public void Create_HasJournalWithCheckpoint_RealTimeMode()
         {
-            _metadataStorage.Get<JournalLog>(PersistantJournal.JournalPath)
+            _metadataStorage.Get<JournalLog>(PersistentJournal.JournalPath)
                 .Returns(new JournalLog {Checkpoint = Position.Gen(57)});
 
             _journal.Initialize();
@@ -47,7 +47,7 @@ namespace ESPlus.Tests.Storage
         [Fact]
         public void Create_HasJournalWithCheckpoint_ReplayMode()
         {
-            _metadataStorage.Get<JournalLog>(PersistantJournal.JournalPath)
+            _metadataStorage.Get<JournalLog>(PersistentJournal.JournalPath)
                 .Returns(new JournalLog {Checkpoint = Position.Start});
 
             _journal.Initialize();
@@ -65,10 +65,55 @@ namespace ESPlus.Tests.Storage
 
             Received.InOrder(() =>
             {
-                _metadataStorage.Received().Put(PersistantJournal.JournalPath,
+                _metadataStorage.Received().Put(PersistentJournal.JournalPath,
                     Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(13))));
                 _metadataStorage.Received().Flush();
             });
         }
+        
+        [Fact]
+        public void Get_AfterPut_Accessable()
+        {
+            _journal.Initialize();
+            _journal.Checkpoint = Position.Start;
+            _journal.Put("path", _payload);
+
+            Assert.Equal(_payload, _journal.Get<HasObjectId>("path"));
+        }
+        
+        [Fact]
+        public void Get_AfterPutAndFlush_Accessable()
+        {
+            _journal.Initialize();
+            _journal.Checkpoint = Position.Start;
+            _journal.Put("path", _payload);
+            _journal.Flush();
+
+            Assert.Equal(_payload, _journal.Get<HasObjectId>("path"));
+        }         
+        
+        [Fact]
+        public void Get_AfterDelete_NotAccessable()
+        {
+            _journal.Initialize();
+            _journal.Checkpoint = Position.Start;
+            _journal.Put("path", _payload);
+            _journal.Delete("path");
+
+            Assert.Null(_journal.Get<HasObjectId>("path"));
+        }
+        
+        [Fact]
+        public void Get_AfterDeleteAndFlush_NotAccessable()
+        {
+            _journal.Initialize();
+            _journal.Checkpoint = Position.Start;
+            _journal.Put("path", _payload);
+            _journal.Flush();
+            _journal.Delete("path");
+            _journal.Flush();
+
+            Assert.Null(_journal.Get<HasObjectId>("path"));
+        }            
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using System.Runtime.CompilerServices;
@@ -7,15 +8,16 @@ using ESPlus.Extentions;
 
 namespace ESPlus.Storage
 {
-    public abstract class PersistantJournal : IJournaled
+    public abstract class PersistentJournal : IJournaled
     {
         public const string JournalPath = "000Journal/000Journal.json";
-        protected readonly IStorage _metadataStorage;
+        private readonly IStorage _metadataStorage;
         protected readonly IStorage _dataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
-        protected readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
+        private readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
         protected readonly Dictionary<string, HasObjectId> _dataWriteCache = new Dictionary<string, HasObjectId>();
-
+        protected HashSet<string> _deletes { get; set; } = new HashSet<string>();
+        
         public Position Checkpoint
         {
             get => _checkpoint;
@@ -29,7 +31,7 @@ namespace ESPlus.Storage
         private bool _changed = false;
         private Position _checkpoint;
 
-        protected PersistantJournal(IStorage metadataStorage, IStorage dataStorage)
+        protected PersistentJournal(IStorage metadataStorage, IStorage dataStorage)
         {
             _metadataStorage = metadataStorage;
             _dataStorage = dataStorage;
@@ -64,6 +66,7 @@ namespace ESPlus.Storage
             {
                 SubscriptionMode = SubscriptionMode.Replay;
             }
+            
             PlayJournal(journal);
         }
 
@@ -86,6 +89,7 @@ namespace ESPlus.Storage
         {
             _cache.AddOrUpdate(destination, item);
             _dataWriteCache[destination] = item;
+            _deletes.Remove(destination);
             _changed = true;
         }
 
@@ -106,7 +110,7 @@ namespace ESPlus.Storage
 
                 if (SubscriptionMode == SubscriptionMode.Replay)
                 {
-                    return default;
+//                    return default;
                 }
 
                 var data = _dataStorage.Get<T>(path);
@@ -114,39 +118,61 @@ namespace ESPlus.Storage
                 _cache.AddOrUpdate(path, data);
                 return data;
             }
-            catch (System.IO.DirectoryNotFoundException)
+            catch (DirectoryNotFoundException)
             {
-                return default(T);
+                return default;
             }
         }
 
-        protected void WriteJournal(Dictionary<string, string> map)
+        public void Update<T>(string path, Action<T> action) where T : HasObjectId
+        {
+            var model = Get<T>(path);
+//
+//            if (model is null)
+//            {
+//                throw new Exception($"{nameof(PersistentJournal)}::Update, Path: {path}. model is null");
+//            }
+
+            action(model);
+            Put(path, model);
+        }
+
+        protected void WriteJournal(Dictionary<string, string> map, HashSet<string> deletes)
         {
             var journal = new JournalLog
             {
                 Checkpoint = Checkpoint,
-                Map = new Dictionary<string, string>(map)
+                Map = new Dictionary<string, string>(map),
+                Deletes = new HashSet<string>(deletes),
             };
             _metadataStorage.Put(JournalPath, journal);
             _metadataStorage.Flush();
             // Console.WriteLine($"Put Journal {Checkpoint}");
         }
 
-        protected void WriteTo(IStorage storage, Dictionary<string, HasObjectId> cache)
+        protected void WriteTo(IStorage storage, Dictionary<string, HasObjectId> cache, HashSet<string> deletes,
+            string prefix = "")
         {
             foreach (var item in cache)
             {
-                var destination = item.Key;
+                var destination = $"{prefix}{item.Key}";
                 var payload = item.Value;
 
                 storage.Put(destination, payload);
             }
+
+            foreach (var item in deletes)
+            {
+                storage.Delete(item);
+            }
+            
             storage.Flush();
         }
 
-        protected virtual void Clean()
+        private void Clean()
         {
             _dataWriteCache.Clear();
+            _deletes.Clear();
             _changed = false;
             DoClean();
         }
@@ -164,9 +190,13 @@ namespace ESPlus.Storage
             throw new System.NotImplementedException();
         }
 
-        public void Delete(string path)
+        public virtual void Delete(string path)
         {
-            Put(path, new HasObjectId());
+//            Console.WriteLine($"PersistantJournal delete: {path}");
+            _changed = true;
+            _cache.Remove(path);
+            _dataWriteCache.Remove(path);
+            _deletes.Add(path);
         }
     }
 }

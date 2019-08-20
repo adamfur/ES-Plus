@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using ESPlus.Interfaces;
@@ -12,7 +13,8 @@ namespace ESPlus.Storage
     {
         private readonly IMongoDatabase _mongoDatabase;
         private readonly string _collection;
-        private readonly Dictionary<ObjectId, HasObjectId> _writeCache = new Dictionary<ObjectId, HasObjectId>();
+        private readonly Dictionary<ObjectId, HasObjectId> _upserts = new Dictionary<ObjectId, HasObjectId>();
+        private readonly HashSet<ObjectId> _deletes = new HashSet<ObjectId>();
 
         public MongoStorage(IMongoDatabase mongoDatabase, string collection)
         {
@@ -22,59 +24,86 @@ namespace ESPlus.Storage
 
         public void Delete(string path)
         {
+//            Console.WriteLine($"Mongo::Delete {path}");
             var id = ObjectId.Parse(path.MongoHash());
-            var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
-            var updates = new List<WriteModel<HasObjectId>>();
-            var filter = new BsonDocument
-            {
-                {"_id", id}
-            };
 
-            updates.Add(new DeleteOneModel<HasObjectId>(filter));
-
-            Retry(() => collection.BulkWrite(updates));
-
-            _writeCache[id] = null;
+            _deletes.Add(id);
+            _upserts.Remove(id);
         }
 
         public void Flush()
         {
-            var collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
-            var updates = _writeCache.Select(d =>
+            IMongoCollection<HasObjectId> collection = _mongoDatabase.GetCollection<HasObjectId>(_collection);
+            var bulk = new List<WriteModel<HasObjectId>>();
+//            var watch = Stopwatch.StartNew();
+
+            bulk.AddRange(AssembleUpserts());
+            bulk.AddRange(AssembleDeletes());
+
+            if (!bulk.Any())
+            {
+                return;
+            }
+
+            Retry(() => collection.BulkWrite(bulk));
+
+            _deletes.Clear();
+            _upserts.Clear();
+
+//            Console.WriteLine($"Mongo:Flush, latency: {watch.ElapsedMilliseconds} ms");
+        }
+
+        private IEnumerable<DeleteOneModel<HasObjectId>> AssembleDeletes()
+        {
+            return _deletes.Select(d =>
+            {
+                var filter = new BsonDocument
+                {
+                    {"_id", d}
+                };
+
+                return new DeleteOneModel<HasObjectId>(filter);
+            });
+        }
+
+        private IEnumerable<WriteModel<HasObjectId>> AssembleUpserts()
+        {
+            return _upserts.Select(d =>
             {
                 var filter = new BsonDocument
                 {
                     {"_id", d.Key},
-                    {"_t", d.Value.GetType().Name}
+//                    {"_t", d.Value.GetType().Name}
                 };
 
-                if (d.Value != null)
-                {
-                    return (WriteModel<HasObjectId>)new ReplaceOneModel<HasObjectId>(filter, d.Value) { IsUpsert = true };
-                }
-                else
-                {
-                    return (WriteModel<HasObjectId>)new DeleteOneModel<HasObjectId>(filter);
-                }
+                return (WriteModel<HasObjectId>) new ReplaceOneModel<HasObjectId>(filter, d.Value)
+                        {IsUpsert = true};
             });
-
-            Retry(() => collection.BulkWrite(updates));
-
-            _writeCache.Clear();
         }
 
         public T Get<T>(string path)
             where T : HasObjectId
         {
             var id = ObjectId.Parse(path.MongoHash());
+
+            if (_deletes.Contains(id))
+            {
+                return default;
+            }
+
+            if (_upserts.ContainsKey(id))
+            {
+                return (T) _upserts[id];
+            }
+            
             var collection = _mongoDatabase.GetCollection<T>(_collection);
             var filter = new BsonDocument
             {
                 {"_id", id},
-                {"_t", typeof(T).Name}
+//                {"_t", typeof(T).Name}
             };
 
-            var result = (T)collection.Find(filter).FirstOrDefault();
+            var result = collection.Find(filter).FirstOrDefault();
 
             return result;
         }
@@ -84,7 +113,8 @@ namespace ESPlus.Storage
             var id = ObjectId.Parse(path.MongoHash());
 
             item.ID = id;
-            _writeCache[id] = item;
+            _upserts[id] = item;
+            _deletes.Remove(id);
         }
 
         public void Reset()
@@ -93,22 +123,27 @@ namespace ESPlus.Storage
 
         private void Retry(Action action)
         {
+            Exception exception = null;
+            
             for (var tries = 0; tries < 3; ++tries)
             {
                 try
                 {
                     action();
-                    break;
+                    return;
                 }
                 catch (OutOfMemoryException)
                 {
                     throw;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    exception = ex;
                     Thread.Sleep(TimeSpan.FromSeconds(1 << tries));
                 }
             }
+
+            throw exception;
         }
     }
 }

@@ -33,7 +33,7 @@ namespace ESPlus.Tests.Storage
             {
                 _dataStorage.Received().Put(destination, payload);
                 _dataStorage.Received().Flush();
-                _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Any<JournalLog>());
+                _metadataStorage.Received().Put(PersistentJournal.JournalPath, Arg.Any<JournalLog>());
                 _metadataStorage.Received().Flush();
             });
         }
