@@ -63,6 +63,7 @@
           <e p="IJournaled.cs" t="Include" />
           <e p="IPersistance.cs" t="Include" />
           <e p="IRepository.cs" t="Include" />
+          <e p="IRepositoryTransaction.cs" t="Include" />
           <e p="IStorage.cs" t="Include" />
           <e p="IStorageClient.cs" t="Include" />
           <e p="ISubscriptionClient.cs" t="Include" />

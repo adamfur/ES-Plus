@@ -103,12 +103,12 @@ namespace ESPlus.Repositories
             return SaveImpl(aggregate, WritePolicy.Any);
         }
 
-        public Task SaveNewAsync(IAggregate aggregate, object headers)
+        public Task<Position> SaveNewAsync(IAggregate aggregate, object headers)
         {
             return SaveImpl(aggregate, WritePolicy.EmptyStream);
         }
 
-        public async Task SaveImpl(IAggregate aggregate, long policy)
+        public async Task<Position> SaveImpl(IAggregate aggregate, long policy)
         {
             var events = aggregate.TakeUncommittedEvents().ToList();
             EventStream stream;
@@ -156,6 +156,8 @@ namespace ESPlus.Repositories
                 //Console.WriteLine(@event);
                 await NotifySubscribers(@event);
             };
+            
+            return Position.Start;
         }
 
         private async Task NotifySubscribers(object @event)
@@ -177,7 +179,7 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 
-        public RepositoryTransaction BeginTransaction()
+        public IRepositoryTransaction BeginTransaction()
         {
             throw new NotImplementedException();
         }

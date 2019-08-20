@@ -212,12 +212,12 @@ namespace ESPlus.Wyrm
             return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
 
-        public Task SaveNewAsync(IAggregate aggregate, object headers)
+        public Task<Position> SaveNewAsync(IAggregate aggregate, object headers)
         {
             throw new NotImplementedException();
         }
 
-        public RepositoryTransaction BeginTransaction()
+        public IRepositoryTransaction BeginTransaction()
         {
             var currentTransaction = _transaction;
             var transaction = new RepositoryTransaction(this, () => _transaction = currentTransaction);

@@ -5,9 +5,9 @@ using ESPlus.Wyrm;
 
 namespace ESPlus.Interfaces
 {
-    public class RepositoryTransaction : IDisposable
+    public class RepositoryTransaction : IRepositoryTransaction
     {
-        private List<WyrmEvent> _events = new List<WyrmEvent>();
+        private readonly List<WyrmEvent> _events = new List<WyrmEvent>();
         private readonly IRepository _repository;
         private readonly Action _action;
         private bool _disposed = false;
