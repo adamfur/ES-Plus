@@ -15,10 +15,21 @@ namespace ESPlus.Storage
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         protected readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
         protected readonly Dictionary<string, HasObjectId> _dataWriteCache = new Dictionary<string, HasObjectId>();
-        public byte[] Checkpoint { get; set; }
-        private bool _changed = false;
 
-        public PersistantJournal(IStorage metadataStorage, IStorage dataStorage)
+        public Position Checkpoint
+        {
+            get => _checkpoint;
+            set
+            {
+                _changed = true;
+                _checkpoint = value;
+            }
+        }
+
+        private bool _changed = false;
+        private Position _checkpoint;
+
+        protected PersistantJournal(IStorage metadataStorage, IStorage dataStorage)
         {
             _metadataStorage = metadataStorage;
             _dataStorage = dataStorage;
@@ -41,7 +52,7 @@ namespace ESPlus.Storage
                 journal = journal ?? new JournalLog();
                 Console.WriteLine($"Journal Read Success: {journal.Checkpoint.AsHexString()}");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 journal = new JournalLog();
                 Console.WriteLine($"Journal Read Failed: {journal.Checkpoint}");
@@ -49,7 +60,7 @@ namespace ESPlus.Storage
             
             Checkpoint = journal.Checkpoint;
 
-            if (journal.Checkpoint == Position.Start)
+            if (journal.Checkpoint.Equals(Position.Start))
             {
                 SubscriptionMode = SubscriptionMode.Replay;
             }
@@ -93,10 +104,10 @@ namespace ESPlus.Storage
                     return item2 as T;
                 }
 
-                // if (SubscriptionMode == SubscriptionMode.Replay)
-                // {
-                //     return default(T);
-                // }
+                if (SubscriptionMode == SubscriptionMode.Replay)
+                {
+                    return default;
+                }
 
                 var data = _dataStorage.Get<T>(path);
 
@@ -155,9 +166,7 @@ namespace ESPlus.Storage
 
         public void Delete(string path)
         {
-            _cache.Remove(path);
-            _dataWriteCache.Remove(path);
-            _dataStorage.Delete(path);
+            Put(path, new HasObjectId());
         }
     }
 }

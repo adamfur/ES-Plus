@@ -9,7 +9,7 @@ namespace ESPlus.EventHandlers
     {
         private readonly IFlushPolicy _flushPolicy;
         protected TContext Context { get; private set; }
-        protected object Mutex = new object();
+        protected readonly object _mutex = new object();
 
         IEventHandler IFlushPolicy.EventHandler
         {
@@ -24,7 +24,7 @@ namespace ESPlus.EventHandlers
             _flushPolicy = flushPolicy;
         }
 
-        public byte[] Checkpoint
+        public Position Checkpoint
         {
             get => Context.Checkpoint;
             set => Context.Checkpoint = value;
@@ -36,7 +36,7 @@ namespace ESPlus.EventHandlers
 
         public virtual void Flush()
         {
-            lock (Mutex)
+            lock (_mutex)
             {
                 Context.Flush();
             }

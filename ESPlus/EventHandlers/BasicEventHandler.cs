@@ -37,7 +37,7 @@ namespace ESPlus.EventHandlers
 
         public override bool DispatchEvent(object @event)
         {
-            lock (Mutex)
+            lock (_mutex)
             {
                 _once.Execute();
                 _router.Dispatch(@event);
@@ -83,6 +83,10 @@ namespace ESPlus.EventHandlers
             Context.Checkpoint = @event.Position;
             _once.Execute();
 
+//            {
+//                Console.WriteLine($"{@event.StreamName}: {@event.EventType}, Offset: {@event.Offset}, Ahead: {@event.IsAhead}");
+//            }
+   
             if (@event.EventType == typeof(StreamDeleted).FullName)
             {
                 DispatchEvent(new StreamDeleted(@event.StreamName));

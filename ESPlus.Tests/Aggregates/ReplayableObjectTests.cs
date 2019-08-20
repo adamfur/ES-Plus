@@ -94,7 +94,7 @@ namespace ESPlus.Tests.Aggregates
             ((IAggregate)aggregate).TakeUncommittedEvents();
             var events = ((IAggregate)aggregate).TakeUncommittedEvents();
 
-            Assert.Equal(0, events.Count());
+            Assert.Empty(events);
         }
 
         [Fact]

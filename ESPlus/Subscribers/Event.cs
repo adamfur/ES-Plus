@@ -7,12 +7,13 @@ namespace ESPlus.Subscribers
         private readonly IEventTypeResolver _eventTypeResolver;
         private readonly IEventSerializer _eventSerializer;
 
-        public byte[] Position { get; set; }
+        public Position Position { get; set; }
         public byte[] Meta { get; set; }
         public byte[] Payload { get; set; }
         public string EventType { get; set; }
         public bool IsAhead { get; set; }
         public string StreamName { get; set; }
+        public long Offset { get; set; }
 
         public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {

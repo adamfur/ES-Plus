@@ -20,7 +20,7 @@ namespace ESPlus.Interfaces
 
         public IEnumerable<WyrmEvent> Events => _events;
 
-        public async Task<byte[]> Commit()
+        public async Task<Position> Commit()
         {
             return await _repository.Commit();
         }

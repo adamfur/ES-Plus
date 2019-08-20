@@ -20,7 +20,7 @@ namespace ESPlus.Subscribers
             _eventSerializer = eventSerializer;
         }
 
-        public ISubscriptionClient Subscribe(byte[] position)
+        public ISubscriptionClient Subscribe(Position position)
         {
             var context = new SubscriptionContext
             {

@@ -22,14 +22,16 @@ namespace ESPlus.Wyrm
         {
             foreach (var @event in _wyrmConnection.Subscribe(_subscriptionContext.Position))
             {
+                
                 yield return new Event(_eventTypeResolver, @event.Serializer)
                 {
-                    Position = @event.Position,
+                    Position = new Position(@event.Position),
                     Meta = @event.Metadata,
                     Payload = @event.Data,
                     EventType = @event.EventType,
                     IsAhead = @event.IsAhead,
-                    StreamName = @event.StreamName
+                    StreamName = @event.StreamName,
+                    Offset = @event.Offset,
                 };
             }
         }

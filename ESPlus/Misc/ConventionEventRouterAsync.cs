@@ -59,7 +59,7 @@ namespace ESPlus.Aggregates
                 this.handlers.Add(apply.MessageType, Build((dynamic)Activator.CreateInstance(apply.MessageType), aggregate, apply.Method));
             }
         }
-        static int count = 0;
+        
         private Func<object, Task> Build<T>(T typeInstance, object instance, MethodInfo applyMethod)
         {
             var specificDelegate = ((Func<T, Task>)Delegate.CreateDelegate(typeof(Func<T, Task>), instance, applyMethod));

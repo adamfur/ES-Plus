@@ -82,7 +82,7 @@ namespace ESPlus.Timeout
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
             }

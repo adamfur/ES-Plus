@@ -58,7 +58,7 @@ namespace ESPlus.Wyrm
             await _wyrmConnection.DeleteAsync(id, version);
         }
 
-        public Task<byte[]> SaveAsync(AggregateBase aggregate, object headers)
+        public Task<Position> SaveAsync(AggregateBase aggregate, object headers = null)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
@@ -67,7 +67,7 @@ namespace ESPlus.Wyrm
             return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers);
         }
 
-        public Task<byte[]> AppendAsync(AggregateBase aggregate, object headers)
+        public Task<Position> AppendAsync(AggregateBase aggregate, object headers)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
@@ -98,7 +98,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        private async Task<byte[]> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
+        private async Task<Position> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
         {
             if (!newEvents.Any())
             {
@@ -226,7 +226,7 @@ namespace ESPlus.Wyrm
             return transaction;
         }
 
-        public async Task<byte[]> Commit()
+        public async Task<Position> Commit()
         {
             if (_transaction != null)
             {

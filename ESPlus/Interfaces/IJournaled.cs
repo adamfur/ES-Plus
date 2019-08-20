@@ -5,7 +5,7 @@ namespace ESPlus.Storage
 {
     public interface IJournaled : IStorage
     {
-        byte[] Checkpoint { get; set; }
+        Position Checkpoint { get; set; }
         SubscriptionMode SubscriptionMode { get; }
         void Initialize();
     }

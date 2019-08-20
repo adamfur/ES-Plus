@@ -180,7 +180,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public Task<byte[]> Append(IEnumerable<WyrmEvent> events)
+        public Task<Position> Append(IEnumerable<WyrmEvent> events)
         {
             if (!events.Any())
             {
@@ -215,7 +215,7 @@ namespace ESPlus.Wyrm
                     throw new WrongExpectedVersionException($"Bad status: {status}");
                 }
 
-                return Task.FromResult(hash);
+                return Task.FromResult(new Position(hash));
             }
         }
 
@@ -266,7 +266,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public IEnumerable<WyrmEvent2> Subscribe(byte[] from)
+        public IEnumerable<WyrmEvent2> Subscribe(Position from)
         {
             Console.WriteLine($"Subscribe: {from.AsHexString()}");
             using (var client = Create())
@@ -275,7 +275,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(OperationType.SUBSCRIBE);
-                writer.Write(from);
+                writer.Write(from.Binary());
                 writer.Flush();
 
                 while (true)
@@ -293,7 +293,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public IEnumerable<WyrmEvent2> EnumerateAll(byte[] from)
+        public IEnumerable<WyrmEvent2> EnumerateAll(Position from)
         {
             Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
             using (var client = Create())
@@ -302,7 +302,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(OperationType.READ_ALL_FORWARD);
-                writer.Write(from);
+                writer.Write(from.Binary());
                 writer.Flush();
 
                 while (true)

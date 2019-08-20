@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="$USER_HOME$/.Rider2019.2/system/extResources" t="IncludeRecursive" />
+    <e p="$USER_HOME$/.Rider2019.2/system/resharper-host/local/Transient/ReSharperHost/v192/SolutionCaches/_ES-Plus.-453139127.00" t="ExcludeRecursive" />
+    <e p="$USER_HOME$/.nuget/packages/microsoft.net.test.sdk/16.0.1/build/netcoreapp1.0" t="Include">
+      <e p="Microsoft.NET.Test.Sdk.Program.cs" t="Include" />
+    </e>
+    <e p="$USER_HOME$/.nuget/packages/xunit.runner.visualstudio/2.4.1/build/netcoreapp1.0/xunit.runner.reporters.netcoreapp10.dll" t="Include" />
+    <e p="$USER_HOME$/.nuget/packages/xunit.runner.visualstudio/2.4.1/build/netcoreapp1.0/xunit.runner.utility.netcoreapp10.dll" t="Include" />
+    <e p="$USER_HOME$/.nuget/packages/xunit.runner.visualstudio/2.4.1/build/netcoreapp1.0/xunit.runner.visualstudio.dotnetcore.testadapter.dll" t="Include" />
+    <e p="$PROJECT_DIR$" t="IncludeFlat">
+      <e p="ES-Plus.sln" t="IncludeFlat" />
+      <e p="ESPlus" t="IncludeRecursive">
+        <e p="Aggregates" t="Include">
+          <e p="AggregateBase.cs" t="Include" />
+          <e p="Events" t="Include">
+            <e p="ProcessManagerAlarm.cs" t="Include" />
+            <e p="ProcessManagerCommand.cs" t="Include" />
+            <e p="ProcessManagerPoisonPill.cs" t="Include" />
+            <e p="ProcessManagerProcessed.cs" t="Include" />
+          </e>
+          <e p="ProcessManager.cs" t="Include" />
+        </e>
+        <e p="ESPlus.csproj" t="IncludeRecursive" />
+        <e p="Event" t="Include">
+          <e p="WyrmStreamDeleted.cs" t="Include" />
+        </e>
+        <e p="EventHandlers" t="Include">
+          <e p="BasicEventHandler.cs" t="Include" />
+          <e p="ComplexEventHandler.cs" t="Include" />
+          <e p="EventHandlerBase.cs" t="Include" />
+          <e p="ProcessManagerEventHandler.cs" t="Include" />
+          <e p="SubscriptionMode.cs" t="Include" />
+        </e>
+        <e p="EventJsonSerializer.cs" t="Include" />
+        <e p="EventMessagePackSerializer.cs" t="Include" />
+        <e p="Exceptions" t="Include">
+          <e p="AggregateDeletedException.cs" t="Include" />
+          <e p="AggregateException.cs" t="Include" />
+          <e p="AggregateNotFoundException.cs" t="Include" />
+          <e p="AggregateVersionException.cs" t="Include" />
+          <e p="WrongExpectedVersionException.cs" t="Include" />
+        </e>
+        <e p="Extensions" t="Include">
+          <e p="StreamExtensions.cs" t="Include" />
+          <e p="StringExtensions.cs" t="Include" />
+        </e>
+        <e p="FlushPolicies" t="Include">
+          <e p="AlwaysFlushPolicy.cs" t="Include" />
+          <e p="FlushWhenAheadPolicy.cs" t="Include" />
+          <e p="NullFlushPolicy.cs" t="Include" />
+        </e>
+        <e p="Hash.cs" t="Include" />
+        <e p="IEventSerializer.cs" t="Include" />
+        <e p="Interfaces" t="Include">
+          <e p="IAggregate.cs" t="Include" />
+          <e p="IEventHandler.cs" t="Include" />
+          <e p="IEventHandlerContext.cs" t="Include" />
+          <e p="IFlushPolicy.cs" t="Include" />
+          <e p="IFlushable.cs" t="Include" />
+          <e p="IHandleEvent.cs" t="Include" />
+          <e p="IJournaled.cs" t="Include" />
+          <e p="IPersistance.cs" t="Include" />
+          <e p="IRepository.cs" t="Include" />
+          <e p="IStorage.cs" t="Include" />
+          <e p="IStorageClient.cs" t="Include" />
+          <e p="ISubscriptionClient.cs" t="Include" />
+          <e p="ISubscriptionManager.cs" t="Include" />
+          <e p="RepositoryTransaction.cs" t="Include" />
+          <e p="WritePolicy.cs" t="Include" />
+        </e>
+        <e p="Lazy" t="Include">
+          <e p="LazyReload.cs" t="Include" />
+        </e>
+        <e p="Misc" t="Include">
+          <e p="AmbientSystemTimeScope.cs" t="Include" />
+          <e p="AmbientSytemTimeBase.cs" t="Include" />
+          <e p="ConventionEventRouter.cs" t="Include" />
+          <e p="ConventionEventRouterAsync.cs" t="Include" />
+          <e p="EnumerableExtention.cs" t="Include" />
+          <e p="EventIdentifierAttribute.cs" t="Include" />
+          <e p="EventTypeResolver.cs" t="Include" />
+          <e p="ICommandDispatcher.cs" t="Include" />
+          <e p="IEventTypeResolver.cs" t="Include" />
+          <e p="IHandleCommand.cs" t="Include" />
+          <e p="Once.cs" t="Include" />
+          <e p="SystemTime.cs" t="Include" />
+        </e>
+        <e p="NoReplayAttribute.cs" t="Include" />
+        <e p="NoTestAttribute.cs" t="Include" />
+        <e p="Position.cs" t="Include" />
+        <e p="Repositories" t="Include">
+          <e p="InMemoryRepository.cs" t="Include" />
+        </e>
+        <e p="Scheduling" t="Include">
+          <e p="IScheduler.cs" t="Include" />
+          <e p="Job.cs" t="Include" />
+          <e p="Scheduler.cs" t="Include" />
+        </e>
+        <e p="Storage" t="Include">
+          <e p="CamelCaseExceptDictionaryKeysResolver.cs" t="Include" />
+          <e p="FileSystemStorage.cs" t="Include" />
+          <e p="Future" t="Include">
+            <e p="AzureBlobStorage.cs" t="Include" />
+            <e p="SqlCheckpointStorage.cs" t="Include" />
+          </e>
+          <e p="IHasObjectId.cs" t="Include" />
+          <e p="InMemoryStorage.cs" t="Include" />
+          <e p="JournalLog.cs" t="Include" />
+          <e p="Journals" t="Include">
+            <e p="CheckpointJournal.cs" t="Include" />
+            <e p="PersistantJournal.cs" t="Include" />
+            <e p="ReplayableJournal.cs" t="Include" />
+          </e>
+          <e p="MongoStorage.cs" t="Include" />
+          <e p="StorageClient.cs" t="Include" />
+        </e>
+        <e p="Subscribers" t="Include">
+          <e p="Event.cs" t="Include" />
+          <e p="SubscriptionContext.cs" t="Include" />
+          <e p="SubscriptionManager.cs" t="Include" />
+        </e>
+        <e p="Timeout" t="Include">
+          <e p="Alarm.cs" t="Include" />
+          <e p="AlarmHandler.cs" t="Include" />
+          <e p="AlarmRepository.cs" t="Include" />
+          <e p="IAlarmHandler.cs" t="Include" />
+          <e p="IAlarmRepository.cs" t="Include" />
+        </e>
+        <e p="Wyrm" t="Include">
+          <e p="BinaryWriterExtentions.cs" t="Include" />
+          <e p="ExpectedVersion.cs" t="Include" />
+          <e p="OperationType.cs" t="Include" />
+          <e p="WyrmDriver.cs" t="Include" />
+          <e p="WyrmEvent.cs" t="Include" />
+          <e p="WyrmEvent2.cs" t="Include" />
+          <e p="WyrmRepository.cs" t="Include" />
+          <e p="WyrmSubscriptionClient.cs" t="Include" />
+        </e>
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.2" t="Include">
+              <e p="ESPlus.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
+      <e p="ESPlus.IntegrationTests" t="IncludeRecursive">
+        <e p="ESPlus.IntegrationTests.csproj" t="IncludeRecursive" />
+        <e p="Repositories" t="Include">
+          <e p="Implementations" t="Include">
+            <e p="InMemoryRepositoryTests.cs" t="Include" />
+            <e p="WyrmRepositoryTests.cs" t="Include" />
+          </e>
+          <e p="RepositoryTests.cs" t="Include" />
+        </e>
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.2" t="Include">
+              <e p="ESPlus.IntegrationTests.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
+      <e p="ESPlus.Specification" t="IncludeRecursive">
+        <e p="ESPlus.Specification.csproj" t="IncludeRecursive" />
+        <e p="Specification.cs" t="Include" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.2" t="Include">
+              <e p="ESPlus.Specification.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
+      <e p="ESPlus.SpecificationTests" t="IncludeRecursive">
+        <e p="DummyAggregate.cs" t="Include" />
+        <e p="ESPlus.SpecificationTests.csproj" t="IncludeRecursive" />
+        <e p="SpecificationTests.cs" t="Include" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.2" t="Include">
+              <e p="ESPlus.SpecificationTests.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
+      <e p="ESPlus.Tests" t="IncludeRecursive">
+        <e p="Aggregates" t="Include">
+          <e p="ReplayableObjectTests.cs" t="Include" />
+        </e>
+        <e p="ESPlus.Tests.csproj" t="IncludeRecursive" />
+        <e p="EventHandlers" t="Include">
+          <e p="BasicEventHandlerTests.cs" t="Include" />
+          <e p="ComplexEventHandlerTests.cs" t="Include" />
+        </e>
+        <e p="Misc" t="Include">
+          <e p="OnceTests.cs" t="Include" />
+          <e p="SystemTimeTests.cs" t="Include" />
+        </e>
+        <e p="SpecificationTests.cs" t="Include" />
+        <e p="Storage" t="Include">
+          <e p="CheckpointJournalTests.cs" t="Include" />
+          <e p="JournalTests.cs" t="Include" />
+          <e p="ReplayableJournalTests.cs" t="Include" />
+        </e>
+        <e p="Timeout" t="Include">
+          <e p="AlarmHandlerTest.cs" t="Include" />
+        </e>
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.2" t="Include">
+              <e p="ESPlus.Tests.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+      </e>
+      <e p="packages" t="ExcludeRecursive" />
+    </e>
+  </component>
+</project>

@@ -92,7 +92,7 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
-        public async Task<byte[]> SaveAsync(AggregateBase aggregate, object headers)
+        public async Task<Position> SaveAsync(AggregateBase aggregate, object headers)
         {
             await SaveImpl(aggregate, aggregate.Version);
             return Position.Start;
@@ -172,7 +172,7 @@ namespace ESPlus.Repositories
             return Task.FromResult(0);
         }
 
-        Task<byte[]> IRepository.AppendAsync(AggregateBase aggregate, object headers)
+        Task<Position> IRepository.AppendAsync(AggregateBase aggregate, object headers = null)
         {
             throw new NotImplementedException();
         }
@@ -182,7 +182,7 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<byte[]> Commit()
+        public Task<Position> Commit()
         {
             throw new NotImplementedException();
         }

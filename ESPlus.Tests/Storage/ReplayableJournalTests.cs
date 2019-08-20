@@ -3,6 +3,7 @@ using ESPlus.Storage;
 using NSubstitute;
 using Xunit;
 using System.Linq;
+using ESPlus.EventHandlers;
 using ESPlus.Subscribers;
 
 namespace ESPlus.Tests.Storage
@@ -14,185 +15,180 @@ namespace ESPlus.Tests.Storage
             return new ReplayableJournal(_metadataStorage, _stageStorage, _dataStorage);
         }
 
-        // [Fact]
-        // public void Flush_ReplayJournal_MoveFromStageToPersistant()
-        // {
-        //     // Arrange
-        //     var source = "stage/1/file1";
-        //     var destination = "prod/file1";
-        //     var payload = new object();
-        //     var replayLog = new JournalLog
-        //     {
-        //         Checkpoint = 0L.ToPosition(),
-        //         Map = new Dictionary<string, string>
-        //         {
-        //             [source] = destination
-        //         }
-        //     };
+        [Fact]
+        public void Flush_ReplayJournal_MoveFromStageToPersistant()
+        {
+            // Arrange
+            var replayLog = new JournalLog
+            {
+                Checkpoint = Position.Start,
+                Map = new Dictionary<string, string>
+                {
+                    ["stage/1/file1"] = "prod/file1"
+                }
+            };
 
-        //     _metadataStorage.Get<JournalLog>(PersistantJournal.JournalPath).Returns(replayLog);
-        //     _stageStorage.Get<object>(source).Returns(_payload);
+            _metadataStorage.Get<JournalLog>(PersistantJournal.JournalPath).Returns(replayLog);
+            _stageStorage.Get<HasObjectId>("stage/1/file1").Returns(_payload);
 
-        //     // Act
-        //     _journal.Initialize();
+            // Act
+            _journal.Initialize();
 
-        //     // Assert
-        //     Received.InOrder(() =>
-        //     {
-        //         //_stageStorage.Received().Get<object>(Arg.Any<string>());
-        //         _dataStorage.Received().Put(Arg.Any<string>(), Arg.Any<object>());
-        //         _dataStorage.Received().Flush();
-        //     });
-        // }
+            // Assert
+            Received.InOrder(() =>
+            {
+                //_stageStorage.Received().Get<object>(Arg.Any<string>());
+                _dataStorage.Received().Put(Arg.Any<string>(), Arg.Any<HasObjectId>());
+                _dataStorage.Received().Flush();
+            });
+        }
 
-        // [Fact]
-        // public void Flush_PutFile_WriteFirstToStageThenJournalThenStorage()
-        // {
-        //     // Arrange
-        //     var source = "stage/1/file1";
-        //     var destination = "prod/file1";
-        //     var payload = new object();
+        [Fact]
+        public void Flush_PutFile_WriteFirstToStageThenJournalThenStorage()
+        {
+            // Arrange
+            var source = "stage/1/file1";
+            var destination = "prod/file1";
+            var payload = new HasObjectId();
 
-        //     _stageStorage.Get<object>(source).Returns(_payload);
+            _stageStorage.Get<HasObjectId>(source).Returns(_payload);
 
-        //     // Act
-        //     _journal.Initialize();
-        //     _journal.Checkpoint = 12L.ToPosition();
-        //     _journal.Put(destination, payload);
-        //     _journal.Flush();
+            // Act
+            _journal.Initialize();
+            _journal.Checkpoint = Position.Gen(12);
+            _journal.Put(destination, payload);
+            _journal.Flush();
 
-        //     // Assert
-        //     Received.InOrder(() =>
-        //     {
-        //         _stageStorage.Received().Put(Arg.Is<string>(p => p == "Journal/12/0/prod/file1"), payload);
-        //         _stageStorage.Received().Flush();
-        //         _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => true));
-        //         _metadataStorage.Received().Flush();
-        //         _dataStorage.Received().Put(Arg.Is<string>(p => p == "prod/file1"), payload);
-        //         _dataStorage.Received().Flush();
-        //     });
-        // }
+            // Assert
+            Received.InOrder(() =>
+            {
+                _stageStorage.Received().Put(Arg.Is<string>(p => p == "prod/file1"), payload);
+                _stageStorage.Received().Flush();
+                _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => true));
+                _metadataStorage.Received().Flush();
+                _dataStorage.Received().Put(Arg.Is<string>(p => p == "prod/file1"), payload);
+                _dataStorage.Received().Flush();
+            });
+        }
 
-        // [Fact]
-        // public void Flush_PutFile_StagePathAndDestinationPathInJournal()
-        // {
-        //     // Arrange
-        //     var destination = "prod/file1";
-        //     var payload = new object();
+        [Fact]
+        public void Flush_PutFile_StagePathAndDestinationPathInJournal()
+        {
+            // Arrange
+            var destination = "prod/file1";
+            var payload = new HasObjectId();
 
-        //     // Act
-        //     _journal.Initialize();
-        //     _journal.Checkpoint = 12L.ToPosition();
-        //     _journal.Put(destination, payload);
-        //     _journal.Flush();
+            // Act
+            _journal.Initialize();
+            _journal.Checkpoint = Position.Gen(12);
+            _journal.Put(destination, payload);
+            _journal.Flush();
 
-        //     // Assert
-        //     _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 12L.ToPosition()
-        //         && p.Map.Count == 1
-        //         && p.Map.First().Key == "Journal/12/0/" + destination
-        //         && p.Map.First().Value == destination));
-        // }
+            // Assert
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(12))
+               && p.Map.Count == 1
+               && p.Map.First().Key == "prod/file1"
+               && p.Map.First().Value == destination));
+        }
 
-        // [Fact]
-        // public void Get_RealTimeModeNoCache_GetFromStorage()
-        // {
-        //     var path = "path/1";
-        //     _dataStorage.Get<object>(path).Returns(_payload);
+        [Fact]
+        public void Get_RealTimeModeNoCache_GetFromStorage()
+        {
+            var path = "path/1";
+            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
 
-        //     var item = _journal.Get<object>(path);
+            var item = _journal.Get<HasObjectId>(path);
 
-        //     Assert.Equal(_payload, item);
-        //     _dataStorage.Received().Get<object>(path);
-        // }
+            Assert.Equal(_payload, item);
+            _dataStorage.Received().Get<HasObjectId>(path);
+        }
 
-        // [Fact]
-        // public void Get_Twice_GetFromCacheSecondTime()
-        // {
-        //     var path = "path/1";
-        //     _dataStorage.Get<object>(path).Returns(_payload);
+        [Fact]
+        public void Get_Twice_GetFromCacheSecondTime()
+        {
+            var path = "path/1";
+            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
 
-        //     _journal.Get<object>(path);
-        //     _journal.Get<object>(path);
+            _journal.Get<HasObjectId>(path);
+            _journal.Get<HasObjectId>(path);
 
-        //     _dataStorage.Received(1).Get<object>(path);
-        // }
+            _dataStorage.Received(1).Get<HasObjectId>(path);
+        }
 
-        // [Fact]
-        // public void Get_PutBefore_ReceiveFromCache()
-        // {
-        //     var path = "path/1";
-        //     _dataStorage.Get<object>(path).Returns(_payload);
+        [Fact]
+        public void Get_PutBefore_ReceiveFromCache()
+        {
+            var path = "path/1";
+            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
 
-        //     _journal.Put(path, _payload);
-        //     _journal.Get<object>(path);
+            _journal.Put(path, _payload);
+            _journal.Get<HasObjectId>(path);
 
-        //     _dataStorage.DidNotReceive().Get<object>(path);
-        // }
+            _dataStorage.DidNotReceive().Get<HasObjectId>(path);
+        }
 
-        // [Fact]
-        // public void Get_ReplayMode_UnlessInCacheReturnNewT()
-        // {
-        //     _metadataStorage.Get<object>(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
+        [Fact]
+        public void Get_ReplayMode_UnlessInCacheReturnNewT()
+        {
+            var path = "path/1";
 
-        //     var path = "path/1";
-        //     _dataStorage.Get<object>(path).Returns(_payload);
+            _metadataStorage.Get<HasObjectId>(PersistantJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
+            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
 
-        //     _journal.Initialize();
-        //     _journal.Get<object>(path);
+            _journal.Initialize();
+            _journal.Get<HasObjectId>(path);
 
-        //     _dataStorage.DidNotReceive().Get<object>(path);
-        // }
+            Assert.Equal(SubscriptionMode.Replay, _journal.SubscriptionMode);
+            _dataStorage.DidNotReceive().Get<HasObjectId>(path);
+        }
 
-        // [Fact]
-        // public void Flush_DontKeepMapFromPreviousCall_CleanSlate()
-        // {
-        //     var path1 = "path/1";
-        //     var path2 = "path/2";
+        [Fact]
+        public void Flush_DontKeepMapFromPreviousCall_CleanSlate()
+        {
+            var path1 = "path/1";
+            var path2 = "path/2";
             
-        //     _journal.Checkpoint = 12L.ToPosition();
-        //     _journal.Put(path1, _payload);
-        //     _journal.Flush();
-        //     _journal.Checkpoint = 13L.ToPosition();
-        //     _journal.Put(path2, _payload);
-        //     _journal.Flush();
+            _journal.Checkpoint = Position.Gen(12);
+            _journal.Put(path1, _payload);
+            _journal.Flush();
+            _journal.Checkpoint = Position.Gen(13);
+            _journal.Put(path2, _payload);
+            _journal.Flush();
 
-        //     _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 12L.ToPosition() && p.Map.Count == 1));
-        //     _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint == 13L.ToPosition() && p.Map.Count == 1));
-        // }
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(12)) && p.Map.Count == 1));
+            _metadataStorage.Received().Put(PersistantJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(13)) && p.Map.Count == 1));
+        }
 
-        // [Fact]
-        // public void Flush_WipeWriteCacheBetweenWrites_CleanSlate1()
-        // {
-        //     var path1 = "path/1";
-        //     var path2 = "path/2";
+        [Fact]
+        public void Flush_WipeWriteCacheBetweenWrites_CleanSlate1()
+        {
+            var path1 = "path/1";
+            var path2 = "path/2";
             
-        //     _journal.Checkpoint = 12L.ToPosition();
-        //     _journal.Put(path1, _payload);
-        //     _journal.Flush();
-        //     _journal.Checkpoint = 13L.ToPosition();
-        //     _journal.Put(path2, _payload);
-        //     _journal.Flush();
+            _journal.Checkpoint = Position.Gen(12);
+            _journal.Put(path1, _payload);
+            _journal.Flush();
+            _journal.Checkpoint = Position.Gen(13);
+            _journal.Put(path2, _payload);
+            _journal.Flush();
 
-        //     _dataStorage.Received(1).Put(path1, Arg.Any<object>());
-        //     _dataStorage.Received(1).Put(path2, Arg.Any<object>());
-        // }
+            _dataStorage.Received(1).Put(path1, Arg.Any<HasObjectId>());
+            _dataStorage.Received(1).Put(path2, Arg.Any<HasObjectId>());
+        }
 
-        // [Fact]
-        // public void Flush_WipeStageCacheBetweenWrites_CleanSlate2()
-        // {
-        //     var path1 = "path/1";
-        //     var path2 = "path/2";
-            
-        //     _journal.Checkpoint = 12L.ToPosition();
-        //     _journal.Put(path1, _payload);
-        //     _journal.Flush();
-        //     _journal.Checkpoint = 13L.ToPosition();
-        //     _journal.Put(path2, _payload);
-        //     _journal.Flush();
+        [Fact]
+        public void Flush_WipeStageCacheBetweenWrites_CleanSlate2()
+        {
+            _journal.Checkpoint = Position.Gen(12);
+            _journal.Put("path/1", _payload);
+            _journal.Flush();
+            _journal.Checkpoint = Position.Gen(13);
+            _journal.Put("path/2", _payload);
+            _journal.Flush();
 
-        //     _stageStorage.Received(1).Put("Journal/12/0/" + path1, Arg.Any<object>());
-        //     _stageStorage.Received(1).Put("Journal/13/0/" + path2, Arg.Any<object>());
-        // } 
+            _stageStorage.Received(1).Put("path/1", Arg.Any<HasObjectId>());
+            _stageStorage.Received(1).Put("path/2", Arg.Any<HasObjectId>());
+        } 
 
         [Fact]
         public void Flush_NoChange_NoFlush()
@@ -202,18 +198,18 @@ namespace ESPlus.Tests.Storage
             _metadataStorage.DidNotReceive().Flush();
         }         
 
-        // [Fact]
-        // public void Flush_NoChange_NoFlush2()
-        // {
-        //     var path = "path/1";
+        [Fact]
+        public void Flush_NoChange_NoFlush2()
+        {
+            var path = "path/1";
             
-        //     _journal.Checkpoint = 12L.ToPosition();
-        //     _journal.Put(path, _payload);            
-        //     _journal.Flush();
-        //     _journal.Flush();
+            _journal.Checkpoint = Position.Gen(12);
+            _journal.Put(path, _payload);            
+            _journal.Flush();
+            _journal.Flush();
 
-        //     _metadataStorage.Received(1).Flush();
-        // }  
+            _metadataStorage.Received(1).Flush();
+        }  
 
         // public void TEMPTEMPTEMP()
         // {
