@@ -68,6 +68,7 @@
           <e p="IStorageClient.cs" t="Include" />
           <e p="ISubscriptionClient.cs" t="Include" />
           <e p="ISubscriptionManager.cs" t="Include" />
+          <e p="MuteTransaction.cs" t="Include" />
           <e p="RepositoryTransaction.cs" t="Include" />
           <e p="WritePolicy.cs" t="Include" />
         </e>

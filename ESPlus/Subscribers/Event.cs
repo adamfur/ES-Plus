@@ -14,6 +14,7 @@ namespace ESPlus.Subscribers
         public bool IsAhead { get; set; }
         public string StreamName { get; set; }
         public long Offset { get; set; }
+        public long TotalOffset { get; set; }
 
         public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {

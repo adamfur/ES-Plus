@@ -22,7 +22,6 @@ namespace ESPlus.Wyrm
         {
             foreach (var @event in _wyrmConnection.Subscribe(_subscriptionContext.Position))
             {
-                
                 yield return new Event(_eventTypeResolver, @event.Serializer)
                 {
                     Position = new Position(@event.Position),
@@ -32,6 +31,7 @@ namespace ESPlus.Wyrm
                     IsAhead = @event.IsAhead,
                     StreamName = @event.StreamName,
                     Offset = @event.Offset,
+                    TotalOffset = @event.TotalOffset,
                 };
             }
         }
