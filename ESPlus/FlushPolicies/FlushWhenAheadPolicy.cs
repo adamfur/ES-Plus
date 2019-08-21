@@ -8,20 +8,20 @@ namespace ESPlus.FlushPolicies
     public class FlushWhenAheadPolicy : IFlushPolicy
     {
         public IEventHandler EventHandler { get; set; }
-        private readonly int _ms;
-        private object _mutex = new object();
+        private readonly TimeSpan _timeout;
+        private readonly object _mutex = new object();
         private bool _doFlush = false;
         private const int _eventThreshold = 100;
         private int _events = 0;
 
-        public FlushWhenAheadPolicy(int ms)
+        public FlushWhenAheadPolicy(TimeSpan timeout)
         {
-            _ms = ms;
+            _timeout = timeout;
         }
 
         public void Start()
         {
-            new Thread(() => Worker()).Start();
+            new Thread(Worker).Start();
         }
 
         private void Worker()
@@ -35,7 +35,7 @@ namespace ESPlus.FlushPolicies
                         Monitor.Wait(_mutex);
                     }
                 }
-                Thread.Sleep(_ms);
+                Thread.Sleep(_timeout);
                 Flush();
             }
         }

@@ -275,7 +275,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(OperationType.SUBSCRIBE);
-                writer.Write(from.Binary());
+                writer.Write(@from.Binary);
                 writer.Flush();
 
                 while (true)
@@ -302,7 +302,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(OperationType.READ_ALL_FORWARD);
-                writer.Write(from.Binary());
+                writer.Write(@from.Binary);
                 writer.Flush();
 
                 while (true)

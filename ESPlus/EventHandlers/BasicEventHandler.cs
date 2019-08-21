@@ -74,7 +74,7 @@ namespace ESPlus.EventHandlers
 
         public override bool Dispatch(Event @event)
         {
-            if (@event.Position == Position.Start)
+            if (@event.Offset == 1)
             {
                 Initialize();
             }
@@ -84,6 +84,7 @@ namespace ESPlus.EventHandlers
             Context.Checkpoint = @event.Position;
             Context.Offset = @event.Offset;
             Context.TotalOffset = @event.TotalOffset;
+            Context.Metadata = new Metadata(@event.Meta);
             _once.Execute();
 
 //            {
@@ -124,5 +125,14 @@ namespace ESPlus.EventHandlers
 
             return Task.FromResult(result);
         }
+    }
+
+    public class Metadata
+    {
+        public Metadata(byte[] eventMeta)
+        {
+        }
+        
+        public DateTime Utc => DateTime.UtcNow; 
     }
 }
