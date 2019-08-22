@@ -104,8 +104,9 @@ namespace ESPlus.EventHandlers
                 
                     if (type != null)
                     {
-                        var instance = CreateInstance(type, @event.CreateEvent);
+                        var instance = CreateInstance(type, @event.StreamName);
                     
+//                        Console.WriteLine($"<@@@> Dispatch: StreamDeleted!{@event.CreateEvent}");
                         DispatchEvent(instance);
                     }
                 }
