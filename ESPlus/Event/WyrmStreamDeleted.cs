@@ -1,16 +1,10 @@
 namespace Wyrm
 {
-    public class StreamDeleted
+    public abstract class StreamDeleted
     {
-        public string StreamName { get; }
-
-        public StreamDeleted(string streamName)
-        {
-            StreamName = streamName;
-        }
     }
     
-    public class StreamDeleted<T>
+    public class StreamDeleted<T> : StreamDeleted
     {
         public string StreamName { get; }
 

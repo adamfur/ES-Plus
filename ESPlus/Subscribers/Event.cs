@@ -15,6 +15,7 @@ namespace ESPlus.Subscribers
         public string StreamName { get; set; }
         public long Offset { get; set; }
         public long TotalOffset { get; set; }
+        public string CreateEvent { get; set; }
 
         public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {

@@ -16,5 +16,6 @@ namespace ESPlus.Wyrm
         public byte[] Position { get; set; }
         public IEventSerializer Serializer { get; set; }
         public bool IsAhead { get; set; }
+        public string CreateEvent { get; set; }
     }
 }

@@ -98,7 +98,21 @@ namespace ESPlus.EventHandlers
    
             if (@event.EventType == typeof(StreamDeleted).FullName)
             {
-                DispatchEvent(new StreamDeleted(@event.StreamName));
+                try
+                {
+                    var type = _eventTypeResolver.ResolveType(@event.CreateEvent);
+                
+                    if (type != null)
+                    {
+                        var instance = CreateInstance(type, @event.CreateEvent);
+                    
+                        DispatchEvent(instance);
+                    }
+                }
+                catch (ArgumentException)
+                {
+                }
+
                 status = true;
             }
             else if (_router.CanHandle(@event.EventType))
@@ -114,6 +128,14 @@ namespace ESPlus.EventHandlers
 
             return status;
         }
+        
+        private StreamDeleted CreateInstance(Type type, string createEventType)
+        {
+            var make = typeof(StreamDeleted<>).MakeGenericType(new[] { type });
+            var result = (StreamDeleted) Activator.CreateInstance(make, createEventType);
+
+            return result;
+        }        
 
         public override Task<bool> DispatchEventAsync(object @event)
         {

@@ -32,6 +32,7 @@ namespace ESPlus.Wyrm
                     StreamName = @event.StreamName,
                     Offset = @event.Offset,
                     TotalOffset = @event.TotalOffset,
+                    CreateEvent = @event.CreateEvent,
                 };
             }
         }

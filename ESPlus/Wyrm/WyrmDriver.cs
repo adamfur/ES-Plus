@@ -88,7 +88,7 @@ namespace ESPlus.Wyrm
         public WyrmEvent2 ReadEvent(BinaryReader reader, int length)
         {
             ReadOnlySpan<byte> payload = reader.ReadBytes(length);// stackalloc byte[length];
-
+            var createEvent = "";
             // reader.ReadBytes(payload, length);
 
             int disp = 0;
@@ -128,11 +128,19 @@ namespace ESPlus.Wyrm
             disp += (int)eventTypeLength;
             var time = Epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
             var compressed = payload.Slice(disp, (int)compressedSize).ToArray();
+            disp += compressedSize;
             var uncompressed = new byte[uncompressedSize];
             var compressedLength = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
             var metadata = new byte[metaDataLength];
             var data = new byte[payloadLength];
-
+            
+            if (eventType == "Wyrm.StreamDeleted" && disp < payload.Length)
+            {
+                var createEventLength = BitConverter.ToInt32(payload.Slice(disp, 4));
+                disp += 4;
+                createEvent = Encoding.UTF8.GetString(payload.Slice(disp, createEventLength));
+            }
+            
             Array.Copy(uncompressed, metadata, metadata.Length);
             Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
 
@@ -149,7 +157,8 @@ namespace ESPlus.Wyrm
                 StreamName = streamName,
                 Position = position,
                 Serializer = Serializer,
-                IsAhead = ahead
+                IsAhead = ahead,
+                CreateEvent = createEvent 
             };
         }
 
