@@ -5,6 +5,7 @@ using ESPlus.Interfaces;
 using System.Linq;
 using System;
 using ESPlus.EventHandlers;
+using ESPlus.Exceptions;
 
 namespace ESPlus.Repositories
 {

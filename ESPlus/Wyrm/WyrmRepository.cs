@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
+using ESPlus.Exceptions;
 using ESPlus.Interfaces;
 
 namespace ESPlus.Wyrm

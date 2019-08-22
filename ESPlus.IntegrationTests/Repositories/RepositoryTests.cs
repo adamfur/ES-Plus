@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
+using ESPlus.Exceptions;
 using ESPlus.Interfaces;
 using Xunit;
 
@@ -133,7 +134,7 @@ namespace ESPlus.IntegrationTests.Repositories
             var aggregate2 = new DummyAggregate(id);
 
             await Repository.SaveAsync(aggregate1);
-            await Assert.ThrowsAsync<ESPlus.WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
+            await Assert.ThrowsAsync<WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
         }
 
         [Fact]

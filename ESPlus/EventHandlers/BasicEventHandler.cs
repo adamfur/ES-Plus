@@ -84,7 +84,7 @@ namespace ESPlus.EventHandlers
             Context.Checkpoint = @event.Position;
             Context.Offset = @event.Offset;
             Context.TotalOffset = @event.TotalOffset;
-            Context.Metadata = new Metadata(@event.Meta);
+            Context.Metadata = new MetaData(@event.Meta);
             _once.Execute();
 
 //            {
@@ -106,10 +106,6 @@ namespace ESPlus.EventHandlers
                 DispatchEvent(@event.DeserializedItem());
                 status = true;
             }
-//            else
-//            {
-//                Console.WriteLine("Cannot handle!!!");
-//            }
 
             if (@event.IsAhead)
             {
@@ -125,14 +121,5 @@ namespace ESPlus.EventHandlers
 
             return Task.FromResult(result);
         }
-    }
-
-    public class Metadata
-    {
-        public Metadata(byte[] eventMeta)
-        {
-        }
-        
-        public DateTime Utc => DateTime.UtcNow; 
     }
 }

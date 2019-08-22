@@ -1,6 +1,6 @@
 using System;
 
-namespace ESPlus
+namespace ESPlus.Exceptions
 {
     public class AggregateDeletedException : AggregateException
     {
