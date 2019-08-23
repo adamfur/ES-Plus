@@ -84,7 +84,7 @@ namespace ESPlus.EventHandlers
             Context.Checkpoint = @event.Position;
             Context.Offset = @event.Offset;
             Context.TotalOffset = @event.TotalOffset;
-            Context.Metadata = new MetaData(@event.Meta);
+            Context.Metadata = new MetaData(@event.Meta, new EventMessagePackSerializer());
             _once.Execute();
 
 //            {

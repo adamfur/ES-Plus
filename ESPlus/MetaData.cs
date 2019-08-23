@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using MessagePack;
 using Newtonsoft.Json;
 
 namespace ESPlus
@@ -12,24 +13,30 @@ namespace ESPlus
         DateTime TimestampUtc { get; }
     }
 
+    [MessagePackObject]
     public class MetaObject : IMetaObject
     {
+        [Key("Subject")]
         public string Subject { get; set; }
+        [Key("IP")]
         public string IP { get; set; }
+        [Key("GivenName")]
         public string GivenName { get; set; }
+        [Key("TimestampUtc")]
         public DateTime TimestampUtc { get; set; }
     }
     
     public class MetaData : IMetaObject
     {
+        private readonly IEventSerializer _serializer;
         private readonly Lazy<MetaObject> _lazyMetaObject;
         
-        public MetaData(byte[] eventMeta)
+        public MetaData(byte[] eventMeta, IEventSerializer serializer)
         {
+            _serializer = serializer;
             _lazyMetaObject = new Lazy<MetaObject>(() =>
             {
-                var json = Encoding.UTF8.GetString(eventMeta);
-                var obj = JsonConvert.DeserializeObject<MetaObject>(json);
+                var obj = (MetaObject) _serializer.Deserialize(typeof(MetaObject), eventMeta);
 
                 return obj;
             });

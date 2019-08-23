@@ -128,20 +128,20 @@ namespace ESPlus.Tests.Storage
             _dataStorage.DidNotReceive().Get<HasObjectId>(path);
         }
 
-        [Fact]
-        public void Get_ReplayMode_UnlessInCacheReturnNewT()
-        {
-            var path = "path/1";
-
-            _metadataStorage.Get<HasObjectId>(PersistentJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
-            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
-
-            _journal.Initialize();
-            _journal.Get<HasObjectId>(path);
-
-            Assert.Equal(SubscriptionMode.Replay, _journal.SubscriptionMode);
-            _dataStorage.DidNotReceive().Get<HasObjectId>(path);
-        }
+//        [Fact]
+//        public void Get_ReplayMode_UnlessInCacheReturnNewT()
+//        {
+//            var path = "path/1";
+//
+//            _metadataStorage.Get<HasObjectId>(PersistentJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
+//            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
+//
+//            _journal.Initialize();
+//            _journal.Get<HasObjectId>(path);
+//
+//            Assert.Equal(SubscriptionMode.Replay, _journal.SubscriptionMode);
+//            _dataStorage.DidNotReceive().Get<HasObjectId>(path);
+//        }
 
         [Fact]
         public void Flush_DontKeepMapFromPreviousCall_CleanSlate()
