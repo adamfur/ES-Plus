@@ -13,6 +13,16 @@ namespace ESPlus
 
         public Position(byte[] input)
         {
+            if (input == null)
+            {
+                throw new ArgumentNullException(nameof(input));
+            }
+
+            if (input.Length != 32)
+            {
+                throw new ArgumentException(nameof(input));
+            }
+            
             Binary = input;
         }
 

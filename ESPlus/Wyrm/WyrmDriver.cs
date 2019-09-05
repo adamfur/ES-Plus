@@ -9,11 +9,12 @@ using System.Text;
 using System.Threading.Tasks;
 using ESPlus.Exceptions;
 using ESPlus.Extentions;
+using ESPlus.Storage;
 using LZ4;
 
 namespace ESPlus.Wyrm
 {
-    public class WyrmDriver
+    public class WyrmDriver : IWyrmDriver
     {
         private string _host;
         private int _port;
@@ -85,7 +86,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public WyrmEvent2 ReadEvent(BinaryReader reader, int length)
+        private WyrmEvent2 ReadEvent(BinaryReader reader, int length)
         {
             ReadOnlySpan<byte> payload = reader.ReadBytes(length);// stackalloc byte[length];
             var createEvent = "";
@@ -272,6 +273,26 @@ namespace ESPlus.Wyrm
                     var buffer = reader.ReadBytes(length);
 
                     yield return Encoding.UTF8.GetString(buffer);
+                }
+            }
+        }
+        
+        public Position LastCheckpoint()
+        {
+            Console.WriteLine($"LastCheckpoint");
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write(OperationType.LAST_CHECKPOINT);
+                writer.Flush();
+
+                while (true)
+                {
+                    var position = reader.ReadBytes(32);
+
+                    return new Position(position);
                 }
             }
         }
