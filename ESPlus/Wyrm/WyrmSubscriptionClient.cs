@@ -8,10 +8,10 @@ namespace ESPlus.Wyrm
     public class WyrmSubscriptionClient : ISubscriptionClient
     {
         private SubscriptionContext _subscriptionContext;
-        private readonly WyrmDriver _wyrmConnection;
+        private readonly IWyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
 
-        public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, WyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver)
+        public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, IWyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver)
         {
             _subscriptionContext = subscriptionContext;
             _wyrmConnection = wyrmConnection;

@@ -12,7 +12,7 @@ namespace ESPlus.Wyrm
     public class WyrmRepository : IRepository
     {
         private readonly IEventSerializer _eventSerializer;
-        private readonly WyrmDriver _wyrmConnection;
+        private readonly IWyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
         private object _lock = new object();
         private RepositoryTransaction _transaction = null;
@@ -22,7 +22,7 @@ namespace ESPlus.Wyrm
             _types[typeof(Type).FullName] = typeof(Type);
         }
 
-        public WyrmRepository(WyrmDriver wyrmConnection)
+        public WyrmRepository(IWyrmDriver wyrmConnection)
         {
             _wyrmConnection = wyrmConnection;
             _eventSerializer = wyrmConnection.Serializer;
