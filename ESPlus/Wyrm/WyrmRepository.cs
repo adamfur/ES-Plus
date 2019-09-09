@@ -17,11 +17,6 @@ namespace ESPlus.Wyrm
         private object _lock = new object();
         private RepositoryTransaction _transaction = null;
 
-        public static void Register<Type>()
-        {
-            _types[typeof(Type).FullName] = typeof(Type);
-        }
-
         public WyrmRepository(IWyrmDriver wyrmConnection)
         {
             _wyrmConnection = wyrmConnection;
@@ -183,7 +178,7 @@ namespace ESPlus.Wyrm
 
                     stream = evnt.StreamName;
                     aggregate = ConstructAggregate<TAggregate>(evnt.StreamName);
-                    applyAggregate = (IAggregate)aggregate;
+                    applyAggregate = aggregate;
                 }
 
                 Type type;
