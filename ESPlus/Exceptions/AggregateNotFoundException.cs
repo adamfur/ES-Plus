@@ -4,12 +4,11 @@ namespace ESPlus.Exceptions
 {
     public class AggregateNotFoundException : AggregateException
     {
-        public string Id { get; }
         public Type Type { get; }
 
         public AggregateNotFoundException(string id, Type type)
+        : base($"Aggregate with id '{id}' not found")
         {
-            Id = id;
             Type = type;
         }
     }    

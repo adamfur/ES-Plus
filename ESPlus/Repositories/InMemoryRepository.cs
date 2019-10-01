@@ -85,7 +85,7 @@ namespace ESPlus.Repositories
             }
             else
             {
-                throw new AggregateNotFoundException("", null);
+                throw new AggregateNotFoundException(id, null);
             }
 
             aggregate.TakeUncommittedEvents();

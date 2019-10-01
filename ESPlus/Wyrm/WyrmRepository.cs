@@ -150,7 +150,7 @@ namespace ESPlus.Wyrm
 
             if (!any)
             {
-                throw new AggregateNotFoundException("", null);
+                throw new AggregateNotFoundException(id, null);
             }
 
             aggregate.TakeUncommittedEvents();
