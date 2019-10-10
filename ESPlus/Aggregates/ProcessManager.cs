@@ -7,7 +7,7 @@ namespace ESPlus.Aggregates
 {
     public class ProcessManager : AggregateBase
     {
-        private bool _dead = false;
+//        private bool _dead = false;
         private ISet<string> _processed = new HashSet<string>();
         public IRepository Repository { get; set; }
 
@@ -72,7 +72,7 @@ namespace ESPlus.Aggregates
 
         private void Apply(ProcessManagerPoisonPill @event)
         {
-            _dead = true;
+//            _dead = true;
         }
 
         private void Apply(ProcessManagerAlarm @event)
