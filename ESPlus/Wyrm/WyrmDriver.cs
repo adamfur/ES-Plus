@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Exceptions;
 using ESPlus.Extentions;
@@ -16,10 +17,10 @@ namespace ESPlus.Wyrm
 {
     public class WyrmDriver : IWyrmDriver
     {
-        private string _host;
-        private int _port;
+        private readonly string _host;
+        private readonly int _port;
         public IEventSerializer Serializer { get; }
-        private static DateTime Epooch = new DateTime(1970, 1, 1);
+        private static readonly DateTime Epooch = new DateTime(1970, 1, 1);
 
         public WyrmDriver(string connectionString, IEventSerializer eventSerializer)
         {
@@ -48,11 +49,33 @@ namespace ESPlus.Wyrm
         {
             var client = new TcpClient();
             client.NoDelay = false;
-            client.Connect(_host, _port);
+            
+            Retry(() => client.Connect(_host, _port));
 
             return client;
         }
+        
+        private void Retry(Action action)
+        {
+            Exception exception = null;
+            
+            for (var tries = 0; tries < 3; ++tries)
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                    Thread.Sleep(TimeSpan.FromSeconds(1 << tries));
+                }
+            }
 
+            throw exception;
+        }
+        
         public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
         {
             using (var client = Create())
