@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ContentModelStore">
     <e p="$USER_HOME$/.Rider2019.2/system/extResources" t="IncludeRecursive" />
-    <e p="$USER_HOME$/.Rider2019.2/system/resharper-host/local/Transient/ReSharperHost/v192/SolutionCaches/_ES-Plus.-453139127.00" t="ExcludeRecursive" />
+    <e p="$USER_HOME$/.Rider2019.2/system/resharper-host/local/Transient/ReSharperHost/v192/SolutionCaches/_ES-Plus.1663221332.00" t="ExcludeRecursive" />
     <e p="$USER_HOME$/.nuget/packages/microsoft.net.test.sdk/16.0.1/build/netcoreapp1.0" t="Include">
       <e p="Microsoft.NET.Test.Sdk.Program.cs" t="Include" />
     </e>
@@ -75,6 +75,7 @@
         <e p="Lazy" t="Include">
           <e p="LazyReload.cs" t="Include" />
         </e>
+        <e p="MetaData.cs" t="Include" />
         <e p="Misc" t="Include">
           <e p="AmbientSystemTimeScope.cs" t="Include" />
           <e p="AmbientSytemTimeBase.cs" t="Include" />
@@ -128,7 +129,9 @@
         </e>
         <e p="Wyrm" t="Include">
           <e p="BinaryWriterExtentions.cs" t="Include" />
+          <e p="Bundle.cs" t="Include" />
           <e p="ExpectedVersion.cs" t="Include" />
+          <e p="IWyrmDriver.cs" t="Include" />
           <e p="OperationType.cs" t="Include" />
           <e p="WyrmDriver.cs" t="Include" />
           <e p="WyrmEvent.cs" t="Include" />
@@ -139,7 +142,7 @@
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
-            <e p="netcoreapp2.2" t="Include">
+            <e p="netcoreapp3.0" t="Include">
               <e p="ESPlus.AssemblyInfo.cs" t="Include" />
             </e>
           </e>
@@ -160,7 +163,7 @@
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
-            <e p="netcoreapp2.2" t="Include">
+            <e p="netcoreapp3.0" t="Include">
               <e p="ESPlus.IntegrationTests.AssemblyInfo.cs" t="Include" />
             </e>
           </e>
@@ -172,7 +175,7 @@
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
-            <e p="netcoreapp2.2" t="Include">
+            <e p="netcoreapp3.0" t="Include">
               <e p="ESPlus.Specification.AssemblyInfo.cs" t="Include" />
             </e>
           </e>
@@ -185,7 +188,7 @@
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
-            <e p="netcoreapp2.2" t="Include">
+            <e p="netcoreapp3.0" t="Include">
               <e p="ESPlus.SpecificationTests.AssemblyInfo.cs" t="Include" />
             </e>
           </e>
@@ -200,10 +203,12 @@
           <e p="BasicEventHandlerTests.cs" t="Include" />
           <e p="ComplexEventHandlerTests.cs" t="Include" />
         </e>
+        <e p="JournalLogTests.cs" t="Include" />
         <e p="Misc" t="Include">
           <e p="OnceTests.cs" t="Include" />
           <e p="SystemTimeTests.cs" t="Include" />
         </e>
+        <e p="PositionTests.cs" t="Include" />
         <e p="SpecificationTests.cs" t="Include" />
         <e p="Storage" t="Include">
           <e p="CheckpointJournalTests.cs" t="Include" />
@@ -213,10 +218,11 @@
         <e p="Timeout" t="Include">
           <e p="AlarmHandlerTest.cs" t="Include" />
         </e>
+        <e p="WyrmDriverTests.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
-            <e p="netcoreapp2.2" t="Include">
+            <e p="netcoreapp3.0" t="Include">
               <e p="ESPlus.Tests.AssemblyInfo.cs" t="Include" />
             </e>
           </e>

@@ -214,42 +214,94 @@ namespace ESPlus.Wyrm
             }
         }
 
+        public Task<Position> Append(Bundle bundle)
+        {
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int)4+4+4+bundle.Items.Sum(x => x.Count())); //FIXME
+                writer.Write((int)OperationType.PUT);
+                writer.Write((int)CommitPolicy.All);
+
+                foreach (var item in bundle.Items)
+                {
+                    if (item is CreateBundleItem createItem)
+                    {
+                        writer.Write((int)BundleOp.Create);
+                        writer.Write((int)createItem.StreamName.Length);
+                        writer.Write(Encoding.UTF8.GetBytes(createItem.StreamName));
+                    }
+                    else if (item is DeleteBundleItem deleteItem)
+                    {
+                        writer.Write((int)BundleOp.Delete);
+                        writer.Write((long)deleteItem.StreamVersion);
+                        writer.Write((int)deleteItem.StreamName.Length);
+                        writer.Write(Encoding.UTF8.GetBytes(deleteItem.StreamName));
+                    }
+                    else if (item is EventsBundleItem eventsItem)
+                    {
+                        writer.Write((int)BundleOp.Events);
+                        writer.Write((long)eventsItem.StreamVersion);
+                        writer.Write((int)eventsItem.StreamName.Length);
+                        writer.Write(Encoding.UTF8.GetBytes(eventsItem.StreamName));
+                        writer.Write((int)eventsItem.Events.Count());
+
+                        foreach (var evt in eventsItem.Events)
+                        {
+                            writer.WriteStruct(evt.EventId);
+                            writer.Write((int) evt.EventType.Length);
+                            writer.Write(Encoding.UTF8.GetBytes(evt.EventType));
+                            writer.Write((int) evt.Metadata.Length);
+                            writer.Write(evt.Metadata);
+                            writer.Write((int) evt.Body.Length);
+                            writer.Write(evt.Body);
+                        }
+                    }
+                }
+            }
+            
+            return Task.FromResult(Position.Start);
+        }
+
         public Task<Position> Append(IEnumerable<WyrmEvent> events)
         {
-            if (!events.Any())
-            {
-                return Task.FromResult(Position.Start);
-            }
+//            if (!events.Any())
+//            {
+//                return Task.FromResult(Position.Start);
+//            }
 
             using (var client = Create())
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
-                var concat = Combine(events.Select(x => Assemble(x)).ToArray());
-                int length = concat.Length;
+//                var concat = Combine(events.Select(x => Assemble(x)).ToArray());
+//                int length = concat.Length;
+//
+                writer.Write((int)8);
+                writer.Write((int)OperationType.PUT);
+//                writer.Write(length);
+//                writer.Write(concat, 0, length);
+//                writer.Flush();
+//
+//                var len = reader.ReadInt32();
+//
+//                if (len != 8 + 32)
+//                {
+//                    throw new Exception("if (len != 8 + 32)");
+//                }
+//
+//                var status = reader.ReadInt32();
+//                var hash = reader.ReadBytes(32);
+//
+//                if (status != 0)
+//                {
+//                    throw new WrongExpectedVersionException($"Bad status: {status}");
+//                }
 
-                writer.Write(OperationType.PUT);
-                writer.Write(length);
-                writer.Write(concat, 0, length);
-                writer.Flush();
-
-                var len = reader.ReadInt32();
-
-                if (len != 8 + 32)
-                {
-                    throw new Exception("if (len != 8 + 32)");
-                }
-
-                var status = reader.ReadInt32();
-                var hash = reader.ReadBytes(32);
-
-                if (status != 0)
-                {
-                    throw new WrongExpectedVersionException($"Bad status: {status}");
-                }
-
-                return Task.FromResult(new Position(hash));
+                return Task.FromResult(Position.Start);
             }
         }
 
