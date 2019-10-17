@@ -49,12 +49,18 @@ namespace ESPlus.Wyrm
             return new WyrmEvent(eventId, typeName, data, metadata, streamName, (int)version);
         }
 
-        public async Task DeleteAsync(string id, long version)
+        public Task CreateStreamAsync(string streamName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task DeleteStreamAsync(string id, long version)
         {
             await _wyrmConnection.DeleteAsync(id, version);
         }
 
-        public Task<Position> SaveAsync(AggregateBase aggregate, object headers = null)
+        public Task<Position> SaveAsync(AggregateBase aggregate,
+            object headers = null, long savePolicy = ExpectedVersion.Specified)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
@@ -222,18 +228,18 @@ namespace ESPlus.Wyrm
             return transaction;
         }
 
-        public async Task<Position> Commit()
-        {
-            if (_transaction != null)
-            {
-                var result = await _wyrmConnection.Append(_transaction.Events);
-
-                return result;
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
+//        public async Task<Position> Commit(Interfaces.CommitPolicy policy = CommitPolicy.All)
+//        {
+//            if (_transaction != null)
+//            {
+//                var result = await _wyrmConnection.Append(_transaction.Events);
+//
+//                return result;
+//            }
+//            else
+//            {
+//                throw new NotImplementedException();
+//            }
+//        }
     }
 }

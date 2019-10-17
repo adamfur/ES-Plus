@@ -6,6 +6,8 @@ using System.Linq;
 using System;
 using ESPlus.EventHandlers;
 using ESPlus.Exceptions;
+using ESPlus.Wyrm;
+using CommitPolicy = ESPlus.Interfaces.CommitPolicy;
 
 namespace ESPlus.Repositories
 {
@@ -93,7 +95,14 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
-        public async Task<Position> SaveAsync(AggregateBase aggregate, object headers)
+        public Task CreateStreamAsync(string streamName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Position> SaveAsync(AggregateBase aggregate,
+            object headers = null,
+            long savePolicy = ExpectedVersion.Specified)
         {
             await SaveImpl(aggregate, aggregate.Version);
             return Position.Start;
@@ -101,12 +110,12 @@ namespace ESPlus.Repositories
 
         public Task AppendAsync(AggregateBase aggregate, object headers)
         {
-            return SaveImpl(aggregate, WritePolicy.Any);
+            return SaveImpl(aggregate, ExpectedVersion.Any);
         }
 
         public Task<Position> SaveNewAsync(IAggregate aggregate, object headers)
         {
-            return SaveImpl(aggregate, WritePolicy.EmptyStream);
+            return SaveImpl(aggregate, ExpectedVersion.EmptyStream);
         }
 
         public async Task<Position> SaveImpl(IAggregate aggregate, long policy)
@@ -127,7 +136,7 @@ namespace ESPlus.Repositories
             {
                 throw new WrongExpectedVersionException();
             }
-            else if (policy == WritePolicy.NoStream && stream.Version != -1)
+            else if (policy == ExpectedVersion.NoStream && stream.Version != -1)
             {
                 throw new WrongExpectedVersionException();
             }
@@ -169,15 +178,10 @@ namespace ESPlus.Repositories
             }
         }
 
-        public Task DeleteAsync(string streamName, long version)
+        public Task DeleteStreamAsync(string streamName, long version)
         {
             _streams.Remove(streamName);
             return Task.FromResult(0);
-        }
-
-        Task<Position> IRepository.AppendAsync(AggregateBase aggregate, object headers = null)
-        {
-            throw new NotImplementedException();
         }
 
         public IRepositoryTransaction BeginTransaction()
@@ -185,7 +189,7 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<Position> Commit()
+        public Task<Position> Commit(CommitPolicy policy = CommitPolicy.All)
         {
             throw new NotImplementedException();
         }

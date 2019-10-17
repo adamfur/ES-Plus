@@ -260,6 +260,7 @@ namespace ESPlus.Wyrm
                         }
                     }
                 }
+                client.Close();
             }
             
             return Task.FromResult(Position.Start);

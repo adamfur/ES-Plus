@@ -12,7 +12,7 @@ namespace ESPlus.Interfaces
 
         public IEnumerable<WyrmEvent> Events { get; }
         
-        public Task<Position> Commit()
+        public Task<Position> Commit(CommitPolicy policy)
         {
             return Task.FromResult(Position.Start);
         }

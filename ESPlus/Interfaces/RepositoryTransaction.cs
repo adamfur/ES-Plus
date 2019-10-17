@@ -20,9 +20,11 @@ namespace ESPlus.Interfaces
 
         public IEnumerable<WyrmEvent> Events => _events;
 
-        public async Task<Position> Commit()
+        public async Task<Position> Commit(CommitPolicy policy)
         {
-            return await _repository.Commit();
+            throw new NotImplementedException();
+//            return await _r
+//            threpository.Commit(policy);
         }
 
         public void Append(IEnumerable<WyrmEvent> events)

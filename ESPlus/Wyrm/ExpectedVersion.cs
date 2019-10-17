@@ -6,5 +6,6 @@ namespace ESPlus.Wyrm
         public const long NoStream = -1;     // The stream being written to should not yet exist. If it does exist treat that as a concurrency problem.
         public const long EmptyStream = -1;  // The stream should exist and should be empty. If it does not exist or is not empty treat that as a concurrency problem.
         public const long StreamExists = -4; // The stream should exist. If it or a metadata stream does not exist treat that as a concurrency problem.
+        public const long Specified = -5;
     }
 }

@@ -7,8 +7,6 @@ namespace ESPlus.Interfaces
 {
     public interface IRepositoryTransaction : IDisposable
     {
-        IEnumerable<WyrmEvent> Events { get; }
-        Task<Position> Commit();
-        void Append(IEnumerable<WyrmEvent> events);
+        Task<Position> Commit(CommitPolicy policy = CommitPolicy.All);
     }
 }

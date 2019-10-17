@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using ESPlus.Wyrm;
 using Xunit;
 
@@ -209,5 +210,128 @@ namespace ESPlus.Tests
                 }
             });
         }
+
+        [Fact]
+        public void Food()
+        {
+            Thread thread = null;
+
+            for (var i = 0; i < 8; ++i)
+            {
+                thread = new Thread(() =>
+                {
+                    while (true)
+                    {
+                        var id = Guid.NewGuid().ToString();
+                        
+                        _wyrmDriver.Append(new Bundle
+                        {
+                            Policy = CommitPolicy.All,
+                            Items = new List<BundleItem>
+                            {
+                                new EventsBundleItem
+                                {
+                                    StreamName = id,
+                                    StreamVersion = 0,
+                                    Events = new List<BundleEvent>
+                                    {
+                                        new BundleEvent
+                                        {
+                                            EventId = Guid.NewGuid(),
+                                            EventType = Guid.NewGuid().ToString(),
+                                            Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                            Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                        }
+                                    }
+                                },
+                                new EventsBundleItem
+                                {
+                                    StreamName = id,
+                                    StreamVersion = 1,
+                                    Events = new List<BundleEvent>
+                                    {
+                                        new BundleEvent
+                                        {
+                                            EventId = Guid.NewGuid(),
+                                            EventType = Guid.NewGuid().ToString(),
+                                            Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                            Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                        },
+                                        new BundleEvent
+                                        {
+                                            EventId = Guid.NewGuid(),
+                                            EventType = Guid.NewGuid().ToString(),
+                                            Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                            Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+
+                thread.Start();
+            }
+
+            thread.Join();
+        }
+        
+      [Fact]
+        public void AppendDeterministicStream()
+        {
+            _wyrmDriver.Append(new Bundle
+            {
+                Policy = CommitPolicy.All,
+                Items = new List<BundleItem>
+                {
+                    new EventsBundleItem
+                    {
+                        StreamName = "john",
+                        StreamVersion = 0,
+                        Events = new List<BundleEvent>
+                        {
+                            new BundleEvent
+                            {
+                                EventId = Guid.Empty,
+                                EventType = "EventType",
+                                Metadata = Encoding.UTF8.GetBytes("Metadata"),
+                                Body = Encoding.UTF8.GetBytes("Body"),
+                            }
+                        }
+                    }
+                }
+            });
+
+            _wyrmDriver.Append(new Bundle
+            {
+                Policy = CommitPolicy.All,
+                Items = new List<BundleItem>
+                {
+                    new EventsBundleItem
+                    {
+                        StreamName = "john",
+                        StreamVersion = 1,
+                        Events = new List<BundleEvent>
+                        {
+                            new BundleEvent
+                            {
+                                EventId = Guid.Empty,
+                                EventType = "EventType",
+                                Metadata = Encoding.UTF8.GetBytes("Metadata"),
+                                Body = Encoding.UTF8.GetBytes("Body"),
+                            },
+                            new BundleEvent
+                            {
+                                EventId = Guid.Empty,
+                                EventType = "EventType",
+                                Metadata = Encoding.UTF8.GetBytes("Metadata"),
+                                Body = Encoding.UTF8.GetBytes("Body"),
+                            }
+                        }
+                    }
+                }
+            });
+        }        
     }
 }

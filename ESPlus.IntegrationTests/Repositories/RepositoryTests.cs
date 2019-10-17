@@ -144,7 +144,7 @@ namespace ESPlus.IntegrationTests.Repositories
             var aggregate = new DummyAggregate(id);
 
             await Repository.SaveAsync(aggregate);
-            await Repository.DeleteAsync(id, aggregate.Version);
+            await Repository.DeleteStreamAsync(id, aggregate.Version);
         }
 
         // // //////////////////////////////[Fact]
@@ -215,7 +215,7 @@ namespace ESPlus.IntegrationTests.Repositories
 
             aggregate.AttachFile();
             await Repository.SaveAsync(aggregate);
-            await Repository.DeleteAsync(id, aggregate.Version);
+            await Repository.DeleteStreamAsync(id, aggregate.Version);
             await Assert.ThrowsAsync<AggregateNotFoundException>(async () => await Repository.GetByIdAsync<DummyAggregate>(id));
         }        
     }
