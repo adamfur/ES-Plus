@@ -292,6 +292,17 @@ namespace ESPlus.Tests
 
             Assert.True(_wyrmDriver.ReadAllBackward(Position.End).Any());
         }
+        
+        [Fact]
+        public async Task SuscribeAll()
+        {
+            await Append();
+            await DeleteExistingStream();
+//            var result = await Append();
+
+            var list = _wyrmDriver.SubscribeAll(Position.Start).ToList();
+            int x = 13;
+        }        
 
         [Fact]
         public async Task TestException2()
