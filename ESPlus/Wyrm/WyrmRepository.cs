@@ -117,7 +117,8 @@ namespace ESPlus.Wyrm
             }
             else
             {
-                return await _wyrmConnection.Append(eventsToSave);
+//                return await _wyrmConnection.Append(eventsToSave);
+                throw new NotImplementedException();
             }
         }
 
@@ -134,7 +135,7 @@ namespace ESPlus.Wyrm
 
             Index<TAggregate>();
 
-            foreach (var evnt in _wyrmConnection.EnumerateStream(id))
+            foreach (var evnt in _wyrmConnection.ReadStreamForward(id))
             {
                 Type type;
 

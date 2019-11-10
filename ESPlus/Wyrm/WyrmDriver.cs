@@ -13,6 +13,7 @@ using ESPlus.Extentions;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
 using LZ4;
+using MongoDB.Driver;
 
 namespace ESPlus.Wyrm
 {
@@ -47,6 +48,7 @@ namespace ESPlus.Wyrm
         Success = 6,
         Pong = 7,
         Exception = 8,
+        Checksum = 9,
     }
     
     public class WyrmDriver : IWyrmDriver
@@ -94,8 +96,8 @@ namespace ESPlus.Wyrm
 
             throw exception;
         }
-        
-        public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
+
+        private IEnumerable<WyrmEvent2> ReadStream(string streamName, Commands command)
         {
             using (var client = Create())
             using (var stream = client.GetStream())
@@ -103,7 +105,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write((int)12+streamName.Length);
-                writer.Write((int)10);
+                writer.Write((int)command);
                 writer.Write((int)streamName.Length);
                 writer.Write(Encoding.UTF8.GetBytes(streamName));
                 writer.Flush();
@@ -124,10 +126,64 @@ namespace ESPlus.Wyrm
                     }
                     else if (query == Queries.Exception)
                     {
-                        
+                        ReadException(tokenizer);
                     }
                 }
             }
+        }
+
+        public IEnumerable<WyrmEvent2> ReadAllForward(Position position)
+        {
+            return ReadAllForward(position, Commands.ReadAllForward);
+        }
+        
+        public IEnumerable<WyrmEvent2> ReadAllBackward(Position position)
+        {
+            return ReadAllForward(position, Commands.ReadAllBackward);
+        }
+        
+        public IEnumerable<WyrmEvent2> ReadAllForward(Position position, Commands command)
+        {
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int)4+4+32);
+                writer.Write((int)command);
+                writer.Write(position.Binary);
+                writer.Flush();
+                
+                while (true)
+                {
+                    var length = reader.ReadInt32(); 
+                    var query = (Queries) reader.ReadInt32();
+                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+
+                    if (query == Queries.Success)
+                    {
+                        yield break;
+                    }
+                    else if (query == Queries.Event)
+                    {
+                        yield return ReadEvent(tokenizer);
+                    }
+                    else if (query == Queries.Exception)
+                    {
+                        ReadException(tokenizer);
+                    }
+                }                
+            }
+        }
+        
+        public IEnumerable<WyrmEvent2> ReadStreamForward(string streamName)
+        {
+            return ReadStream(streamName, Commands.ReadStreamForward);
+        }
+        
+        public IEnumerable<WyrmEvent2> ReadStreamBackward(string streamName)
+        {
+            return ReadStream(streamName, Commands.ReadStreamBackward);
         }
 
         private WyrmEvent2 ReadEvent(Tokenizer tokenizer)
@@ -161,9 +217,21 @@ namespace ESPlus.Wyrm
             };
         }
 
-        public async Task DeleteAsync(string streamName, long version)
+        public async Task<Position> DeleteAsync(string streamName, long version)
         {
-throw new NotImplementedException();
+            var bundle = new Bundle
+            {
+                Items = new List<BundleItem>
+                {
+                    new DeleteBundleItem
+                    {
+                        StreamName = streamName,
+                        StreamVersion = version,
+                    }
+                }
+            };
+
+            return await Append(bundle);
         }
 
         public Task<Position> Append(Bundle bundle)
@@ -225,6 +293,10 @@ throw new NotImplementedException();
                     {
                         break;
                     }
+                    else if (query == Queries.Checksum)
+                    {
+                        position = ReadChecksum(tokenizer);
+                    }
                     else if (query == Queries.Exception)
                     {
                         ReadException(tokenizer);
@@ -237,6 +309,13 @@ throw new NotImplementedException();
             return Task.FromResult(position);
         }
 
+        private Position ReadChecksum(Tokenizer tokenizer)
+        {
+            var binary = tokenizer.ReadBinary(32);
+            
+            return new Position(binary);
+        }
+
         private void ReadException(Tokenizer tokenizer)
         {
             var code = tokenizer.ReadI32();
@@ -245,89 +324,18 @@ throw new NotImplementedException();
             throw new Exception(message);
         }
 
-        public Task<Position> Append(IEnumerable<WyrmEvent> events)
-        {
-            return Task.FromResult(Position.Start);
-        }
-
         public IEnumerable<string> EnumerateStreams(params Type[] filters)
         {
-            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
-
-            using (var client = Create())
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
-            {
-                writer.Write(OperationType.LIST_STREAMS);
-                writer.Write(filters.Length);
-                foreach (var filter in filters)
-                {
-                    writer.Write(BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(filter.FullName)).Hash));
-                }
-                writer.Flush();
-
-                while (true)
-                {
-                    var length = reader.ReadInt32();
-
-                    if (length == 0)
-                    {
-                        yield break;
-                    }
-
-                    var buffer = reader.ReadBytes(length);
-
-                    yield return Encoding.UTF8.GetString(buffer);
-                }
-            }
+            throw new NotImplementedException();
         }
-        
+
         public Position LastCheckpoint()
         {
-            Console.WriteLine($"LastCheckpoint");
-            using (var client = Create())
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
-            {
-                writer.Write(OperationType.LAST_CHECKPOINT);
-                writer.Flush();
-
-                while (true)
-                {
-                    var position = reader.ReadBytes(32);
-
-                    return new Position(position);
-                }
-            }
+            throw new NotImplementedException();
         }
 
         public IEnumerable<WyrmEvent2> Subscribe(Position from)
         {
-//            Console.WriteLine($"Subscribe: {from.AsHexString()}");
-//            using (var client = Create())
-//            using (var stream = client.GetStream())
-//            using (var reader = new BinaryReader(stream))
-//            using (var writer = new BinaryWriter(stream))
-//            {
-//                writer.Write(OperationType.SUBSCRIBE);
-//                writer.Write(@from.Binary);
-//                writer.Flush();
-//
-//                while (true)
-//                {
-//                    var length = reader.ReadInt32();
-//
-//                    if (length == 8)
-//                    {
-//                        //Console.WriteLine("reached end!");
-//                        break;
-//                    }
-//
-//                    yield return ReadEvent(reader, length - sizeof(Int32));
-//                }
-//            }
             throw new NotImplementedException();
         }
 
@@ -339,64 +347,35 @@ throw new NotImplementedException();
         public IEnumerable<WyrmEvent2> EnumerateAllByStreams(params Type[] filters)
         {
             throw new NotImplementedException();
-//            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
-//
+        }
+
+//        public void InvokeException()
+//        {
 //            using (var client = Create())
 //            using (var stream = client.GetStream())
 //            using (var reader = new BinaryReader(stream))
 //            using (var writer = new BinaryWriter(stream))
 //            {
-//                writer.Write(OperationType.READ_ALL_STREAMS_FORWARD);
-//                writer.Write(filters.Length);
-//                foreach (var filter in filters)
-//                {
-//                    writer.Write(BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(filter.FullName)).Hash));
-//                }
-//
+//                writer.Write((int) 8);
+//                writer.Write((int) Commands.Exception);
 //                writer.Flush();
 //
 //                while (true)
 //                {
-//                    var length = reader.ReadInt32();
+//                    var length = reader.ReadInt32(); 
+//                    var query = (Queries) reader.ReadInt32();
+//                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
 //
-//                    if (length == 8)
+//                    if (query == Queries.Success)
 //                    {
-//                        //Console.WriteLine("reached end!");
-//                        break;
+//                        return;
 //                    }
-//
-//                    yield return ReadEvent(reader, length - sizeof(Int32));
-//                }
+//                    else if (query == Queries.Exception)
+//                    {
+//                        ReadException(tokenizer);
+//                    }
+//                }                
 //            }
-        }
-
-        public void InvokeException()
-        {
-            using (var client = Create())
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
-            {
-                writer.Write((int) 8);
-                writer.Write((int) Commands.Exception);
-                writer.Flush();
-
-                while (true)
-                {
-                    var length = reader.ReadInt32(); 
-                    var query = (Queries) reader.ReadInt32();
-                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
-
-                    if (query == Queries.Success)
-                    {
-                        return;
-                    }
-                    else if (query == Queries.Exception)
-                    {
-                        ReadException(tokenizer);
-                    }
-                }                
-            }
-        }
+//        }
     }
 }

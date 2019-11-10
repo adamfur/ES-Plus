@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using ESPlus.Wyrm;
 using Xunit;
 
@@ -212,9 +214,16 @@ namespace ESPlus.Tests
         }
 
         [Fact]
-        public void ReadCreatedStream()
+        public async Task ReadStreamForward()
         {
-            _wyrmDriver.Append(new Bundle
+            var result = await Append();
+
+            Assert.Equal(3, _wyrmDriver.ReadStreamForward(_id).Count());
+        }
+
+        private Task<Position> Append()
+        {
+            return _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -258,20 +267,41 @@ namespace ESPlus.Tests
                     }
                 }
             });
-//Thread.Sleep(TimeSpan.FromMilliseconds(300));
-            foreach (var item in _wyrmDriver.EnumerateStream(_id))
-            {
-                Console.WriteLine("*** TICK ***" + item.EventType);
-            }
         }
 
         [Fact]
-        public void TestException()
+        public async Task ReadStreamBackward()
         {
-            var exception = Assert.Throws<Exception>(() => _wyrmDriver.InvokeException());
-            
-            Assert.Equal("hello world", exception.Message);
+            var result = await Append();
+
+            Assert.Equal(3, _wyrmDriver.ReadStreamBackward(_id).Count());
         }
+
+        [Fact]
+        public async Task ReadAllForward()
+        {
+            var result = await Append();
+            
+            Assert.True(_wyrmDriver.ReadAllForward(Position.Start).Any());
+        }
+        
+        [Fact]
+        public async Task ReadAllBackward()
+        {
+            await Append();
+            
+            var result = _wyrmDriver.ReadAllBackward(Position.End);
+                
+            Assert.True(result.Any());
+        }
+
+//        [Fact]
+//        public void TestException()
+//        {
+//            var exception = Assert.Throws<Exception>(() => _wyrmDriver.InvokeException());
+//            
+//            Assert.Equal("hello world", exception.Message);
+//        }
 
 //        [Fact]
         public void Food()

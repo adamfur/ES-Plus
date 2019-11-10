@@ -73,7 +73,7 @@ namespace ESPlus.Wyrm
 
             if (next > _length)
             {
-                throw new OverflowException();
+                throw new OverflowException($"Offset: {_offset}, Read: {length}, Length: {_length}");                
             }
 
             var range = _data.Slice(_offset, length);

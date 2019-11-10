@@ -9,6 +9,14 @@ namespace ESPlus
     public class Position : IEquatable<Position>
     {
         public static Position Start => new Position(new byte[32]);
+
+        public static Position End => new Position(new byte[]
+        {
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        });
+
         private byte[] _binary = new byte[32];
 
         public Position(byte[] input)
@@ -22,14 +30,14 @@ namespace ESPlus
             {
                 throw new ArgumentException(nameof(input));
             }
-            
+
             Binary = input;
         }
 
         public Position()
         {
         }
-        
+
         public static Position Gen(int value)
         {
             var binary = new byte[32];
@@ -37,7 +45,7 @@ namespace ESPlus
             binary[0] = (byte) value;
             return new Position(binary);
         }
-        
+
         public string AsHexString()
         {
             var hex = new StringBuilder(_binary.Length * 2);
@@ -64,7 +72,7 @@ namespace ESPlus
                 {
                     throw new ArgumentException(nameof(value));
                 }
-                
+
                 _binary = value;
             }
         }
