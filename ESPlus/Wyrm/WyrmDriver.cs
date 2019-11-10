@@ -190,6 +190,10 @@ namespace ESPlus.Wyrm
                     {
                         yield return ReadEvent(tokenizer);
                     }
+                    else if (query == Queries.Deleted)
+                    {
+                        yield return ReadDeletedEvent(tokenizer);
+                    }
                     else if (query == Queries.Exception)
                     {
                         ReadException(tokenizer);
@@ -210,6 +214,27 @@ namespace ESPlus.Wyrm
         public IEnumerable<WyrmItem> ReadStreamBackward(string streamName)
         {
             return ReadStream(streamName, Commands.ReadStreamBackward);
+        }
+
+        private WyrmItem ReadDeletedEvent(Tokenizer tokenizer)
+        {
+            var time = tokenizer.ReadDateTime();
+            var offset = tokenizer.ReadI64();
+            var totalOffset = tokenizer.ReadI64();
+            var position = tokenizer.ReadBinary(32);
+            var streamName = tokenizer.ReadString();
+            var eventType = tokenizer.ReadString();
+                        
+            return new WyrmDeleteItem
+            {
+                EventType = eventType,
+                Offset = offset,
+                TotalOffset = totalOffset,
+                Position = position,
+                StreamName = streamName,
+                Serializer = Serializer,
+                Timestamp = time,
+            };
         }
 
         private WyrmItem ReadEvent(Tokenizer tokenizer)
@@ -396,6 +421,10 @@ namespace ESPlus.Wyrm
                     {
                         yield return ReadEvent(tokenizer);
                     }
+                    else if (query == Queries.Deleted)
+                    {
+                        yield return ReadDeletedEvent(tokenizer);
+                    }
                     else if (query == Queries.StreamVersion)
                     {
                         yield return ReadStreamVersion(tokenizer);
@@ -497,6 +526,10 @@ namespace ESPlus.Wyrm
                     else if (query == Queries.Event)
                     {
                         yield return ReadEvent(tokenizer);
+                    }
+                    else if (query == Queries.Deleted)
+                    {
+                        yield return ReadDeletedEvent(tokenizer);
                     }
                     else if (query == Queries.StreamVersion)
                     {

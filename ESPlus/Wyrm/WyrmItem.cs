@@ -28,6 +28,22 @@ namespace ESPlus.Wyrm
             visitor.Visit(this);
         }
     }
+    
+    public class WyrmDeleteItem : WyrmItem
+    {
+        public long Offset { get; set; }
+        public long TotalOffset { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string EventType { get; set; }
+        public string StreamName { get; set; }
+        public byte[] Position { get; set; }
+        public IEventSerializer Serializer { get; set; }
+        
+        public override void Accept(IWyrmItemVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }    
 
     public class WyrmAheadItem : WyrmItem
     {
@@ -52,5 +68,6 @@ namespace ESPlus.Wyrm
         void Visit(WyrmEventItem item);
         void Visit(WyrmAheadItem item);
         void Visit(WyrmVersionItem item);
+        void Visit(WyrmDeleteItem item);
     }
 }
