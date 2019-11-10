@@ -13,7 +13,7 @@ namespace ESPlus.Wyrm
         Position LastCheckpoint();
         IEnumerable<WyrmItem> SubscribeAll(Position from);
         IEnumerable<WyrmItem> EnumerateAll(Position from);
-        IEnumerable<WyrmItem> EnumerateAllByStreams(params Type[] filters);
+        IEnumerable<WyrmItem> EnumerateAllGroupByStream(params Type[] filters);
         Task<Position> Append(Bundle bundle);
         IEnumerable<WyrmItem> ReadStreamBackward(string streamName);
         Task<Position> CreateStreamAsync(string streamName);

@@ -36,7 +36,7 @@ namespace ESPlus.Wyrm
         SubscribePull = 15,
         Exception = 16,
         ListStreams = 17,
-        
+        ReadAllForwardGroupByStream = 18,
     }
 
     public enum Queries
@@ -473,9 +473,45 @@ namespace ESPlus.Wyrm
             throw new NotImplementedException();
         }        
 
-        public IEnumerable<WyrmItem> EnumerateAllByStreams(params Type[] filters)
+        public IEnumerable<WyrmItem> EnumerateAllGroupByStream(params Type[] filters)
         {
-            throw new NotImplementedException();
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int)4+4);
+                writer.Write((int)Commands.ReadAllForwardGroupByStream);
+                writer.Flush();
+                
+                while (true)
+                {
+                    var length = reader.ReadInt32(); 
+                    var query = (Queries) reader.ReadInt32();
+                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+
+                    if (query == Queries.Success)
+                    {
+                        yield break;
+                    }
+                    else if (query == Queries.Event)
+                    {
+                        yield return ReadEvent(tokenizer);
+                    }
+                    else if (query == Queries.StreamVersion)
+                    {
+                        yield return ReadStreamVersion(tokenizer);
+                    }
+                    else if (query == Queries.Exception)
+                    {
+                        ReadException(tokenizer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }                
+            }
         }
     }
 }
