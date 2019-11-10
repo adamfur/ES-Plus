@@ -124,14 +124,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-
-                    if (length == 8)
-                    {
-                        //Console.WriteLine("reached end!");
-                        break;
-                    }
-                    
+                    var length = reader.ReadInt32(); 
                     var query = (Queries) reader.ReadInt32();
 
                     if (query == Queries.Success)
@@ -150,6 +143,13 @@ namespace ESPlus.Wyrm
                         var eventId = tokenizer.ReadGuid();
                         var eventType = tokenizer.ReadString();
                         var readName = tokenizer.ReadString();
+                        var metadataLength = tokenizer.ReadI32();
+                        var dataLength = tokenizer.ReadI32();
+                        var metadata = tokenizer.ReadBinary(metadataLength);
+                        var data = tokenizer.ReadBinary(dataLength);
+
+                        var text1 = Encoding.UTF8.GetString(metadata);
+                        var text2 = Encoding.UTF8.GetString(data);
                         
                         yield return new WyrmEvent2
                         {
@@ -162,6 +162,8 @@ namespace ESPlus.Wyrm
                             EventId = eventId,
                             Serializer = Serializer,
                             Timestamp = time,
+                            Metadata = metadata,
+                            Data = data,
                         };
                     }
                 }

@@ -228,9 +228,9 @@ namespace ESPlus.Tests
                             new BundleEvent
                             {
                                 EventId = Guid.NewGuid(),
-                                EventType = Guid.NewGuid().ToString(),
-                                Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
-                                Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                EventType = $"EventType: [{Guid.NewGuid()}]",
+                                Metadata = Encoding.UTF8.GetBytes($"Metadata: [{Guid.NewGuid()}]"),
+                                Body = Encoding.UTF8.GetBytes($"Body: [{Guid.NewGuid()}]"),
                             }
                         }
                     },
@@ -243,16 +243,16 @@ namespace ESPlus.Tests
                             new BundleEvent
                             {
                                 EventId = Guid.NewGuid(),
-                                EventType = Guid.NewGuid().ToString(),
-                                Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
-                                Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                EventType = $"EventType: [{Guid.NewGuid()}]",
+                                Metadata = Encoding.UTF8.GetBytes($"Metadata: [{Guid.NewGuid()}]"),
+                                Body = Encoding.UTF8.GetBytes($"Body: [{Guid.NewGuid()}]"),
                             },
                             new BundleEvent
                             {
                                 EventId = Guid.NewGuid(),
-                                EventType = Guid.NewGuid().ToString(),
-                                Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
-                                Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                EventType = $"EventType: [{Guid.NewGuid()}]",
+                                Metadata = Encoding.UTF8.GetBytes($"Metadata: [{Guid.NewGuid()}]"),
+                                Body = Encoding.UTF8.GetBytes($"Body: [{Guid.NewGuid()}]"),
                             }
                         }
                     }
