@@ -43,6 +43,7 @@
           <e p="WrongExpectedVersionException.cs" t="Include" />
         </e>
         <e p="Extensions" t="Include">
+          <e p="ArrayExtensions.cs" t="Include" />
           <e p="StreamExtensions.cs" t="Include" />
           <e p="StringExtensions.cs" t="Include" />
         </e>
@@ -133,6 +134,7 @@
           <e p="ExpectedVersion.cs" t="Include" />
           <e p="IWyrmDriver.cs" t="Include" />
           <e p="OperationType.cs" t="Include" />
+          <e p="Tokenizer.cs" t="Include" />
           <e p="WyrmDriver.cs" t="Include" />
           <e p="WyrmEvent.cs" t="Include" />
           <e p="WyrmEvent2.cs" t="Include" />

@@ -11,10 +11,42 @@ using System.Threading.Tasks;
 using ESPlus.Exceptions;
 using ESPlus.Extentions;
 using ESPlus.Storage;
+using ESPlus.Subscribers;
 using LZ4;
 
 namespace ESPlus.Wyrm
 {
+    public enum Commands
+    {
+        Protocol = 0,
+        Ping = 1,
+        Close = 3,
+        Put = 4,
+        AuthenticateJwt = 5,
+        AuthenticateApiKey = 6,
+        EventFilter = 7,
+        ReadAllForward = 8,
+        ReadAllBackward = 9,
+        ReadStreamForward = 10,
+        ReadStreamBackward = 11,
+        SubscribeAll = 12,
+        SuscribeStream = 13,
+        Pull = 14,
+        SubscribePull = 15,
+    }
+
+    public enum Queries
+    {
+        Ahead = 0,
+        PullCreated = 1,
+        PullDeleted = 2,
+        PullEvent = 3,
+        Event = 4,
+        Deleted = 5,
+        Success = 6,
+        Pong = 7,
+    }
+    
     public class WyrmDriver : IWyrmDriver
     {
         private readonly string _host;
@@ -84,10 +116,10 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 var name = Encoding.UTF8.GetBytes(streamName);
-                writer.Write(OperationType.READ_STREAM_FORWARD);
-                writer.Write(name.Length);
-                writer.Write(name, 0, name.Length);
-                writer.Write((int)0); //filter
+                writer.Write((int)4+4+4+streamName.Length);
+                writer.Write((int)10);
+                writer.Write((int)streamName.Length);
+                writer.Write(Encoding.UTF8.GetBytes(streamName));
                 writer.Flush();
 
                 while (true)
@@ -99,12 +131,39 @@ namespace ESPlus.Wyrm
                         //Console.WriteLine("reached end!");
                         break;
                     }
+                    
+                    var query = (Queries) reader.ReadInt32();
 
-                    var evt = ReadEvent(reader, length - sizeof(Int32));
+                    if (query == Queries.Success)
+                    {
+                        yield break;
+                    }
+                    else if (query == Queries.Event)
+                    {
+                        var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
 
-                    Console.WriteLine($"Stream: {evt.StreamName}.({evt.Version}){evt.EventType}");
-
-                    yield return evt;
+                        var version = tokenizer.ReadI64();
+                        var time = tokenizer.ReadDateTime();
+                        var offset = tokenizer.ReadI64();
+                        var totalOffset = tokenizer.ReadI64();
+                        var position = tokenizer.ReadBinary(32);
+                        var eventId = tokenizer.ReadGuid();
+                        var eventType = tokenizer.ReadString();
+                        var readName = tokenizer.ReadString();
+                        
+                        yield return new WyrmEvent2
+                        {
+                            EventType = eventType,
+                            Offset = offset,
+                            TotalOffset = totalOffset,
+                            Version = version,
+                            Position = position,
+                            StreamName = readName,
+                            EventId = eventId,
+                            Serializer = Serializer,
+                            Timestamp = time,
+                        };
+                    }
                 }
             }
         }
@@ -221,7 +280,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write((int)4+4+4+bundle.Items.Sum(x => x.Count())); //FIXME
+                writer.Write((int)4+4+4+bundle.Items.Sum(x => x.Count()));
                 writer.Write((int)OperationType.PUT);
                 writer.Write((int)CommitPolicy.All);
 
@@ -260,6 +319,8 @@ namespace ESPlus.Wyrm
                         }
                     }
                 }
+                writer.Flush();
+                var len = reader.ReadInt32();
                 client.Close();
             }
             
@@ -268,42 +329,7 @@ namespace ESPlus.Wyrm
 
         public Task<Position> Append(IEnumerable<WyrmEvent> events)
         {
-//            if (!events.Any())
-//            {
-//                return Task.FromResult(Position.Start);
-//            }
-
-            using (var client = Create())
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
-            {
-//                var concat = Combine(events.Select(x => Assemble(x)).ToArray());
-//                int length = concat.Length;
-//
-                writer.Write((int)8);
-                writer.Write((int)OperationType.PUT);
-//                writer.Write(length);
-//                writer.Write(concat, 0, length);
-//                writer.Flush();
-//
-//                var len = reader.ReadInt32();
-//
-//                if (len != 8 + 32)
-//                {
-//                    throw new Exception("if (len != 8 + 32)");
-//                }
-//
-//                var status = reader.ReadInt32();
-//                var hash = reader.ReadBytes(32);
-//
-//                if (status != 0)
-//                {
-//                    throw new WrongExpectedVersionException($"Bad status: {status}");
-//                }
-
-                return Task.FromResult(Position.Start);
-            }
+            return Task.FromResult(Position.Start);
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

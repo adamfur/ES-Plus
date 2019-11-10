@@ -212,6 +212,60 @@ namespace ESPlus.Tests
         }
 
         [Fact]
+        public void ReadCreatedStream()
+        {
+            _wyrmDriver.Append(new Bundle
+            {
+                Policy = CommitPolicy.All,
+                Items = new List<BundleItem>
+                {
+                    new EventsBundleItem
+                    {
+                        StreamName = _id,
+                        StreamVersion = 0,
+                        Events = new List<BundleEvent>
+                        {
+                            new BundleEvent
+                            {
+                                EventId = Guid.NewGuid(),
+                                EventType = Guid.NewGuid().ToString(),
+                                Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                            }
+                        }
+                    },
+                    new EventsBundleItem
+                    {
+                        StreamName = _id,
+                        StreamVersion = 1,
+                        Events = new List<BundleEvent>
+                        {
+                            new BundleEvent
+                            {
+                                EventId = Guid.NewGuid(),
+                                EventType = Guid.NewGuid().ToString(),
+                                Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                            },
+                            new BundleEvent
+                            {
+                                EventId = Guid.NewGuid(),
+                                EventType = Guid.NewGuid().ToString(),
+                                Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                            }
+                        }
+                    }
+                }
+            });
+//Thread.Sleep(TimeSpan.FromMilliseconds(300));
+            foreach (var item in _wyrmDriver.EnumerateStream(_id))
+            {
+                Console.WriteLine("*** TICK ***" + item.EventType);
+            }
+        }
+
+//        [Fact]
         public void Food()
         {
             Thread thread = null;
