@@ -265,6 +265,14 @@ namespace ESPlus.Tests
             }
         }
 
+        [Fact]
+        public void TestException()
+        {
+            var exception = Assert.Throws<Exception>(() => _wyrmDriver.InvokeException());
+            
+            Assert.Equal("hello world", exception.Message);
+        }
+
 //        [Fact]
         public void Food()
         {
