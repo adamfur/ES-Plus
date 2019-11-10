@@ -37,9 +37,9 @@ namespace ESPlus.Tests
         }
 
         [Fact]
-        public void DeleteNonExistingStream()
+        public async Task DeleteNonExistingStream()
         {
-            _wyrmDriver.Append(new Bundle
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -53,9 +53,9 @@ namespace ESPlus.Tests
         }
 
         [Fact]
-        public void DeleteExistingStream()
+        public async Task DeleteExistingStream()
         {
-            _wyrmDriver.Append(new Bundle
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -67,7 +67,7 @@ namespace ESPlus.Tests
                 }
             });
 
-            _wyrmDriver.Append(new Bundle
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -81,9 +81,9 @@ namespace ESPlus.Tests
         }
 
         [Fact]
-        public void AppendNewStream()
+        public async Task AppendNewStream()
         {
-            _wyrmDriver.Append(new Bundle
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -108,9 +108,9 @@ namespace ESPlus.Tests
         }
 
         [Fact]
-        public void AppendExistingStream()
+        public async Task AppendExistingStream()
         {
-            _wyrmDriver.Append(new Bundle
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -133,7 +133,7 @@ namespace ESPlus.Tests
                 }
             });
 
-            _wyrmDriver.Append(new Bundle
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -165,9 +165,9 @@ namespace ESPlus.Tests
         }
 
         [Fact]
-        public void AppendExistingStream_OneTransaction()
+        public async Task AppendExistingStream_OneTransaction()
         {
-            _wyrmDriver.Append(new Bundle
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -281,27 +281,25 @@ namespace ESPlus.Tests
         public async Task ReadAllForward()
         {
             var result = await Append();
-            
+
             Assert.True(_wyrmDriver.ReadAllForward(Position.Start).Any());
         }
-        
+
         [Fact]
         public async Task ReadAllBackward()
         {
-            await Append();
-            
-            var result = _wyrmDriver.ReadAllBackward(Position.End);
-                
-            Assert.True(result.Any());
+            var result = await Append();
+
+            Assert.True(_wyrmDriver.ReadAllBackward(Position.End).Any());
         }
 
-//        [Fact]
-//        public void TestException()
-//        {
-//            var exception = Assert.Throws<Exception>(() => _wyrmDriver.InvokeException());
-//            
+        [Fact]
+        public async Task TestException2()
+        {
+            var exception = await Assert.ThrowsAsync<Exception>(() => _wyrmDriver.CreateStreamAsync(""));
+
 //            Assert.Equal("hello world", exception.Message);
-//        }
+        }
 
 //        [Fact]
         public void Food()
@@ -315,7 +313,7 @@ namespace ESPlus.Tests
                     while (true)
                     {
                         var id = Guid.NewGuid().ToString();
-                        
+
                         _wyrmDriver.Append(new Bundle
                         {
                             Policy = CommitPolicy.All,
@@ -368,11 +366,20 @@ namespace ESPlus.Tests
 
             thread.Join();
         }
-        
-      [Fact]
-        public void AppendDeterministicStream()
+
+        [Fact]
+        public async Task EnumerateStreams()
         {
-            _wyrmDriver.Append(new Bundle
+            var result = await Append();
+            
+            var sum = _wyrmDriver.EnumerateStreams().ToList();
+            var x = 13;
+        }
+
+//        [Fact]
+        public async Task AppendDeterministicStream()
+        {
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -395,7 +402,7 @@ namespace ESPlus.Tests
                 }
             });
 
-            _wyrmDriver.Append(new Bundle
+            await _wyrmDriver.Append(new Bundle
             {
                 Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
@@ -424,6 +431,6 @@ namespace ESPlus.Tests
                     }
                 }
             });
-        }        
+        }
     }
 }

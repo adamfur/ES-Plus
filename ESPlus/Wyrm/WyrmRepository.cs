@@ -49,14 +49,14 @@ namespace ESPlus.Wyrm
             return new WyrmEvent(eventId, typeName, data, metadata, streamName, (int)version);
         }
 
-        public Task CreateStreamAsync(string streamName)
+        public Task<Position> CreateStreamAsync(string streamName)
         {
-            throw new NotImplementedException();
+            return _wyrmConnection.CreateStreamAsync(streamName);
         }
 
-        public async Task DeleteStreamAsync(string id, long version)
+        public Task<Position> DeleteStreamAsync(string id, long version = -1)
         {
-            await _wyrmConnection.DeleteAsync(id, version);
+            return _wyrmConnection.DeleteStreamAsync(id, version);
         }
 
         public Task<Position> SaveAsync(AggregateBase aggregate,
@@ -124,90 +124,92 @@ namespace ESPlus.Wyrm
 
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate
         {
-            var aggregate = ConstructAggregate<TAggregate>(id);
-            var applyAggregate = (IAggregate)aggregate;
-            bool any = false;
-
-            if (version <= 0)
-            {
-                throw new ArgumentException("Cannot get version < 0");
-            }
-
-            Index<TAggregate>();
-
-            foreach (var evnt in _wyrmConnection.ReadStreamForward(id))
-            {
-                Type type;
-
-                lock (_lock)
-                {
-                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
-                }
-
-                any = true;
-                if (type == null)
-                {
-                    applyAggregate.Version = evnt.Version;
-                    continue;
-                }
-
-                applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
-                applyAggregate.Version = evnt.Version;
-            }
-
-            if (!any)
-            {
-                throw new AggregateNotFoundException(id, null);
-            }
-
-            aggregate.TakeUncommittedEvents();
-            await Task.FromResult(0);
-
-            return aggregate;
+            throw new NotImplementedException();
+//            var aggregate = ConstructAggregate<TAggregate>(id);
+//            var applyAggregate = (IAggregate)aggregate;
+//            bool any = false;
+//
+//            if (version <= 0)
+//            {
+//                throw new ArgumentException("Cannot get version < 0");
+//            }
+//
+//            Index<TAggregate>();
+//
+//            foreach (var evnt in _wyrmConnection.ReadStreamForward(id))
+//            {
+//                Type type;
+//
+//                lock (_lock)
+//                {
+//                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
+//                }
+//
+//                any = true;
+//                if (type == null)
+//                {
+//                    applyAggregate.Version = evnt.Version;
+//                    continue;
+//                }
+//
+////                applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
+////                applyAggregate.Version = evnt.Version;
+//            }
+//
+//            if (!any)
+//            {
+//                throw new AggregateNotFoundException(id, null);
+//            }
+//
+//            aggregate.TakeUncommittedEvents();
+//            await Task.FromResult(0);
+//
+//            return aggregate;
         }
 
         public IEnumerable<TAggregate> GetAllByAggregateType<TAggregate>(params Type[] filters) where TAggregate : IAggregate
         {
-            var aggregate = default(TAggregate);
-            var stream = default(string);
-            var applyAggregate = default(IAggregate);
-
-            Index<TAggregate>();
-            foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(filters))
-            {
-                if (evnt.StreamName != stream)
-                {
-                    if (!ReferenceEquals(aggregate, default(TAggregate)))
-                    {
-                        aggregate.TakeUncommittedEvents();
-                        yield return aggregate;
-                    }
-
-                    stream = evnt.StreamName;
-                    aggregate = ConstructAggregate<TAggregate>(evnt.StreamName);
-                    applyAggregate = aggregate;
-                }
-
-                Type type;
-
-                lock (_lock)
-                {
-                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
-                }
-
-                if (type != null)
-                {
-                    applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
-                }
-
-                applyAggregate.Version = evnt.Version;
-
-                if (evnt.IsAhead)
-                {
-                    aggregate.TakeUncommittedEvents();
-                    yield return aggregate;
-                }
-            }
+            throw new NotImplementedException();
+//            var aggregate = default(TAggregate);
+//            var stream = default(string);
+//            var applyAggregate = default(IAggregate);
+//
+//            Index<TAggregate>();
+//            foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(filters))
+//            {
+//                if (evnt.StreamName != stream)
+//                {
+//                    if (!ReferenceEquals(aggregate, default(TAggregate)))
+//                    {
+//                        aggregate.TakeUncommittedEvents();
+//                        yield return aggregate;
+//                    }
+//
+//                    stream = evnt.StreamName;
+//                    aggregate = ConstructAggregate<TAggregate>(evnt.StreamName);
+//                    applyAggregate = aggregate;
+//                }
+//
+//                Type type;
+//
+//                lock (_lock)
+//                {
+//                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
+//                }
+//
+//                if (type != null)
+//                {
+//                    applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
+//                }
+//
+//                applyAggregate.Version = evnt.Version;
+//
+//                if (evnt.IsAhead)
+//                {
+//                    aggregate.TakeUncommittedEvents();
+//                    yield return aggregate;
+//                }
+//            }
         }
 
         private static TAggregate ConstructAggregate<TAggregate>(string id)

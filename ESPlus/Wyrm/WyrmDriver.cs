@@ -35,6 +35,8 @@ namespace ESPlus.Wyrm
         Pull = 14,
         SubscribePull = 15,
         Exception = 16,
+        ListStreams = 17,
+        
     }
 
     public enum Queries
@@ -49,6 +51,8 @@ namespace ESPlus.Wyrm
         Pong = 7,
         Exception = 8,
         Checksum = 9,
+        StreamVersion = 10,
+        StreamName = 11,
     }
     
     public class WyrmDriver : IWyrmDriver
@@ -97,7 +101,7 @@ namespace ESPlus.Wyrm
             throw exception;
         }
 
-        private IEnumerable<WyrmEvent2> ReadStream(string streamName, Commands command)
+        private IEnumerable<WyrmItem> ReadStream(string streamName, Commands command)
         {
             using (var client = Create())
             using (var stream = client.GetStream())
@@ -124,25 +128,43 @@ namespace ESPlus.Wyrm
                     {
                         yield return ReadEvent(tokenizer);
                     }
+                    else if (query == Queries.StreamVersion)
+                    {
+                        yield return ReadStreamVersion(tokenizer);
+                    }
                     else if (query == Queries.Exception)
                     {
                         ReadException(tokenizer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
                     }
                 }
             }
         }
 
-        public IEnumerable<WyrmEvent2> ReadAllForward(Position position)
+        private WyrmItem ReadStreamVersion(Tokenizer tokenizer)
         {
-            return ReadAllForward(position, Commands.ReadAllForward);
+            var version = tokenizer.ReadI64();
+
+            return new WyrmVersionItem
+            {
+                StreamVersion = version,
+            };
+        }
+
+        public IEnumerable<WyrmItem> ReadAllForward(Position position)
+        {
+            return ReadAll(position, Commands.ReadAllForward);
         }
         
-        public IEnumerable<WyrmEvent2> ReadAllBackward(Position position)
+        public IEnumerable<WyrmItem> ReadAllBackward(Position position)
         {
-            return ReadAllForward(position, Commands.ReadAllBackward);
+            return ReadAll(position, Commands.ReadAllBackward);
         }
-        
-        public IEnumerable<WyrmEvent2> ReadAllForward(Position position, Commands command)
+
+        private IEnumerable<WyrmItem> ReadAll(Position position, Commands command)
         {
             using (var client = Create())
             using (var stream = client.GetStream())
@@ -172,21 +194,25 @@ namespace ESPlus.Wyrm
                     {
                         ReadException(tokenizer);
                     }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
                 }                
             }
         }
         
-        public IEnumerable<WyrmEvent2> ReadStreamForward(string streamName)
+        public IEnumerable<WyrmItem> ReadStreamForward(string streamName)
         {
             return ReadStream(streamName, Commands.ReadStreamForward);
         }
         
-        public IEnumerable<WyrmEvent2> ReadStreamBackward(string streamName)
+        public IEnumerable<WyrmItem> ReadStreamBackward(string streamName)
         {
             return ReadStream(streamName, Commands.ReadStreamBackward);
         }
 
-        private WyrmEvent2 ReadEvent(Tokenizer tokenizer)
+        private WyrmItem ReadEvent(Tokenizer tokenizer)
         {
             var version = tokenizer.ReadI64();
             var time = tokenizer.ReadDateTime();
@@ -201,7 +227,7 @@ namespace ESPlus.Wyrm
             var metadata = tokenizer.ReadBinary(metadataLength);
             var data = tokenizer.ReadBinary(dataLength);
                         
-            return new WyrmEvent2
+            return new WyrmEventItem
             {
                 EventType = eventType,
                 Offset = offset,
@@ -217,7 +243,23 @@ namespace ESPlus.Wyrm
             };
         }
 
-        public async Task<Position> DeleteAsync(string streamName, long version)
+        public async Task<Position> CreateStreamAsync(string streamName)
+        {
+            var bundle = new Bundle
+            {
+                Items = new List<BundleItem>
+                {
+                    new CreateBundleItem
+                    {
+                        StreamName = streamName,
+                    }
+                }
+            };
+
+            return await Append(bundle);
+        }
+
+        public async Task<Position> DeleteStreamAsync(string streamName, long version)
         {
             var bundle = new Bundle
             {
@@ -301,6 +343,10 @@ namespace ESPlus.Wyrm
                     {
                         ReadException(tokenizer);
                     }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
                 }
                 
                 client.Close();
@@ -324,58 +370,112 @@ namespace ESPlus.Wyrm
             throw new Exception(message);
         }
 
+        public IEnumerable<WyrmItem> SubscribeAll(Position from)
+        {
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int)4+4+32);
+                writer.Write((int)Commands.SubscribeAll);
+                writer.Write(from.Binary);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = reader.ReadInt32(); 
+                    var query = (Queries) reader.ReadInt32();
+                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+
+                    if (query == Queries.Success)
+                    {
+                        yield break;
+                    }
+                    else if (query == Queries.Event)
+                    {
+                        yield return ReadEvent(tokenizer);
+                    }
+                    else if (query == Queries.StreamVersion)
+                    {
+                        yield return ReadStreamVersion(tokenizer);
+                    }
+                    else if (query == Queries.Ahead)
+                    {
+                        yield return ReadAhead(tokenizer);
+                    }                    
+                    else if (query == Queries.Exception)
+                    {
+                        ReadException(tokenizer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+        }
+        
         public IEnumerable<string> EnumerateStreams(params Type[] filters)
         {
-            throw new NotImplementedException();
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int)4+4);
+                writer.Write((int)Commands.ListStreams);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = reader.ReadInt32(); 
+                    var query = (Queries) reader.ReadInt32();
+                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+
+                    if (query == Queries.Success)
+                    {
+                        yield break;
+                    }
+                    else if (query == Queries.StreamName)
+                    {
+                        yield return ReadStreamName(tokenizer);
+                    }
+                    else if (query == Queries.Exception)
+                    {
+                        ReadException(tokenizer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+        }
+
+        private string ReadStreamName(Tokenizer tokenizer)
+        {
+            return tokenizer.ReadString();
         }
 
         public Position LastCheckpoint()
         {
             throw new NotImplementedException();
         }
-
-        public IEnumerable<WyrmEvent2> Subscribe(Position from)
+        
+        private WyrmItem ReadAhead(Tokenizer tokenizer)
         {
-            throw new NotImplementedException();
+            return new WyrmAheadItem();
         }
 
-        public IEnumerable<WyrmEvent2> EnumerateAll(Position from)
+        public IEnumerable<WyrmItem> EnumerateAll(Position from)
         {
             throw new NotImplementedException();
         }        
 
-        public IEnumerable<WyrmEvent2> EnumerateAllByStreams(params Type[] filters)
+        public IEnumerable<WyrmItem> EnumerateAllByStreams(params Type[] filters)
         {
             throw new NotImplementedException();
         }
-
-//        public void InvokeException()
-//        {
-//            using (var client = Create())
-//            using (var stream = client.GetStream())
-//            using (var reader = new BinaryReader(stream))
-//            using (var writer = new BinaryWriter(stream))
-//            {
-//                writer.Write((int) 8);
-//                writer.Write((int) Commands.Exception);
-//                writer.Flush();
-//
-//                while (true)
-//                {
-//                    var length = reader.ReadInt32(); 
-//                    var query = (Queries) reader.ReadInt32();
-//                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
-//
-//                    if (query == Queries.Success)
-//                    {
-//                        return;
-//                    }
-//                    else if (query == Queries.Exception)
-//                    {
-//                        ReadException(tokenizer);
-//                    }
-//                }                
-//            }
-//        }
     }
 }

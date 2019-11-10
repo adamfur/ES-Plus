@@ -13,6 +13,7 @@ namespace ESPlus.Repositories
 {
     public class InMemoryRepository : IRepository
     {
+/*        
         private class EventStream
         {
             public EventNode First { get; set; }
@@ -95,7 +96,7 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
-        public Task CreateStreamAsync(string streamName)
+        public Task<Position> CreateStreamAsync(string streamName)
         {
             throw new NotImplementedException();
         }
@@ -178,7 +179,7 @@ namespace ESPlus.Repositories
             }
         }
 
-        public Task DeleteStreamAsync(string streamName, long version)
+        public Task<Position> DeleteStreamAsync(string streamName, long version = -1)
         {
             _streams.Remove(streamName);
             return Task.FromResult(0);
@@ -190,6 +191,31 @@ namespace ESPlus.Repositories
         }
 
         public Task<Position> Commit(CommitPolicy policy = CommitPolicy.All)
+        {
+            throw new NotImplementedException();
+        }
+*/
+        public Task<Position> SaveAsync(AggregateBase aggregate, object headers = null, long savePolicy = ExpectedVersion.Specified)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = Int64.MaxValue) where TAggregate : IAggregate
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Position> CreateStreamAsync(string streamName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Position> DeleteStreamAsync(string streamName, long version = -1)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IRepositoryTransaction BeginTransaction()
         {
             throw new NotImplementedException();
         }

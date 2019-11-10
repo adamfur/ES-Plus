@@ -1,9 +1,6 @@
-﻿using System.Text;
-
-namespace ESPlus.Extentions
+﻿namespace ESPlus.Extentions
 {
     public static class StringExtensions
     {
-
     }
 }

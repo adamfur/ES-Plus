@@ -20,20 +20,23 @@ namespace ESPlus.Wyrm
 
         public IEnumerator<Event> GetEnumerator()
         {
-            foreach (var @event in _wyrmConnection.Subscribe(_subscriptionContext.Position))
+            foreach (var @event in _wyrmConnection.SubscribeAll(_subscriptionContext.Position))
             {
-                yield return new Event(_eventTypeResolver, @event.Serializer)
+                if (@event is WyrmEventItem evt)
                 {
-                    Position = new Position(@event.Position),
-                    Meta = @event.Metadata,
-                    Payload = @event.Data,
-                    EventType = @event.EventType,
-                    IsAhead = @event.IsAhead,
-                    StreamName = @event.StreamName,
-                    Offset = @event.Offset,
-                    TotalOffset = @event.TotalOffset,
-                    CreateEvent = @event.CreateEvent,
-                };
+                    yield return new Event(_eventTypeResolver, evt.Serializer)
+                    {
+                        Position = new Position(evt.Position),
+                        Meta = evt.Metadata,
+                        Payload = evt.Data,
+                        EventType = evt.EventType,
+                        IsAhead = evt.IsAhead,
+                        StreamName = evt.StreamName,
+                        Offset = evt.Offset,
+                        TotalOffset = evt.TotalOffset,
+                        CreateEvent = evt.CreateEvent,
+                    };
+                }
             }
         }
 

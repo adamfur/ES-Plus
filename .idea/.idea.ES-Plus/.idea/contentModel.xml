@@ -137,7 +137,7 @@
           <e p="Tokenizer.cs" t="Include" />
           <e p="WyrmDriver.cs" t="Include" />
           <e p="WyrmEvent.cs" t="Include" />
-          <e p="WyrmEvent2.cs" t="Include" />
+          <e p="WyrmItem.cs" t="Include" />
           <e p="WyrmRepository.cs" t="Include" />
           <e p="WyrmSubscriptionClient.cs" t="Include" />
         </e>
