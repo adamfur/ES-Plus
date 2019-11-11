@@ -500,6 +500,10 @@ namespace ESPlus.Wyrm
                     {
                         position = ParseChecksum(tokenizer);
                     }
+                    else if (query == Queries.Exception)
+                    {
+                        ParseException(tokenizer);
+                    }
                     else
                     {
                         throw new NotImplementedException();
@@ -525,10 +529,49 @@ namespace ESPlus.Wyrm
                     var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
                     var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Pong)
                     {
                         return TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds);
+                    }
+                    else if (query == Queries.Exception)
+                    {
+                        ParseException(tokenizer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+        }
+        
+        public void Reset()
+        {
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int) 8);
+                writer.Write((int) Commands.Reset);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = reader.ReadInt32();
+                    var query = (Queries) reader.ReadInt32();
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
+
+                    if (query == Queries.Success)
+                    {
+                        break;
+                    }
+                    else if (query == Queries.Exception)
+                    {
+                        ParseException(tokenizer);
                     }
                     else
                     {

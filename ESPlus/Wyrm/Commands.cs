@@ -17,6 +17,7 @@ namespace ESPlus.Wyrm
         SubscribeStream = 13,
         Pull = 14,
         SubscribePull = 15,
+        Reset = 16,
         ListStreams = 17,
         ReadAllForwardGroupByStream = 18,
         Checkpoint = 19,

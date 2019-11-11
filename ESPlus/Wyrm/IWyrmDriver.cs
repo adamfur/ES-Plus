@@ -20,5 +20,6 @@ namespace ESPlus.Wyrm
         IEnumerable<WyrmItem> EnumerateAllGroupByStream(params Type[] filters);
         Position Checkpoint();
         TimeSpan Ping();
+        void Reset();
     }
 }

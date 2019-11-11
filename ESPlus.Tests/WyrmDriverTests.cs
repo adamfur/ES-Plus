@@ -402,6 +402,17 @@ namespace ESPlus.Tests
             var sum = _wyrmDriver.EnumerateAllGroupByStream().ToList();
             var x = 13;
         }
+        
+        [Fact]
+        public async Task Reset()
+        {
+            var result = await Append();
+            _wyrmDriver.Reset();
+            
+            var sum = _wyrmDriver.ReadAllForward(Position.Start).ToList();
+            
+            Assert.Empty(sum);
+        }        
 
 //        [Fact]
         public async Task AppendDeterministicStream()
