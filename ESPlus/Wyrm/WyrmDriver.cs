@@ -37,6 +37,7 @@ namespace ESPlus.Wyrm
         Exception = 16,
         ListStreams = 17,
         ReadAllForwardGroupByStream = 18,
+        Checkpoint = 19,
     }
 
     public enum Queries
@@ -50,7 +51,7 @@ namespace ESPlus.Wyrm
         Success = 6,
         Pong = 7,
         Exception = 8,
-        Checksum = 9,
+        Checkpoint = 9,
         StreamVersion = 10,
         StreamName = 11,
     }
@@ -126,15 +127,15 @@ namespace ESPlus.Wyrm
                     }
                     else if (query == Queries.Event)
                     {
-                        yield return ReadEvent(tokenizer);
+                        yield return ParseEvent(tokenizer);
                     }
                     else if (query == Queries.StreamVersion)
                     {
-                        yield return ReadStreamVersion(tokenizer);
+                        yield return ParseStreamVersion(tokenizer);
                     }
                     else if (query == Queries.Exception)
                     {
-                        ReadException(tokenizer);
+                        ParseException(tokenizer);
                     }
                     else
                     {
@@ -144,21 +145,11 @@ namespace ESPlus.Wyrm
             }
         }
 
-        private WyrmItem ReadStreamVersion(Tokenizer tokenizer)
-        {
-            var version = tokenizer.ReadI64();
-
-            return new WyrmVersionItem
-            {
-                StreamVersion = version,
-            };
-        }
-
         public IEnumerable<WyrmItem> ReadAllForward(Position position)
         {
             return ReadAll(position, Commands.ReadAllForward);
         }
-        
+
         public IEnumerable<WyrmItem> ReadAllBackward(Position position)
         {
             return ReadAll(position, Commands.ReadAllBackward);
@@ -188,15 +179,15 @@ namespace ESPlus.Wyrm
                     }
                     else if (query == Queries.Event)
                     {
-                        yield return ReadEvent(tokenizer);
+                        yield return ParseEvent(tokenizer);
                     }
                     else if (query == Queries.Deleted)
                     {
-                        yield return ReadDeletedEvent(tokenizer);
+                        yield return ParseDeletedEvent(tokenizer);
                     }
                     else if (query == Queries.Exception)
                     {
-                        ReadException(tokenizer);
+                        ParseException(tokenizer);
                     }
                     else
                     {
@@ -205,67 +196,15 @@ namespace ESPlus.Wyrm
                 }                
             }
         }
-        
+
         public IEnumerable<WyrmItem> ReadStreamForward(string streamName)
         {
             return ReadStream(streamName, Commands.ReadStreamForward);
         }
-        
+
         public IEnumerable<WyrmItem> ReadStreamBackward(string streamName)
         {
             return ReadStream(streamName, Commands.ReadStreamBackward);
-        }
-
-        private WyrmItem ReadDeletedEvent(Tokenizer tokenizer)
-        {
-            var time = tokenizer.ReadDateTime();
-            var offset = tokenizer.ReadI64();
-            var totalOffset = tokenizer.ReadI64();
-            var position = tokenizer.ReadBinary(32);
-            var streamName = tokenizer.ReadString();
-            var eventType = tokenizer.ReadString();
-                        
-            return new WyrmDeleteItem
-            {
-                EventType = eventType,
-                Offset = offset,
-                TotalOffset = totalOffset,
-                Position = position,
-                StreamName = streamName,
-                Serializer = Serializer,
-                Timestamp = time,
-            };
-        }
-
-        private WyrmItem ReadEvent(Tokenizer tokenizer)
-        {
-            var version = tokenizer.ReadI64();
-            var time = tokenizer.ReadDateTime();
-            var offset = tokenizer.ReadI64();
-            var totalOffset = tokenizer.ReadI64();
-            var position = tokenizer.ReadBinary(32);
-            var eventId = tokenizer.ReadGuid();
-            var eventType = tokenizer.ReadString();
-            var streamName = tokenizer.ReadString();
-            var metadataLength = tokenizer.ReadI32();
-            var dataLength = tokenizer.ReadI32();
-            var metadata = tokenizer.ReadBinary(metadataLength);
-            var data = tokenizer.ReadBinary(dataLength);
-                        
-            return new WyrmEventItem
-            {
-                EventType = eventType,
-                Offset = offset,
-                TotalOffset = totalOffset,
-                Version = version,
-                Position = position,
-                StreamName = streamName,
-                EventId = eventId,
-                Serializer = Serializer,
-                Timestamp = time,
-                Metadata = metadata,
-                Data = data,
-            };
         }
 
         public async Task<Position> CreateStreamAsync(string streamName)
@@ -360,13 +299,13 @@ namespace ESPlus.Wyrm
                     {
                         break;
                     }
-                    else if (query == Queries.Checksum)
+                    else if (query == Queries.Checkpoint)
                     {
-                        position = ReadChecksum(tokenizer);
+                        position = ParseChecksum(tokenizer);
                     }
                     else if (query == Queries.Exception)
                     {
-                        ReadException(tokenizer);
+                        ParseException(tokenizer);
                     }
                     else
                     {
@@ -378,21 +317,6 @@ namespace ESPlus.Wyrm
             }
             
             return Task.FromResult(position);
-        }
-
-        private Position ReadChecksum(Tokenizer tokenizer)
-        {
-            var binary = tokenizer.ReadBinary(32);
-            
-            return new Position(binary);
-        }
-
-        private void ReadException(Tokenizer tokenizer)
-        {
-            var code = tokenizer.ReadI32();
-            var message = tokenizer.ReadString();
-            
-            throw new Exception(message);
         }
 
         public IEnumerable<WyrmItem> SubscribeAll(Position from)
@@ -419,23 +343,23 @@ namespace ESPlus.Wyrm
                     }
                     else if (query == Queries.Event)
                     {
-                        yield return ReadEvent(tokenizer);
+                        yield return ParseEvent(tokenizer);
                     }
                     else if (query == Queries.Deleted)
                     {
-                        yield return ReadDeletedEvent(tokenizer);
+                        yield return ParseDeletedEvent(tokenizer);
                     }
                     else if (query == Queries.StreamVersion)
                     {
-                        yield return ReadStreamVersion(tokenizer);
+                        yield return ParseStreamVersion(tokenizer);
                     }
                     else if (query == Queries.Ahead)
                     {
-                        yield return ReadAhead(tokenizer);
+                        yield return ParseAhead(tokenizer);
                     }                    
                     else if (query == Queries.Exception)
                     {
-                        ReadException(tokenizer);
+                        ParseException(tokenizer);
                     }
                     else
                     {
@@ -444,7 +368,7 @@ namespace ESPlus.Wyrm
                 }
             }
         }
-        
+
         public IEnumerable<string> EnumerateStreams(params Type[] filters)
         {
             using (var client = Create())
@@ -468,11 +392,11 @@ namespace ESPlus.Wyrm
                     }
                     else if (query == Queries.StreamName)
                     {
-                        yield return ReadStreamName(tokenizer);
+                        yield return ParseStreamName(tokenizer);
                     }
                     else if (query == Queries.Exception)
                     {
-                        ReadException(tokenizer);
+                        ParseException(tokenizer);
                     }
                     else
                     {
@@ -481,26 +405,6 @@ namespace ESPlus.Wyrm
                 }
             }
         }
-
-        private string ReadStreamName(Tokenizer tokenizer)
-        {
-            return tokenizer.ReadString();
-        }
-
-        public Position LastCheckpoint()
-        {
-            throw new NotImplementedException();
-        }
-        
-        private WyrmItem ReadAhead(Tokenizer tokenizer)
-        {
-            return new WyrmAheadItem();
-        }
-
-        public IEnumerable<WyrmItem> EnumerateAll(Position from)
-        {
-            throw new NotImplementedException();
-        }        
 
         public IEnumerable<WyrmItem> EnumerateAllGroupByStream(params Type[] filters)
         {
@@ -525,19 +429,19 @@ namespace ESPlus.Wyrm
                     }
                     else if (query == Queries.Event)
                     {
-                        yield return ReadEvent(tokenizer);
+                        yield return ParseEvent(tokenizer);
                     }
                     else if (query == Queries.Deleted)
                     {
-                        yield return ReadDeletedEvent(tokenizer);
+                        yield return ParseDeletedEvent(tokenizer);
                     }
                     else if (query == Queries.StreamVersion)
                     {
-                        yield return ReadStreamVersion(tokenizer);
+                        yield return ParseStreamVersion(tokenizer);
                     }
                     else if (query == Queries.Exception)
                     {
-                        ReadException(tokenizer);
+                        ParseException(tokenizer);
                     }
                     else
                     {
@@ -545,6 +449,130 @@ namespace ESPlus.Wyrm
                     }
                 }                
             }
+        }
+
+        public Position Checkpoint()
+        {
+            var position = Position.Start;
+
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int) 8);
+                writer.Write((int) Commands.Checkpoint);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = reader.ReadInt32();
+                    var query = (Queries) reader.ReadInt32();
+                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+
+                    if (query == Queries.Success)
+                    {
+                        return position;
+                    }
+                    else if (query == Queries.Checkpoint)
+                    {
+                        position = ParseChecksum(tokenizer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+        }
+
+        private WyrmItem ParseAhead(Tokenizer tokenizer)
+        {
+            return new WyrmAheadItem();
+        }
+
+        private void ParseException(Tokenizer tokenizer)
+        {
+            var code = tokenizer.ReadI32();
+            var message = tokenizer.ReadString();
+            
+            throw new Exception(message);
+        }
+
+        private WyrmItem ParseStreamVersion(Tokenizer tokenizer)
+        {
+            var version = tokenizer.ReadI64();
+
+            return new WyrmVersionItem
+            {
+                StreamVersion = version,
+            };
+        }
+
+        private WyrmItem ParseDeletedEvent(Tokenizer tokenizer)
+        {
+            var time = tokenizer.ReadDateTime();
+            var offset = tokenizer.ReadI64();
+            var totalOffset = tokenizer.ReadI64();
+            var position = tokenizer.ReadBinary(32);
+            var streamName = tokenizer.ReadString();
+            var eventType = tokenizer.ReadString();
+                        
+            return new WyrmDeleteItem
+            {
+                EventType = eventType,
+                Offset = offset,
+                TotalOffset = totalOffset,
+                Position = position,
+                StreamName = streamName,
+                Serializer = Serializer,
+                Timestamp = time,
+            };
+        }
+
+        private WyrmItem ParseEvent(Tokenizer tokenizer)
+        {
+            var version = tokenizer.ReadI64();
+            var time = tokenizer.ReadDateTime();
+            var offset = tokenizer.ReadI64();
+            var totalOffset = tokenizer.ReadI64();
+            var position = tokenizer.ReadBinary(32);
+            var eventId = tokenizer.ReadGuid();
+            var eventType = tokenizer.ReadString();
+            var streamName = tokenizer.ReadString();
+            var metadataLength = tokenizer.ReadI32();
+            var dataLength = tokenizer.ReadI32();
+            var metadata = tokenizer.ReadBinary(metadataLength);
+            var data = tokenizer.ReadBinary(dataLength);
+                        
+            return new WyrmEventItem
+            {
+                EventType = eventType,
+                Offset = offset,
+                TotalOffset = totalOffset,
+                Version = version,
+                Position = position,
+                StreamName = streamName,
+                EventId = eventId,
+                Serializer = Serializer,
+                Timestamp = time,
+                Metadata = metadata,
+                Data = data,
+            };
+        }
+
+        private string ParseStreamName(Tokenizer tokenizer)
+        {
+            var streamName = tokenizer.ReadString();
+            
+            return streamName;
+        }
+
+        private Position ParseChecksum(Tokenizer tokenizer)
+        {
+            var binary = tokenizer.ReadBinary(32);
+            
+            return new Position(binary);
         }
     }
 }

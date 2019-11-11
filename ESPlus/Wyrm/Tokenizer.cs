@@ -51,6 +51,11 @@ namespace ESPlus.Wyrm
         {
             var length = ReadI32();
 
+            if (length == 0)
+            {
+                return "";
+            }
+
             return Encoding.UTF8.GetString(ReadBinary(length));
         }
 
@@ -69,6 +74,11 @@ namespace ESPlus.Wyrm
 
         public byte[] ReadBinary(int length)
         {
+            if (length == 0)
+            {
+                return new byte[0];
+            }
+            
             var next = _offset + length;
 
             if (next > _length)
