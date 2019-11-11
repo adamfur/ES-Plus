@@ -18,44 +18,6 @@ using MongoDB.Driver;
 
 namespace ESPlus.Wyrm
 {
-    public enum Commands
-    {
-        Protocol = 0,
-        Ping = 1,
-        Close = 3,
-        Put = 4,
-        AuthenticateJwt = 5,
-        AuthenticateApiKey = 6,
-        EventFilter = 7,
-        ReadAllForward = 8,
-        ReadAllBackward = 9,
-        ReadStreamForward = 10,
-        ReadStreamBackward = 11,
-        SubscribeAll = 12,
-        SuscribeStream = 13,
-        Pull = 14,
-        SubscribePull = 15,
-        ListStreams = 17,
-        ReadAllForwardGroupByStream = 18,
-        Checkpoint = 19,
-    }
-
-    public enum Queries
-    {
-        Ahead = 0,
-        PullCreated = 1,
-        PullDeleted = 2,
-        PullEvent = 3,
-        Event = 4,
-        Deleted = 5,
-        Success = 6,
-        Pong = 7,
-        Exception = 8,
-        Checkpoint = 9,
-        StreamVersion = 10,
-        StreamName = 11,
-    }
-
     public class WyrmDriver : IWyrmDriver
     {
         private readonly string _host;
@@ -373,6 +335,58 @@ namespace ESPlus.Wyrm
                 }
             }
         }
+        
+        public IEnumerable<WyrmItem> SubscribeStream(string streamName)
+        {
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int) 4 + 4 + 4 + streamName.Length);
+                writer.Write((int) Commands.SubscribeStream);
+                writer.Write((int) streamName.Length);
+                writer.Write(Encoding.UTF8.GetBytes(streamName));
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = reader.ReadInt32();
+                    var query = (Queries) reader.ReadInt32();
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
+
+                    if (query == Queries.Success)
+                    {
+                        yield break;
+                    }
+                    else if (query == Queries.Event)
+                    {
+                        yield return ParseEvent(tokenizer);
+                    }
+                    else if (query == Queries.Deleted)
+                    {
+                        yield return ParseDeletedEvent(tokenizer);
+                    }
+                    else if (query == Queries.StreamVersion)
+                    {
+                        yield return ParseStreamVersion(tokenizer);
+                    }
+                    else if (query == Queries.Ahead)
+                    {
+                        yield return ParseAhead(tokenizer);
+                    }
+                    else if (query == Queries.Exception)
+                    {
+                        ParseException(tokenizer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+        }
 
         public IEnumerable<string> EnumerateStreams(params Type[] filters)
         {
@@ -511,7 +525,6 @@ namespace ESPlus.Wyrm
                     var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
                     var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Pong)
                     {
@@ -535,7 +548,7 @@ namespace ESPlus.Wyrm
             var code = tokenizer.ReadI32();
             var message = tokenizer.ReadString();
 
-            throw new Exception(message);
+            throw new WyrmException(code, message);
         }
 
         private WyrmItem ParseStreamVersion(Tokenizer tokenizer)
