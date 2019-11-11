@@ -55,7 +55,7 @@ namespace ESPlus.Wyrm
         StreamVersion = 10,
         StreamName = 11,
     }
-    
+
     public class WyrmDriver : IWyrmDriver
     {
         private readonly string _host;
@@ -75,16 +75,16 @@ namespace ESPlus.Wyrm
         {
             var client = new TcpClient();
             client.NoDelay = false;
-            
+
             Retry(() => client.Connect(_host, _port));
 
             return client;
         }
-        
+
         private void Retry(Action action)
         {
             Exception exception = null;
-            
+
             for (var tries = 0; tries < 3; ++tries)
             {
                 try
@@ -109,17 +109,18 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write((int)12+streamName.Length);
-                writer.Write((int)command);
-                writer.Write((int)streamName.Length);
+                writer.Write((int) 12 + streamName.Length);
+                writer.Write((int) command);
+                writer.Write((int) streamName.Length);
                 writer.Write(Encoding.UTF8.GetBytes(streamName));
                 writer.Flush();
 
                 while (true)
                 {
-                    var length = reader.ReadInt32(); 
+                    var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
-                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Success)
                     {
@@ -162,16 +163,17 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write((int)4+4+32);
-                writer.Write((int)command);
+                writer.Write((int) 4 + 4 + 32);
+                writer.Write((int) command);
                 writer.Write(position.Binary);
                 writer.Flush();
-                
+
                 while (true)
                 {
-                    var length = reader.ReadInt32(); 
+                    var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
-                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Success)
                     {
@@ -193,7 +195,7 @@ namespace ESPlus.Wyrm
                     {
                         throw new NotImplementedException();
                     }
-                }                
+                }
             }
         }
 
@@ -243,38 +245,38 @@ namespace ESPlus.Wyrm
         public Task<Position> Append(Bundle bundle)
         {
             var position = Position.Start;
-            
+
             using (var client = Create())
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write((int)4+4+4+bundle.Items.Sum(x => x.Count()));
-                writer.Write((int)OperationType.PUT);
-                writer.Write((int)CommitPolicy.All);
+                writer.Write((int) 4 + 4 + 4 + bundle.Items.Sum(x => x.Count()));
+                writer.Write((int) OperationType.PUT);
+                writer.Write((int) CommitPolicy.All);
 
                 foreach (var item in bundle.Items)
                 {
                     if (item is CreateBundleItem createItem)
                     {
-                        writer.Write((int)BundleOp.Create);
-                        writer.Write((int)createItem.StreamName.Length);
+                        writer.Write((int) BundleOp.Create);
+                        writer.Write((int) createItem.StreamName.Length);
                         writer.Write(Encoding.UTF8.GetBytes(createItem.StreamName));
                     }
                     else if (item is DeleteBundleItem deleteItem)
                     {
-                        writer.Write((int)BundleOp.Delete);
-                        writer.Write((long)deleteItem.StreamVersion);
-                        writer.Write((int)deleteItem.StreamName.Length);
+                        writer.Write((int) BundleOp.Delete);
+                        writer.Write((long) deleteItem.StreamVersion);
+                        writer.Write((int) deleteItem.StreamName.Length);
                         writer.Write(Encoding.UTF8.GetBytes(deleteItem.StreamName));
                     }
                     else if (item is EventsBundleItem eventsItem)
                     {
-                        writer.Write((int)BundleOp.Events);
-                        writer.Write((long)eventsItem.StreamVersion);
-                        writer.Write((int)eventsItem.StreamName.Length);
+                        writer.Write((int) BundleOp.Events);
+                        writer.Write((long) eventsItem.StreamVersion);
+                        writer.Write((int) eventsItem.StreamName.Length);
                         writer.Write(Encoding.UTF8.GetBytes(eventsItem.StreamName));
-                        writer.Write((int)eventsItem.Events.Count());
+                        writer.Write((int) eventsItem.Events.Count());
 
                         foreach (var evt in eventsItem.Events)
                         {
@@ -288,12 +290,13 @@ namespace ESPlus.Wyrm
                         }
                     }
                 }
-                
+
                 while (true)
                 {
-                    var length = reader.ReadInt32(); 
+                    var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
-                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Success)
                     {
@@ -312,10 +315,10 @@ namespace ESPlus.Wyrm
                         throw new NotImplementedException();
                     }
                 }
-                
+
                 client.Close();
             }
-            
+
             return Task.FromResult(position);
         }
 
@@ -326,16 +329,17 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write((int)4+4+32);
-                writer.Write((int)Commands.SubscribeAll);
+                writer.Write((int) 4 + 4 + 32);
+                writer.Write((int) Commands.SubscribeAll);
                 writer.Write(from.Binary);
                 writer.Flush();
 
                 while (true)
                 {
-                    var length = reader.ReadInt32(); 
+                    var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
-                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Success)
                     {
@@ -356,7 +360,8 @@ namespace ESPlus.Wyrm
                     else if (query == Queries.Ahead)
                     {
                         yield return ParseAhead(tokenizer);
-                    }                    
+                        yield break; //oldman
+                    }
                     else if (query == Queries.Exception)
                     {
                         ParseException(tokenizer);
@@ -376,15 +381,16 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write((int)4+4);
-                writer.Write((int)Commands.ListStreams);
+                writer.Write((int) 4 + 4);
+                writer.Write((int) Commands.ListStreams);
                 writer.Flush();
 
                 while (true)
                 {
-                    var length = reader.ReadInt32(); 
+                    var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
-                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Success)
                     {
@@ -413,15 +419,16 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
-                writer.Write((int)4+4);
-                writer.Write((int)Commands.ReadAllForwardGroupByStream);
+                writer.Write((int) 4 + 4);
+                writer.Write((int) Commands.ReadAllForwardGroupByStream);
                 writer.Flush();
-                
+
                 while (true)
                 {
-                    var length = reader.ReadInt32(); 
+                    var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
-                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Success)
                     {
@@ -447,7 +454,7 @@ namespace ESPlus.Wyrm
                     {
                         throw new NotImplementedException();
                     }
-                }                
+                }
             }
         }
 
@@ -468,7 +475,8 @@ namespace ESPlus.Wyrm
                 {
                     var length = reader.ReadInt32();
                     var query = (Queries) reader.ReadInt32();
-                    var tokenizer = new Tokenizer(reader.ReadBytes(length - sizeof(Int32) * 2));
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
 
                     if (query == Queries.Success)
                     {
@@ -495,7 +503,7 @@ namespace ESPlus.Wyrm
         {
             var code = tokenizer.ReadI32();
             var message = tokenizer.ReadString();
-            
+
             throw new Exception(message);
         }
 
@@ -517,7 +525,7 @@ namespace ESPlus.Wyrm
             var position = tokenizer.ReadBinary(32);
             var streamName = tokenizer.ReadString();
             var eventType = tokenizer.ReadString();
-                        
+
             return new WyrmDeleteItem
             {
                 EventType = eventType,
@@ -544,7 +552,7 @@ namespace ESPlus.Wyrm
             var dataLength = tokenizer.ReadI32();
             var metadata = tokenizer.ReadBinary(metadataLength);
             var data = tokenizer.ReadBinary(dataLength);
-                        
+
             return new WyrmEventItem
             {
                 EventType = eventType,
@@ -564,14 +572,14 @@ namespace ESPlus.Wyrm
         private string ParseStreamName(Tokenizer tokenizer)
         {
             var streamName = tokenizer.ReadString();
-            
+
             return streamName;
         }
 
         private Position ParseChecksum(Tokenizer tokenizer)
         {
             var binary = tokenizer.ReadBinary(32);
-            
+
             return new Position(binary);
         }
     }
