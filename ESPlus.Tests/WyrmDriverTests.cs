@@ -311,6 +311,13 @@ namespace ESPlus.Tests
 
 //            Assert.Equal("hello world", exception.Message);
         }
+        
+        [Fact]
+        public async Task Ping()
+        {
+            var result = _wyrmDriver.Ping();
+            var x = 13;
+        }
 
 //        [Fact]
         public void Food()

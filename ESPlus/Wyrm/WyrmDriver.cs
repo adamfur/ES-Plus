@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.HashFunction.xxHash;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -34,7 +35,6 @@ namespace ESPlus.Wyrm
         SuscribeStream = 13,
         Pull = 14,
         SubscribePull = 15,
-        Exception = 16,
         ListStreams = 17,
         ReadAllForwardGroupByStream = 18,
         Checkpoint = 19,
@@ -485,6 +485,37 @@ namespace ESPlus.Wyrm
                     else if (query == Queries.Checkpoint)
                     {
                         position = ParseChecksum(tokenizer);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+        }
+        
+        public TimeSpan Ping()
+        {
+            var watch = Stopwatch.StartNew();
+            using (var client = Create())
+            using (var stream = client.GetStream())
+            using (var reader = new BinaryReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write((int) 8);
+                writer.Write((int) Commands.Ping);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = reader.ReadInt32();
+                    var query = (Queries) reader.ReadInt32();
+                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
+                    var tokenizer = new Tokenizer(payload);
+
+                    if (query == Queries.Pong)
+                    {
+                        return TimeSpan.FromMilliseconds(watch.ElapsedMilliseconds);
                     }
                     else
                     {
