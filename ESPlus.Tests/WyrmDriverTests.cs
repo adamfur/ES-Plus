@@ -307,7 +307,7 @@ namespace ESPlus.Tests
         [Fact]
         public async Task TestException2()
         {
-            var exception = await Assert.ThrowsAsync<Exception>(() => _wyrmDriver.CreateStreamAsync(""));
+            var exception = await Assert.ThrowsAsync<WyrmException>(() => _wyrmDriver.CreateStreamAsync(""));
 
 //            Assert.Equal("hello world", exception.Message);
         }
