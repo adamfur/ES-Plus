@@ -7,14 +7,12 @@ namespace ESPlus.Wyrm
     public class Tokenizer
     {
         private static readonly DateTime Epooch = new DateTime(1970, 1, 1);
-        private byte[] _data;
+        private readonly byte[] _data;
         private int _offset;
-        private int _length;
 
         public Tokenizer(byte[] data)
         {
             _data = data;
-            _length = data.Length;
         }
 
         public int ReadI32()
@@ -61,7 +59,7 @@ namespace ESPlus.Wyrm
 
         public bool Eof()
         {
-            return _offset == _length;
+            return _offset == _data.Length;
         }
 
         public void AssertEof()
@@ -81,9 +79,9 @@ namespace ESPlus.Wyrm
             
             var next = _offset + length;
 
-            if (next > _length)
+            if (next > _data.Length)
             {
-                throw new OverflowException($"Offset: {_offset}, Read: {length}, Length: {_length}");                
+                throw new OverflowException($"Offset: {_offset}, Read: {length}, Length: {_data.Length}");                
             }
 
             var range = _data.Slice(_offset, length);

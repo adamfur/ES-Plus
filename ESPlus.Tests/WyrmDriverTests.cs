@@ -316,6 +316,7 @@ namespace ESPlus.Tests
         public async Task Ping()
         {
             var result = _wyrmDriver.Ping();
+            var result2 = _wyrmDriver.Ping();
             var x = 13;
         }
 
@@ -409,9 +410,7 @@ namespace ESPlus.Tests
             var result = await Append();
             _wyrmDriver.Reset();
             
-            var sum = _wyrmDriver.ReadAllForward(Position.Start).ToList();
-            
-            Assert.Empty(sum);
+            Assert.Empty(_wyrmDriver.ReadAllForward(Position.Start));
         }        
 
 //        [Fact]

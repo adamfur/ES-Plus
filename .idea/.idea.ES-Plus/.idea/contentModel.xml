@@ -129,6 +129,7 @@
           <e p="IAlarmRepository.cs" t="Include" />
         </e>
         <e p="Wyrm" t="Include">
+          <e p="BinaryReaderExtensions.cs" t="Include" />
           <e p="BinaryWriterExtentions.cs" t="Include" />
           <e p="Bundle.cs" t="Include" />
           <e p="Commands.cs" t="Include" />

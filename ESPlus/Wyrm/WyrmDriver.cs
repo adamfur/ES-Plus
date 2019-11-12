@@ -79,10 +79,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
@@ -132,10 +129,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
@@ -255,10 +249,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
@@ -298,10 +289,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
@@ -351,10 +339,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
@@ -401,10 +386,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
@@ -439,10 +421,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
@@ -487,10 +466,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
@@ -526,10 +502,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Pong)
                     {
@@ -546,6 +519,8 @@ namespace ESPlus.Wyrm
                 }
             }
         }
+
+
         
         public void Reset()
         {
@@ -560,10 +535,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
-                    var query = (Queries) reader.ReadInt32();
-                    var payload = reader.ReadBytes(length - sizeof(Int32) * 2);
-                    var tokenizer = new Tokenizer(payload);
+                    var (query, tokenizer) = reader.Query();
 
                     if (query == Queries.Success)
                     {
