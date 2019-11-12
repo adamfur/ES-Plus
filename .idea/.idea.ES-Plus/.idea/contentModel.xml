@@ -130,7 +130,7 @@
         </e>
         <e p="Wyrm" t="Include">
           <e p="BinaryReaderExtensions.cs" t="Include" />
-          <e p="BinaryWriterExtentions.cs" t="Include" />
+          <e p="BinaryWriterExtensions.cs" t="Include" />
           <e p="Bundle.cs" t="Include" />
           <e p="Commands.cs" t="Include" />
           <e p="ExpectedVersion.cs" t="Include" />

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace ESPlus.Wyrm
 {
-    public static class BinaryWriterExtentions
+    public static class BinaryWriterExtensions
     {
         public static void WriteStruct<T>(this BinaryWriter writer, T data)
             where T : struct
