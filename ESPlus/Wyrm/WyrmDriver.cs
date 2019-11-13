@@ -1,31 +1,25 @@
 using System;
 using System.Collections.Generic;
-using System.Data.HashFunction.xxHash;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ESPlus.Exceptions;
-using ESPlus.Extentions;
-using ESPlus.Storage;
-using ESPlus.Subscribers;
-using LZ4;
-using MongoDB.Driver;
 
 namespace ESPlus.Wyrm
 {
     public class WyrmDriver : IWyrmDriver
     {
+        private readonly string _apiKey;
         private readonly string _host;
         private readonly int _port;
         public IEventSerializer Serializer { get; }
 
-        public WyrmDriver(string connectionString, IEventSerializer eventSerializer)
+        public WyrmDriver(string connectionString, IEventSerializer eventSerializer, string apiKey = null)
         {
+            _apiKey = apiKey;
             var parts = connectionString.Split(":");
 
             _host = parts[0];
@@ -71,6 +65,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 12 + streamName.Length);
                 writer.Write((int) command);
                 writer.Write((int) streamName.Length);
@@ -122,6 +117,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 4 + 4 + 32);
                 writer.Write((int) command);
                 writer.Write(position.Binary);
@@ -207,6 +203,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 4 + 4 + 4 + bundle.Items.Sum(x => x.Count()));
                 writer.Write((int) OperationType.PUT);
                 writer.Write((int) CommitPolicy.All);
@@ -282,6 +279,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 4 + 4 + 32);
                 writer.Write((int) Commands.SubscribeAll);
                 writer.Write(from.Binary);
@@ -331,6 +329,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 4 + 4 + 4 + streamName.Length);
                 writer.Write((int) Commands.SubscribeStream);
                 writer.Write((int) streamName.Length);
@@ -380,6 +379,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 4 + 4);
                 writer.Write((int) Commands.ListStreams);
                 writer.Flush();
@@ -415,6 +415,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 4 + 4);
                 writer.Write((int) Commands.ReadAllForwardGroupByStream);
                 writer.Flush();
@@ -460,6 +461,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 8);
                 writer.Write((int) Commands.Checkpoint);
                 writer.Flush();
@@ -520,8 +522,6 @@ namespace ESPlus.Wyrm
             }
         }
 
-
-        
         public void Reset()
         {
             using (var client = Create())
@@ -529,6 +529,7 @@ namespace ESPlus.Wyrm
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
+                Authenticate(writer);
                 writer.Write((int) 8);
                 writer.Write((int) Commands.Reset);
                 writer.Flush();
@@ -551,6 +552,19 @@ namespace ESPlus.Wyrm
                     }
                 }
             }
+        }
+
+        private void Authenticate(BinaryWriter writer)
+        {
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                return;
+            }
+            
+            writer.Write((int) 12+_apiKey.Length);
+            writer.Write((int) Commands.AuthenticateApiKey);
+            writer.Write((int) _apiKey.Length);
+            writer.Write(Encoding.UTF8.GetBytes(_apiKey));
         }
 
         private WyrmItem ParseAhead(Tokenizer tokenizer)

@@ -16,7 +16,7 @@ namespace ESPlus.Tests
 
         public WyrmDriverTests()
         {
-            _wyrmDriver = new WyrmDriver("192.168.1.2:8888", new EventJsonSerializer());
+            _wyrmDriver = new WyrmDriver("192.168.1.2:8888", new EventJsonSerializer(), "api-key");
             _id = Guid.NewGuid().ToString();
         }
 
@@ -282,7 +282,7 @@ namespace ESPlus.Tests
         {
             var result = await Append();
 
-            Assert.True(_wyrmDriver.ReadAllForward(Position.Start).Any());
+            Assert.NotEmpty(_wyrmDriver.ReadAllForward(Position.Start).ToList());
         }
 
         [Fact]
@@ -290,7 +290,7 @@ namespace ESPlus.Tests
         {
             var result = await Append();
 
-            Assert.True(_wyrmDriver.ReadAllBackward(Position.End).Any());
+            Assert.NotEmpty(_wyrmDriver.ReadAllBackward(Position.End).ToList());
         }
         
         [Fact]
