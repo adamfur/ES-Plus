@@ -14,5 +14,6 @@ namespace ESPlus.Wyrm
         Checkpoint = 9,
         StreamVersion = 10,
         StreamName = 11,
+        Raw = 12,
     }
 }

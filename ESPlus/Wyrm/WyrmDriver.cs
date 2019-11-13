@@ -205,7 +205,7 @@ namespace ESPlus.Wyrm
             {
                 Authenticate(writer);
                 writer.Write((int) 12 + bundle.Items.Sum(x => x.Count()));
-                writer.Write((int) OperationType.PUT);
+                writer.Write((int) Commands.Put);
                 writer.Write((int) CommitPolicy.All);
 
                 foreach (var item in bundle.Items)
@@ -279,7 +279,7 @@ namespace ESPlus.Wyrm
             {
                 Authenticate(writer);
                 writer.Write((int) 40);
-                writer.Write((int) Commands.SubscribeAll);
+                writer.Write((int) Commands.ReadAllForwardFollow);
                 writer.Write(from.Binary);
                 writer.Flush();
 
@@ -329,7 +329,7 @@ namespace ESPlus.Wyrm
             {
                 Authenticate(writer);
                 writer.Write((int) 12 + streamName.Length);
-                writer.Write((int) Commands.SubscribeStream);
+                writer.Write((int) Commands.ReadStreamForwardFollow);
                 writer.Write((int) streamName.Length);
                 writer.Write(Encoding.UTF8.GetBytes(streamName));
                 writer.Flush();

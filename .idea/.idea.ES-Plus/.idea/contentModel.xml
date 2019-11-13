@@ -135,7 +135,6 @@
           <e p="Commands.cs" t="Include" />
           <e p="ExpectedVersion.cs" t="Include" />
           <e p="IWyrmDriver.cs" t="Include" />
-          <e p="OperationType.cs" t="Include" />
           <e p="Queries.cs" t="Include" />
           <e p="Tokenizer.cs" t="Include" />
           <e p="WyrmDriver.cs" t="Include" />
