@@ -118,7 +118,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                writer.Write((int) 4 + 4 + 32);
+                writer.Write((int) 40);
                 writer.Write((int) command);
                 writer.Write(position.Binary);
                 writer.Flush();
@@ -204,7 +204,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                writer.Write((int) 4 + 4 + 4 + bundle.Items.Sum(x => x.Count()));
+                writer.Write((int) 12 + bundle.Items.Sum(x => x.Count()));
                 writer.Write((int) OperationType.PUT);
                 writer.Write((int) CommitPolicy.All);
 
@@ -254,7 +254,7 @@ namespace ESPlus.Wyrm
                     }
                     else if (query == Queries.Checkpoint)
                     {
-                        position = ParseChecksum(tokenizer);
+                        position = ParseCheckpoint(tokenizer);
                     }
                     else if (query == Queries.Exception)
                     {
@@ -280,7 +280,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                writer.Write((int) 4 + 4 + 32);
+                writer.Write((int) 40);
                 writer.Write((int) Commands.SubscribeAll);
                 writer.Write(from.Binary);
                 writer.Flush();
@@ -330,7 +330,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                writer.Write((int) 4 + 4 + 4 + streamName.Length);
+                writer.Write((int) 12 + streamName.Length);
                 writer.Write((int) Commands.SubscribeStream);
                 writer.Write((int) streamName.Length);
                 writer.Write(Encoding.UTF8.GetBytes(streamName));
@@ -380,7 +380,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                writer.Write((int) 4 + 4);
+                writer.Write((int) 8);
                 writer.Write((int) Commands.ListStreams);
                 writer.Flush();
 
@@ -416,7 +416,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                writer.Write((int) 4 + 4);
+                writer.Write((int) 8);
                 writer.Write((int) Commands.ReadAllForwardGroupByStream);
                 writer.Flush();
 
@@ -476,7 +476,7 @@ namespace ESPlus.Wyrm
                     }
                     else if (query == Queries.Checkpoint)
                     {
-                        position = ParseChecksum(tokenizer);
+                        position = ParseCheckpoint(tokenizer);
                     }
                     else if (query == Queries.Exception)
                     {
@@ -546,6 +546,10 @@ namespace ESPlus.Wyrm
                     {
                         ParseException(tokenizer);
                     }
+                    else if (query == Queries.Checkpoint)
+                    {
+                        ParseCheckpoint(tokenizer);
+                    }
                     else
                     {
                         throw new NotImplementedException();
@@ -560,8 +564,8 @@ namespace ESPlus.Wyrm
             {
                 return;
             }
-            
-            writer.Write((int) 12+_apiKey.Length);
+
+            writer.Write((int) 12 + _apiKey.Length);
             writer.Write((int) Commands.AuthenticateApiKey);
             writer.Write((int) _apiKey.Length);
             writer.Write(Encoding.UTF8.GetBytes(_apiKey));
@@ -649,7 +653,7 @@ namespace ESPlus.Wyrm
             return streamName;
         }
 
-        private Position ParseChecksum(Tokenizer tokenizer)
+        private Position ParseCheckpoint(Tokenizer tokenizer)
         {
             var binary = tokenizer.ReadBinary(32);
 
