@@ -265,8 +265,6 @@ namespace ESPlus.Wyrm
                         throw new NotImplementedException();
                     }
                 }
-
-                client.Close();
             }
 
             return Task.FromResult(position);
@@ -599,7 +597,7 @@ namespace ESPlus.Wyrm
             var time = tokenizer.ReadDateTime();
             var offset = tokenizer.ReadI64();
             var totalOffset = tokenizer.ReadI64();
-            var position = tokenizer.ReadBinary(32);
+            var position = tokenizer.ReadBinary(32).ToArray();
             var streamName = tokenizer.ReadString();
             var eventType = tokenizer.ReadString();
 
@@ -621,14 +619,14 @@ namespace ESPlus.Wyrm
             var time = tokenizer.ReadDateTime();
             var offset = tokenizer.ReadI64();
             var totalOffset = tokenizer.ReadI64();
-            var position = tokenizer.ReadBinary(32);
+            var position = tokenizer.ReadBinary(32).ToArray();
             var eventId = tokenizer.ReadGuid();
             var eventType = tokenizer.ReadString();
             var streamName = tokenizer.ReadString();
             var metadataLength = tokenizer.ReadI32();
             var dataLength = tokenizer.ReadI32();
-            var metadata = tokenizer.ReadBinary(metadataLength);
-            var data = tokenizer.ReadBinary(dataLength);
+            var metadata = tokenizer.ReadBinary(metadataLength).ToArray();
+            var data = tokenizer.ReadBinary(dataLength).ToArray();
 
             return new WyrmEventItem
             {
@@ -657,7 +655,7 @@ namespace ESPlus.Wyrm
         {
             var binary = tokenizer.ReadBinary(32);
 
-            return new Position(binary);
+            return new Position(binary.ToArray());
         }
     }
 }

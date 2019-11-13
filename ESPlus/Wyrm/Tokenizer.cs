@@ -7,10 +7,10 @@ namespace ESPlus.Wyrm
     public class Tokenizer
     {
         private static readonly DateTime Epooch = new DateTime(1970, 1, 1);
-        private readonly byte[] _data;
+        private readonly Memory<byte> _data;
         private int _offset;
 
-        public Tokenizer(byte[] data)
+        public Tokenizer(Memory<byte> data)
         {
             _data = data;
         }
@@ -19,42 +19,45 @@ namespace ESPlus.Wyrm
         {
             var data = ReadBinary(sizeof(Int32));
             
-            return BitConverter.ToInt32(data);
+            return BitConverter.ToInt32(data.Span);
         }
 
         public long ReadI64()
         {
             var data = ReadBinary(sizeof(Int64));
             
-            return BitConverter.ToInt64(data);
+            return BitConverter.ToInt64(data.Span);
         }
 
         public Guid ReadGuid()
         {
             var data = ReadBinary(16);
 
-            return new Guid(data);
+            return new Guid(data.Span);
         }
 
         public DateTime ReadDateTime()
         {
             var seconds = ReadI64();
             var milliseconds = ReadI64();
-            var time = Epooch.AddSeconds(seconds).AddMilliseconds(milliseconds).ToLocalTime();
+            var time = Epooch.AddSeconds(seconds)
+                .AddMilliseconds(milliseconds);
             
             return time;
         }
 
         public string ReadString()
         {
+            var binary = ReadBinary();
+            
+            return Encoding.UTF8.GetString(binary.Span);
+        }
+
+        public Memory<byte> ReadBinary()
+        {
             var length = ReadI32();
 
-            if (length == 0)
-            {
-                return "";
-            }
-
-            return Encoding.UTF8.GetString(ReadBinary(length));
+            return ReadBinary(length);
         }
 
         public bool Eof()
@@ -70,11 +73,11 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public byte[] ReadBinary(int length)
+        public Memory<byte> ReadBinary(int length)
         {
             if (length == 0)
             {
-                return new byte[0];
+                return Memory<byte>.Empty;
             }
             
             var next = _offset + length;

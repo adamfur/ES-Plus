@@ -9,14 +9,14 @@ namespace ESPlus.Wyrm
         All = 0,
         Any = 1,
     }
-    
+
     public enum BundleOp
     {
         Create = 1,
         Delete = 2,
         Events = 3,
     }
-    
+
     public class Bundle
     {
         public CommitPolicy Policy { get; set; }
@@ -26,7 +26,7 @@ namespace ESPlus.Wyrm
     public abstract class BundleItem
     {
         public abstract int Count();
-        
+
         public abstract BundleType Type { get; }
         public string StreamName { get; set; }
     }
@@ -35,19 +35,19 @@ namespace ESPlus.Wyrm
     {
         public override int Count()
         {
-            return 4+4 + StreamName.Length;
+            return 8 + StreamName.Length;
         }
 
         public override BundleType Type => BundleType.Create;
     }
-    
+
     public class DeleteBundleItem : BundleItem
     {
         public override int Count()
         {
-            return 4 + 8 + 4 + StreamName.Length;
+            return 16 + StreamName.Length;
         }
-        
+
         public override BundleType Type => BundleType.Delete;
 
         public long StreamVersion { get; set; } = -1;
@@ -57,9 +57,9 @@ namespace ESPlus.Wyrm
     {
         public override int Count()
         {
-            return 4+4 + 8 + 4 + StreamName.Length + Events.Sum(x => x.Count());
+            return 20 + StreamName.Length + Events.Sum(x => x.Count());
         }
-        
+
         public override BundleType Type => BundleType.Events;
 
         public long StreamVersion { get; set; } = 0;
@@ -70,9 +70,9 @@ namespace ESPlus.Wyrm
     {
         public int Count()
         {
-            return 16 + 4 + EventType.Length + 4 + Metadata.Length + 4 + Body.Length;
-        }        
-        
+            return 24 + EventType.Length + 4 + Metadata.Length + Body.Length;
+        }
+
         public Guid EventId { get; set; }
         public string EventType { get; set; }
         public byte[] Metadata { get; set; }
