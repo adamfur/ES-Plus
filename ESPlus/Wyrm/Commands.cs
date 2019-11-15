@@ -21,5 +21,6 @@ namespace ESPlus.Wyrm
         ListStreams = 17,
         ReadAllForwardGroupByStream = 18,
         Checkpoint = 19,
+        CreateFilter = 20,
     }
 }

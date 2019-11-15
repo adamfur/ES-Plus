@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.HashFunction.xxHash;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -15,6 +16,8 @@ namespace ESPlus.Wyrm
         private readonly string _apiKey;
         private readonly string _host;
         private readonly int _port;
+        private readonly IxxHash _algorithm;
+        
         public IEventSerializer Serializer { get; }
 
         public WyrmDriver(string connectionString, IEventSerializer eventSerializer, string apiKey = null)
@@ -25,6 +28,7 @@ namespace ESPlus.Wyrm
             _host = parts[0];
             _port = int.Parse(parts[1]);
             Serializer = eventSerializer;
+            _algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
         }
 
         private TcpClient Create()
@@ -378,6 +382,7 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
+                CreateFilter(writer, filters);
                 writer.Write((int) 8);
                 writer.Write((int) Commands.ListStreams);
                 writer.Flush();
@@ -405,6 +410,37 @@ namespace ESPlus.Wyrm
                 }
             }
         }
+
+        private void CreateFilter(BinaryWriter writer, Type[] filters)
+        {
+            Filters(writer, filters, Commands.CreateFilter);
+        }
+        
+        private void EventFilter(BinaryWriter writer, Type[] filters)
+        {
+            Filters(writer, filters, Commands.EventFilter);
+        }
+        
+        private void Filters(BinaryWriter writer, Type[] filters, Commands command)
+        {
+            if (!filters.Any())
+            {
+                return;
+            }
+            
+            writer.Write((int) 12 + filters.Length * 8);
+            writer.Write((int) command);
+            writer.Write((int) filters.Length);
+            
+            foreach (var filter in filters)
+            {
+                var hash = _algorithm.ComputeHash(Encoding.UTF8.GetBytes(filter.FullName)).Hash;
+                var i64 = BitConverter.ToInt64(hash);
+                
+                writer.Write(i64);
+            }
+        }
+
 
         public IEnumerable<WyrmItem> EnumerateAllGroupByStream(params Type[] filters)
         {
