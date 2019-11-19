@@ -21,6 +21,8 @@ namespace ESPlus.Wyrm
     {
         public CommitPolicy Policy { get; set; }
         public List<BundleItem> Items { get; set; } = new List<BundleItem>();
+        public bool Encrypt { get; set; } = true;
+        public string Branch { get; set; }
     }
 
     public abstract class BundleItem

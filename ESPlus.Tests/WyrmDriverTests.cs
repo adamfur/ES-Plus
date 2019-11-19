@@ -280,6 +280,7 @@ namespace ESPlus.Tests
         [Fact]
         public async Task ReadAllForward()
         {
+            _wyrmDriver.Reset();
             var result = await Append();
 
             Assert.NotEmpty(_wyrmDriver.ReadAllForward(Position.Start).ToList());
@@ -292,7 +293,7 @@ namespace ESPlus.Tests
 
             Assert.NotEmpty(_wyrmDriver.ReadAllBackward(Position.End).ToList());
         }
-        
+
         [Fact]
         public async Task SuscribeAll()
         {
@@ -302,16 +303,16 @@ namespace ESPlus.Tests
 
             var list = _wyrmDriver.SubscribeAll(Position.Start).ToList();
             int x = 13;
-        }        
+        }
 
         [Fact]
         public async Task TestException2()
         {
             var exception = await Assert.ThrowsAsync<WyrmException>(() => _wyrmDriver.CreateStreamAsync(""));
-
+            var x = 12;
 //            Assert.Equal("hello world", exception.Message);
         }
-        
+
         [Fact]
         public async Task Ping()
         {
@@ -320,8 +321,64 @@ namespace ESPlus.Tests
             var x = 13;
         }
 
-//        [Fact]
-        public void Food()
+        [Fact]
+        public async Task Feed()
+        {
+            for (var i = 0; i < 200||true; ++i)
+            {
+                var id = Guid.NewGuid().ToString();
+
+                await _wyrmDriver.Append(new Bundle
+                {
+                    Encrypt = false,
+                    Branch = "master",
+                    Policy = CommitPolicy.All,
+                    Items = new List<BundleItem>
+                    {
+                        new EventsBundleItem
+                        {
+                            StreamName = id,
+                            StreamVersion = 0,
+                            Events = new List<BundleEvent>
+                            {
+                                new BundleEvent
+                                {
+                                    EventId = Guid.NewGuid(),
+                                    EventType = Guid.NewGuid().ToString(),
+                                    Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                    Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                }
+                            }
+                        },
+                        new EventsBundleItem
+                        {
+                            StreamName = id,
+                            StreamVersion = 1,
+                            Events = new List<BundleEvent>
+                            {
+                                new BundleEvent
+                                {
+                                    EventId = Guid.NewGuid(),
+                                    EventType = Guid.NewGuid().ToString(),
+                                    Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                    Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                },
+                                new BundleEvent
+                                {
+                                    EventId = Guid.NewGuid(),
+                                    EventType = Guid.NewGuid().ToString(),
+                                    Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                    Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        [Fact]
+        public void Feed2()
         {
             Thread thread = null;
 
@@ -390,28 +447,28 @@ namespace ESPlus.Tests
         public async Task EnumerateStreams()
         {
             var result = await Append();
-            
+
             var sum = _wyrmDriver.EnumerateStreams().ToList();
             var x = 13;
         }
-        
+
         [Fact]
         public async Task ReadAllGroupByStream()
         {
             var result = await Append();
-            
+
             var sum = _wyrmDriver.EnumerateAllGroupByStream().ToList();
             var x = 13;
         }
-        
+
         [Fact]
         public async Task Reset()
         {
             var result = await Append();
             _wyrmDriver.Reset();
-            
+
             Assert.Empty(_wyrmDriver.ReadAllForward(Position.Start));
-        }        
+        }
 
 //        [Fact]
         public async Task AppendDeterministicStream()
@@ -468,6 +525,35 @@ namespace ESPlus.Tests
                     }
                 }
             });
+        }
+
+        [Fact]
+        public async Task Adam()
+        {
+            await _wyrmDriver.Append(new Bundle
+            {
+                Policy = CommitPolicy.All,
+                Items = new List<BundleItem>
+                {
+                    new EventsBundleItem
+                    {
+                        StreamName = _id,
+                        StreamVersion = 0,
+                        Events = new List<BundleEvent>
+                        {
+                            new BundleEvent
+                            {
+                                EventId = Guid.NewGuid(),
+                                EventType = $"EventType: [{Guid.NewGuid()}]",
+                                Metadata = Encoding.UTF8.GetBytes($"Metadata: [{Guid.NewGuid()}]"),
+                                Body = Encoding.UTF8.GetBytes($"Body: [{Guid.NewGuid()}]"),
+                            }
+                        }
+                    },
+                }
+            });
+
+            Assert.NotEmpty(_wyrmDriver.ReadAllBackward(Position.End).ToList());
         }
     }
 }

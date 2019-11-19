@@ -208,9 +208,10 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                writer.Write((int) 12 + bundle.Items.Sum(x => x.Count()));
+                writer.Write((int) 13 + bundle.Items.Sum(x => x.Count()));
                 writer.Write((int) Commands.Put);
                 writer.Write((int) CommitPolicy.All);
+                writer.Write((bool) bundle.Encrypt);
 
                 foreach (var item in bundle.Items)
                 {
@@ -441,7 +442,6 @@ namespace ESPlus.Wyrm
             }
         }
 
-
         public IEnumerable<WyrmItem> EnumerateAllGroupByStream(params Type[] filters)
         {
             using (var client = Create())
@@ -614,8 +614,9 @@ namespace ESPlus.Wyrm
         {
             var code = tokenizer.ReadI32();
             var message = tokenizer.ReadString();
+            var info = tokenizer.ReadString();
 
-            throw new WyrmException(code, message);
+            throw new WyrmException(code, message, info);
         }
 
         private WyrmItem ParseStreamVersion(Tokenizer tokenizer)
