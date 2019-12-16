@@ -6,6 +6,7 @@ using System.Linq;
 using System;
 using ESPlus.EventHandlers;
 using ESPlus.Exceptions;
+using ESPlus.Wyrm;
 
 namespace ESPlus.Repositories
 {
@@ -93,10 +94,10 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
-        public async Task<Position> SaveAsync(AggregateBase aggregate, object headers)
+        public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null)
         {
             await SaveImpl(aggregate, aggregate.Version);
-            return Position.Start;
+            return new WyrmResult(Position.Start, 0);
         }
 
         public Task AppendAsync(AggregateBase aggregate, object headers)
@@ -175,7 +176,7 @@ namespace ESPlus.Repositories
             return Task.FromResult(0);
         }
 
-        Task<Position> IRepository.AppendAsync(AggregateBase aggregate, object headers = null)
+        Task<WyrmResult> IRepository.AppendAsync(AggregateBase aggregate, object headers = null)
         {
             throw new NotImplementedException();
         }
@@ -185,7 +186,7 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<Position> Commit()
+        public Task<WyrmResult> Commit()
         {
             throw new NotImplementedException();
         }

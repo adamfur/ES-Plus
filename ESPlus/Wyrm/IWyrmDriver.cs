@@ -9,7 +9,7 @@ namespace ESPlus.Wyrm
         IEventSerializer Serializer { get; }
         IEnumerable<WyrmEvent2> EnumerateStream(string streamName);
         Task DeleteAsync(string streamName, long version);
-        Task<Position> Append(IEnumerable<WyrmEvent> events);
+        Task<WyrmResult> Append(IEnumerable<WyrmEvent> events);
         IEnumerable<string> EnumerateStreams(params Type[] filters);
         Position LastCheckpoint();
         IEnumerable<WyrmEvent2> Subscribe(Position from);

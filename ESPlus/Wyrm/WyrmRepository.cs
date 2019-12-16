@@ -54,7 +54,7 @@ namespace ESPlus.Wyrm
             await _wyrmConnection.DeleteAsync(id, version);
         }
 
-        public Task<Position> SaveAsync(AggregateBase aggregate, object headers = null)
+        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
@@ -63,7 +63,7 @@ namespace ESPlus.Wyrm
             return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers);
         }
 
-        public Task<Position> AppendAsync(AggregateBase aggregate, object headers)
+        public Task<WyrmResult> AppendAsync(AggregateBase aggregate, object headers = null)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
@@ -94,11 +94,11 @@ namespace ESPlus.Wyrm
             }
         }
 
-        private async Task<Position> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
+        private async Task<WyrmResult> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
         {
             if (!newEvents.Any())
             {
-                return Position.Start;
+                return new WyrmResult(Position.Start, 0);
             }
 
             var streamName = aggregate.Id;
@@ -107,7 +107,7 @@ namespace ESPlus.Wyrm
             if (_transaction != null)
             {
                 _transaction.Append(eventsToSave);
-                return Position.Start;
+                return new WyrmResult(Position.Start, 0);
             }
             else
             {
@@ -222,7 +222,7 @@ namespace ESPlus.Wyrm
             return transaction;
         }
 
-        public async Task<Position> Commit()
+        public async Task<WyrmResult> Commit()
         {
             if (_transaction != null)
             {

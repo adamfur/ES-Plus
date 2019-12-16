@@ -12,9 +12,9 @@ namespace ESPlus.Interfaces
 
         public IEnumerable<WyrmEvent> Events { get; }
         
-        public Task<Position> Commit()
+        public Task<WyrmResult> Commit()
         {
-            return Task.FromResult(Position.Start);
+            return Task.FromResult(new WyrmResult(Position.Start, 0));
         }
 
         public void Append(IEnumerable<WyrmEvent> events)

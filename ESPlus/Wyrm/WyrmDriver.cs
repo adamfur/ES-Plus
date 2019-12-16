@@ -15,7 +15,7 @@ using LZ4;
 
 namespace ESPlus.Wyrm
 {
-    public class WyrmDriver : IWyrmDriver
+    public partial class WyrmDriver : IWyrmDriver
     {
         private readonly string _host;
         private readonly int _port;
@@ -214,11 +214,11 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public Task<Position> Append(IEnumerable<WyrmEvent> events)
+        public Task<WyrmResult> Append(IEnumerable<WyrmEvent> events)
         {
             if (!events.Any())
             {
-                return Task.FromResult(Position.Start);
+                return Task.FromResult(new WyrmResult(Position.Start, 0L));
             }
 
             using (var client = Create())
@@ -236,20 +236,36 @@ namespace ESPlus.Wyrm
 
                 var len = reader.ReadInt32();
 
-                if (len != 8 + 32)
+                if (len == 8 + 32)
                 {
-                    throw new Exception("if (len != 8 + 32)");
+                    var status = reader.ReadInt32();
+                    var hash = reader.ReadBytes(32);
+                    var offset = 0;
+
+                    if (status != 0)
+                    {
+                        throw new WrongExpectedVersionException($"Bad status: {status}");
+                    }
+
+                    return Task.FromResult(new WyrmResult(new Position(hash), offset));
                 }
-
-                var status = reader.ReadInt32();
-                var hash = reader.ReadBytes(32);
-
-                if (status != 0)
+                else if (len == 8 + 32 + 8)
                 {
-                    throw new WrongExpectedVersionException($"Bad status: {status}");
-                }
+                    var status = reader.ReadInt32();
+                    var hash = reader.ReadBytes(32);
+                    var offset = reader.ReadInt64();
 
-                return Task.FromResult(new Position(hash));
+                    if (status != 0)
+                    {
+                        throw new WrongExpectedVersionException($"Bad status: {status}");
+                    }
+
+                    return Task.FromResult(new WyrmResult(new Position(hash), offset));
+                }
+                else
+                {
+                    throw new Exception("if (len != 8 + 32 + 8?)");
+                }
             }
         }
 
