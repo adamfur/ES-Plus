@@ -7,9 +7,9 @@ namespace ESPlus.Wyrm
     public interface IWyrmDriver
     {
         IEventSerializer Serializer { get; }
-        Task<Position> CreateStreamAsync(string streamName);
-        Task<Position> DeleteStreamAsync(string streamName, long version);
-        Task<Position> Append(Bundle bundle);
+        Task<WyrmResult> CreateStreamAsync(string streamName);
+        Task<WyrmResult> DeleteStreamAsync(string streamName, long version);
+        Task<WyrmResult> Append(Bundle bundle);
         IEnumerable<WyrmItem> ReadAllForward(Position position);
         IEnumerable<WyrmItem> ReadAllBackward(Position position);
         IEnumerable<WyrmItem> ReadStreamForward(string streamName);

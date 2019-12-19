@@ -9,8 +9,8 @@ namespace ESPlus.Interfaces
         Task<Position> SaveAsync(AggregateBase aggregate,
             object headers = null, long savePolicy = ExpectedVersion.Specified);
         Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate;
-        Task<Position> CreateStreamAsync(string streamName);
-        Task<Position> DeleteStreamAsync(string streamName, long version = -1);
+        Task<WyrmResult> CreateStreamAsync(string streamName);
+        Task<WyrmResult> DeleteStreamAsync(string streamName, long version = -1);
         IRepositoryTransaction BeginTransaction();
     }
 }

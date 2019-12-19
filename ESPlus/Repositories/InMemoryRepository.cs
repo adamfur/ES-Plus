@@ -205,12 +205,12 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<Position> CreateStreamAsync(string streamName)
+        public Task<WyrmResult> CreateStreamAsync(string streamName)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Position> DeleteStreamAsync(string streamName, long version = -1)
+        public Task<WyrmResult> DeleteStreamAsync(string streamName, long version = -1)
         {
             throw new NotImplementedException();
         }

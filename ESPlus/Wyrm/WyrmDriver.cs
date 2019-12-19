@@ -165,7 +165,7 @@ namespace ESPlus.Wyrm
             return ReadStream(streamName, Commands.ReadStreamBackward);
         }
 
-        public async Task<Position> CreateStreamAsync(string streamName)
+        public async Task<WyrmResult> CreateStreamAsync(string streamName)
         {
             var bundle = new Bundle
             {
@@ -181,7 +181,7 @@ namespace ESPlus.Wyrm
             return await Append(bundle);
         }
 
-        public async Task<Position> DeleteStreamAsync(string streamName, long version)
+        public async Task<WyrmResult> DeleteStreamAsync(string streamName, long version)
         {
             var bundle = new Bundle
             {
@@ -198,9 +198,10 @@ namespace ESPlus.Wyrm
             return await Append(bundle);
         }
 
-        public Task<Position> Append(Bundle bundle)
+        public Task<WyrmResult> Append(Bundle bundle)
         {
             var position = Position.Start;
+            long offset = 0;
 
             using (var client = Create())
             using (var stream = client.GetStream())
@@ -265,6 +266,10 @@ namespace ESPlus.Wyrm
                     {
                         ParseException(tokenizer);
                     }
+                    else if (query == Queries.TotalOffset)
+                    {
+                        offset = ParseTotalOffset(tokenizer);
+                    }
                     else
                     {
                         throw new NotImplementedException();
@@ -272,7 +277,7 @@ namespace ESPlus.Wyrm
                 }
             }
 
-            return Task.FromResult(position);
+            return Task.FromResult(new WyrmResult(position, offset));
         }
 
         public IEnumerable<WyrmItem> SubscribeAll(Position from)
@@ -324,7 +329,7 @@ namespace ESPlus.Wyrm
                 }
             }
         }
-        
+
         public IEnumerable<WyrmItem> SubscribeStream(string streamName)
         {
             using (var client = Create())
@@ -416,12 +421,12 @@ namespace ESPlus.Wyrm
         {
             Filters(writer, filters, Commands.CreateFilter);
         }
-        
+
         private void EventFilter(BinaryWriter writer, Type[] filters)
         {
             Filters(writer, filters, Commands.EventFilter);
         }
-        
+
         private void Filters(BinaryWriter writer, Type[] filters, Commands command)
         {
             if (!filters.Any())
@@ -478,6 +483,10 @@ namespace ESPlus.Wyrm
                     {
                         ParseException(tokenizer);
                     }
+                    else if (query == Queries.Ahead)
+                    {
+                        yield return ParseStreamAhead(tokenizer);
+                    }
                     else
                     {
                         throw new NotImplementedException();
@@ -523,7 +532,7 @@ namespace ESPlus.Wyrm
                 }
             }
         }
-        
+
         public TimeSpan Ping()
         {
             var watch = Stopwatch.StartNew();
@@ -584,6 +593,10 @@ namespace ESPlus.Wyrm
                     {
                         ParseCheckpoint(tokenizer);
                     }
+                    else if (query == Queries.TotalOffset)
+                    {
+                        ParseTotalOffset(tokenizer);
+                    }
                     else
                     {
                         throw new NotImplementedException();
@@ -606,6 +619,11 @@ namespace ESPlus.Wyrm
         }
 
         private WyrmItem ParseAhead(Tokenizer tokenizer)
+        {
+            return new WyrmAheadItem();
+        }
+
+        private WyrmItem ParseStreamAhead(Tokenizer tokenizer)
         {
             return new WyrmAheadItem();
         }
@@ -693,6 +711,13 @@ namespace ESPlus.Wyrm
             var binary = tokenizer.ReadBinary(32);
 
             return new Position(binary.ToArray());
+        }
+
+        private long ParseTotalOffset(Tokenizer tokenizer)
+        {
+            var totalOffset = tokenizer.ReadI64();
+
+            return totalOffset;
         }
     }
 }

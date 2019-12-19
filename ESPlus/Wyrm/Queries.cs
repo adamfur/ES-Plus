@@ -15,5 +15,7 @@ namespace ESPlus.Wyrm
         StreamVersion = 10,
         StreamName = 11,
         Raw = 12,
+        StreamAhead = 13,
+        TotalOffset = 14,
     }
 }

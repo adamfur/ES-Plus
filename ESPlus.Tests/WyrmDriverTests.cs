@@ -16,7 +16,7 @@ namespace ESPlus.Tests
 
         public WyrmDriverTests()
         {
-            _wyrmDriver = new WyrmDriver("192.168.1.2:8888", new EventJsonSerializer(), "api-key");
+            _wyrmDriver = new WyrmDriver("192.168.1.2:9999", new EventJsonSerializer(), "api-key");
             _id = Guid.NewGuid().ToString();
         }
 
@@ -165,6 +165,33 @@ namespace ESPlus.Tests
         }
 
         [Fact]
+        public async Task Beaver()
+        {
+            await _wyrmDriver.Append(new Bundle
+            {
+                Policy = CommitPolicy.All,
+                Items = new List<BundleItem>
+                {
+                    new EventsBundleItem
+                    {
+                        StreamName = "beaver",
+                        StreamVersion = -2,
+                        Events = new List<BundleEvent>
+                        {
+                            new BundleEvent
+                            {
+                                EventId = Guid.NewGuid(),
+                                EventType = Guid.NewGuid().ToString(),
+                                Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                                Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        [Fact]
         public async Task AppendExistingStream_OneTransaction()
         {
             await _wyrmDriver.Append(new Bundle
@@ -221,7 +248,7 @@ namespace ESPlus.Tests
             Assert.Equal(3, _wyrmDriver.ReadStreamForward(_id).Count());
         }
 
-        private Task<Position> Append()
+        private Task<WyrmResult> Append()
         {
             return _wyrmDriver.Append(new Bundle
             {
@@ -324,7 +351,7 @@ namespace ESPlus.Tests
         [Fact]
         public async Task Feed()
         {
-            for (var i = 0; i < 200||true; ++i)
+            for (var i = 0; i < 200||false; ++i)
             {
                 var id = Guid.NewGuid().ToString();
 
@@ -377,7 +404,7 @@ namespace ESPlus.Tests
             }
         }
 
-        [Fact]
+//        [Fact]
         public void Feed2()
         {
             Thread thread = null;
@@ -410,30 +437,8 @@ namespace ESPlus.Tests
                                         }
                                     }
                                 },
-                                new EventsBundleItem
-                                {
-                                    StreamName = id,
-                                    StreamVersion = 1,
-                                    Events = new List<BundleEvent>
-                                    {
-                                        new BundleEvent
-                                        {
-                                            EventId = Guid.NewGuid(),
-                                            EventType = Guid.NewGuid().ToString(),
-                                            Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
-                                            Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
-                                        },
-                                        new BundleEvent
-                                        {
-                                            EventId = Guid.NewGuid(),
-                                            EventType = Guid.NewGuid().ToString(),
-                                            Metadata = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
-                                            Body = Encoding.UTF8.GetBytes(Guid.NewGuid().ToString()),
-                                        }
-                                    }
-                                }
                             }
-                        });
+                        }).Wait();
                     }
                 });
 

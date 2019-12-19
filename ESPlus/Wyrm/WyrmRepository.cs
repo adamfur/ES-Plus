@@ -49,12 +49,12 @@ namespace ESPlus.Wyrm
             return new WyrmEvent(eventId, typeName, data, metadata, streamName, (int)version);
         }
 
-        public Task<Position> CreateStreamAsync(string streamName)
+        public Task<WyrmResult> CreateStreamAsync(string streamName)
         {
             return _wyrmConnection.CreateStreamAsync(streamName);
         }
 
-        public Task<Position> DeleteStreamAsync(string id, long version = -1)
+        public Task<WyrmResult> DeleteStreamAsync(string id, long version = -1)
         {
             return _wyrmConnection.DeleteStreamAsync(id, version);
         }
