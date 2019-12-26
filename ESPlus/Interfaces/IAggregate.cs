@@ -1,9 +1,10 @@
 ﻿
 using System.Collections.Generic;
+using ESPlus.Wyrm;
 
 namespace ESPlus.Interfaces
 {
-    public interface IAggregate
+    public interface IAggregate : IWyrmItemVisitor
     {
         long Version { get; set; }
         string Id { get; }

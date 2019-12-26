@@ -9,71 +9,6 @@ namespace ESPlus.IntegrationTests.Repositories
 {
     public abstract class RepositoryTests
     {
-        public class DummyAggregate : AggregateBase
-        {
-            public Guid Guid { get; set; }
-
-            public DummyAggregate(string id)
-                : base(id)
-            {
-                Poke();
-            }
-
-            public void Poke()
-            {
-                ApplyChange(new DummyEvent());
-            }
-
-            public void AttachFile()
-            {
-                ApplyChange(new FileMetadataAddedEvent());
-                ApplyChange(new FileAddedEvent());
-            }
-
-            public void AddGuid(Guid guid)
-            {
-                ApplyChange(new GuidAddedEvent
-                {
-                    Guid = guid
-                });
-            }
-
-            protected void Apply(GuidAddedEvent @event)
-            {
-                Guid = @event.Guid;
-            }            
-
-            protected void Apply(DummyEvent @event)
-            {
-            }
-
-            [NoReplay]
-            protected void Apply(FileAddedEvent @event)
-            {
-            }
-
-            protected void Apply(FileMetadataAddedEvent @event)
-            {
-            }
-        }
-
-        public class DummyEvent
-        {
-        }
-
-        public class GuidAddedEvent
-        {
-            public Guid Guid { get; set; }
-        }
-
-        public class FileAddedEvent
-        {
-        }
-
-        public class FileMetadataAddedEvent
-        {
-        }
-
         protected IRepository Repository;
 
         protected abstract IRepository Create();
@@ -218,5 +153,75 @@ namespace ESPlus.IntegrationTests.Repositories
             await Repository.DeleteStreamAsync(id, aggregate.Version);
             await Assert.ThrowsAsync<AggregateNotFoundException>(async () => await Repository.GetByIdAsync<DummyAggregate>(id));
         }        
+    }
+
+    public class FileMetadataAddedEvent
+    {
+    }
+
+    public class FileAddedEvent
+    {
+    }
+
+    public class GuidAddedEvent
+    {
+        public Guid Guid { get; set; }
+    }
+
+    public class DummyAggregate : AggregateBase
+    {
+        public Guid Guid { get; set; }
+
+        public DummyAggregate(string id)
+            : base(id)
+        {
+        }
+        
+        public DummyAggregate(string id, bool poke)
+            : base(id)
+        {
+            Poke();
+        }
+
+        public void Poke()
+        {
+            ApplyChange(new DummyEvent());
+        }
+
+        public void AttachFile()
+        {
+            ApplyChange(new FileMetadataAddedEvent());
+            ApplyChange(new FileAddedEvent());
+        }
+
+        public void AddGuid(Guid guid)
+        {
+            ApplyChange(new GuidAddedEvent
+            {
+                Guid = guid
+            });
+        }
+
+        protected void Apply(GuidAddedEvent @event)
+        {
+            Guid = @event.Guid;
+        }            
+
+        protected void Apply(DummyEvent @event)
+        {
+        }
+
+        [NoReplay]
+        protected void Apply(FileAddedEvent @event)
+        {
+        }
+
+        protected void Apply(FileMetadataAddedEvent @event)
+        {
+        }
+    }
+
+    public class DummyEvent
+    {
     }
 }

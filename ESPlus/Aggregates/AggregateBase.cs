@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using ESPlus.Interfaces;
+using ESPlus.Wyrm;
 
 namespace ESPlus.Aggregates
 {
@@ -12,6 +15,7 @@ namespace ESPlus.Aggregates
         private readonly ConventionEventRouter _router = new ConventionEventRouter();
         public long Version { get; set; } = -1;
         public string Id { get; private set; }
+        public static Dictionary<string, Type> _types = new Dictionary<string, Type>();
 
         protected AggregateBase(string id, Type initialType = null)
         {
@@ -62,6 +66,26 @@ namespace ESPlus.Aggregates
 
             _uncommitedEvents.Clear();
             return result;
+        }
+
+        public void Visit(WyrmEventItem item)
+        {
+            var obj = item.Serializer.Deserialize(item.EventType, item.Data);
+
+            ApplyChange(obj);
+        }
+
+        public void Visit(WyrmAheadItem item)
+        {
+        }
+
+        public void Visit(WyrmVersionItem item)
+        {
+            Version = item.StreamVersion;
+        }
+
+        public void Visit(WyrmDeleteItem item)
+        {
         }
     }
 }

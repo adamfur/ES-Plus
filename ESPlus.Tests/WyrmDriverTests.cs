@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ESPlus.Misc;
 using ESPlus.Wyrm;
 using Xunit;
 
@@ -16,7 +17,7 @@ namespace ESPlus.Tests
 
         public WyrmDriverTests()
         {
-            _wyrmDriver = new WyrmDriver("192.168.1.2:9999", new EventJsonSerializer(), "api-key");
+            _wyrmDriver = new WyrmDriver("192.168.1.2:9999", new EventJsonSerializer(new EventTypeResolver()), "api-key");
             _id = Guid.NewGuid().ToString();
         }
 
@@ -358,7 +359,6 @@ namespace ESPlus.Tests
                 await _wyrmDriver.Append(new Bundle
                 {
                     Encrypt = false,
-                    Branch = "master",
                     Policy = CommitPolicy.All,
                     Items = new List<BundleItem>
                     {

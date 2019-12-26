@@ -11,7 +11,99 @@ namespace ESPlus.Wyrm
 {
     public class WyrmRepository : IRepository
     {
-        private readonly IEventSerializer _eventSerializer;
+        private readonly IWyrmDriver _wyrmDriver;
+
+        public WyrmRepository(IWyrmDriver wyrmDriver)
+        {
+            _wyrmDriver = wyrmDriver;
+        }
+
+        public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
+            long savePolicy = ExpectedVersion.Specified,
+            bool encrypt = true, CommitPolicy commitPolicy = CommitPolicy.All)
+        {
+            var version = savePolicy;
+            var events = aggregate.TakeUncommittedEvents().ToList();
+
+            if (savePolicy == ExpectedVersion.Specified)
+            {
+                version = aggregate.Version;
+            }
+
+            return await _wyrmDriver.Append(new Bundle
+            {
+                Encrypt = encrypt,
+                Policy = commitPolicy,
+                Items = new List<BundleItem>
+                {
+                    new EventsBundleItem
+                    {
+                        StreamName = aggregate.Id,
+                        StreamVersion = version,
+                        Events = events.Select(x => new BundleEvent
+                        {
+                            Body = _wyrmDriver.Serializer.Serialize(x),
+                            Metadata = _wyrmDriver.Serializer.Serialize(headers),
+                            EventId = Guid.NewGuid(),
+                            EventType = x.GetType().FullName,
+                        }).ToList()
+                    }
+                }
+            });
+        }
+
+        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id)
+            where TAggregate : IAggregate
+        {
+            var events = _wyrmDriver.ReadStreamForward(id);
+            var aggregate = ConstructAggregate<TAggregate>(id);
+            var applyAggregate = (IAggregate)aggregate;
+
+            foreach (var @event in events)
+            {
+                @event.Accept(applyAggregate);
+            }
+            
+            aggregate.TakeUncommittedEvents();
+            
+            return aggregate;
+        }
+
+        public Task<WyrmResult> CreateStreamAsync(string streamName)
+        {
+            return _wyrmDriver.CreateStreamAsync(streamName);
+        }
+
+        public Task<WyrmResult> DeleteStreamAsync(string streamName, long version = -1)
+        {
+            return _wyrmDriver.DeleteStreamAsync(streamName, version);
+        }
+
+        public IRepositoryTransaction BeginTransaction()
+        {
+            throw new NotImplementedException();
+        }
+        
+        private static TAggregate ConstructAggregate<TAggregate>(string id)
+        {
+            return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+    private readonly IEventSerializer _eventSerializer;
         private readonly IWyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
         private object _lock = new object();
@@ -246,3 +338,4 @@ namespace ESPlus.Wyrm
 //        }
     }
 }
+*/

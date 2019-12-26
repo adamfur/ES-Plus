@@ -1,29 +1,34 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Reflection;
+using ESPlus.Interfaces;
 
 namespace ESPlus.Misc
 {
     public class EventTypeResolver : IEventTypeResolver
     {
-        private Dictionary<string, Type> _typesByEventId = new Dictionary<string, Type>();
-        private Dictionary<string, Type> _typesByFullName = new Dictionary<string, Type>();
-        private Dictionary<string, Type> _typesByNameName = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _typesByFullName = new Dictionary<string, Type>();
 
-        public void RegisterTypes(Type[] types)
+        public void RegisterType(Type type)
         {
-            foreach (var type in types)
-            {
-                var eventId = ExtractEventId(type);
+            _typesByFullName[type.FullName] = type;
+        }
 
-                if (eventId != null)
-                {
-                    _typesByEventId[eventId] = type;
-                }
+        public static IEventTypeResolver Default()
+        {
+            var instance = new EventTypeResolver();
+            AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(x => typeof(IAggregate).IsAssignableFrom(x))
+                .SelectMany(x => x.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+                .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
+                .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
+                .Select(x => x.GetParameters().First().ParameterType)
+                .ToList()
+                .ForEach(t => instance.RegisterType(t));
 
-                _typesByFullName[type.FullName] = type;
-                _typesByNameName[type.Name] = type;
-            }
+            return instance;
         }
 
         private string ExtractEventId(Type type)
@@ -35,17 +40,7 @@ namespace ESPlus.Misc
 
         public Type ResolveType(string fullName, string name = "", string eventId = "")
         {
-            return FindByEventId(eventId) ?? FindByFullName(fullName) ?? FindByName(name) ?? throw new ArgumentException($"Unabel to resolve type '{fullName}'!");
-        }
-
-        private Type FindByName(string type)
-        {
-            if (_typesByNameName.ContainsKey(type))
-            {
-                return _typesByNameName[type];
-            }
-
-            return null;
+            return FindByFullName(fullName) ?? throw new ArgumentException($"Unabel to resolve type '{fullName}'!");
         }
 
         private Type FindByFullName(string type)
@@ -53,16 +48,6 @@ namespace ESPlus.Misc
             if (_typesByFullName.ContainsKey(type))
             {
                 return _typesByFullName[type];
-            }
-
-            return null;
-        }
-
-        private Type FindByEventId(string eventId)
-        {
-            if (_typesByEventId.ContainsKey(eventId))
-            {
-                return _typesByEventId[eventId];
             }
 
             return null;

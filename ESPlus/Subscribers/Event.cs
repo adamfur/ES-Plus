@@ -25,9 +25,7 @@ namespace ESPlus.Subscribers
 
         public object DeserializedItem()
         {
-            var type = _eventTypeResolver.ResolveType(EventType);
-            
-            return _eventSerializer.Deserialize(type, Payload);
+            return _eventSerializer.Deserialize(EventType, Payload);
         }
     }
 }

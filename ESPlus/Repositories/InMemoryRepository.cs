@@ -195,12 +195,15 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 */
-        public Task<Position> SaveAsync(AggregateBase aggregate, object headers = null, long savePolicy = ExpectedVersion.Specified)
+
+
+        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, long savePolicy = ExpectedVersion.Specified,
+            bool encrypt = true, Wyrm.CommitPolicy commitPolicy = Wyrm.CommitPolicy.All)
         {
             throw new NotImplementedException();
         }
 
-        public Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = Int64.MaxValue) where TAggregate : IAggregate
+        public Task<TAggregate> GetByIdAsync<TAggregate>(string id) where TAggregate : IAggregate
         {
             throw new NotImplementedException();
         }
