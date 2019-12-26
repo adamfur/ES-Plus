@@ -10,5 +10,10 @@ namespace ESPlus.Wyrm
             Position = position;
             Offset = offset;
         }
+
+        public static WyrmResult Empty()
+        {
+            return new WyrmResult(Position.Start, 0);
+        }
     }
 }

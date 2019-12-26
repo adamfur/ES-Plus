@@ -35,6 +35,21 @@ namespace ESPlus.IntegrationTests.Repositories
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
         }
+        
+        [Fact]
+        public async Task SaveAsync_AppendToExistingStream_Save22222222222222222222222()
+        {
+            var aggregate = new DummyAggregate(Guid.NewGuid().ToString(), true);
+
+            using (var transaction = Repository.BeginTransaction())
+            {
+                await transaction.CreateStreamAsync("hello-world");
+                await transaction.SaveAsync(aggregate);
+                aggregate.Poke();
+                await transaction.SaveAsync(aggregate);
+                var result = await transaction.Commit();
+            }
+        }
 
         [Fact]
         public async Task SaveAsync_ReadExistingAndSave_Save()

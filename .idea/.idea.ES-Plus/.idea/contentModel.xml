@@ -55,7 +55,6 @@
         <e p="Hash.cs" t="Include" />
         <e p="IEventSerializer.cs" t="Include" />
         <e p="Interfaces" t="Include">
-          <e p="CommitPolicy.cs" t="Include" />
           <e p="IAggregate.cs" t="Include" />
           <e p="IEventHandler.cs" t="Include" />
           <e p="IEventHandlerContext.cs" t="Include" />
@@ -68,10 +67,10 @@
           <e p="IRepositoryTransaction.cs" t="Include" />
           <e p="IStorage.cs" t="Include" />
           <e p="IStorageClient.cs" t="Include" />
+          <e p="IStore.cs" t="Include" />
           <e p="ISubscriptionClient.cs" t="Include" />
           <e p="ISubscriptionManager.cs" t="Include" />
           <e p="MuteTransaction.cs" t="Include" />
-          <e p="RepositoryTransaction.cs" t="Include" />
         </e>
         <e p="Lazy" t="Include">
           <e p="LazyReload.cs" t="Include" />

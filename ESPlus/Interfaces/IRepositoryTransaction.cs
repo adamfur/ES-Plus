@@ -5,8 +5,8 @@ using ESPlus.Wyrm;
 
 namespace ESPlus.Interfaces
 {
-    public interface IRepositoryTransaction : IDisposable
+    public interface IRepositoryTransaction : IStore, IDisposable
     {
-        Task<Position> Commit(CommitPolicy policy = CommitPolicy.All);
+        Task<WyrmResult> Commit(CommitPolicy policy = CommitPolicy.All);
     }
 }

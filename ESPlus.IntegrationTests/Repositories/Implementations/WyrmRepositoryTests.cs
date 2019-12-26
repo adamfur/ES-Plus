@@ -11,7 +11,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
         {
             var connection = new WyrmDriver("192.168.1.2:9999", new EventJsonSerializer(EventTypeResolver.Default()), "key");
 
-            return new WyrmRepository(connection);            
+            return new WyrmRepository(new WyrmStore(connection), connection);            
         }
     }        
 }

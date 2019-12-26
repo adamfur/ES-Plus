@@ -11,16 +11,147 @@ namespace ESPlus.Wyrm
 {
     public class WyrmRepository : IRepository
     {
+        private readonly IStore _store;
+        private readonly IWyrmDriver _driver;
+
+        public WyrmRepository(IStore store, IWyrmDriver driver)
+        {
+            _store = store;
+            _driver = driver;
+        }
+
+        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
+            long savePolicy = ExpectedVersion.Specified,
+            bool encrypt = true)
+        {
+            return _store.SaveAsync(aggregate, headers, savePolicy, encrypt);
+        }
+
+        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id)
+            where TAggregate : IAggregate
+        {
+            return await _store.GetByIdAsync<TAggregate>(id);
+        }
+
+        public Task<WyrmResult> CreateStreamAsync(string streamName)
+        {
+            return _store.CreateStreamAsync(streamName);
+        }
+
+        public Task<WyrmResult> DeleteStreamAsync(string streamName, long version = -1)
+        {
+            return _store.DeleteStreamAsync(streamName, version);
+        }
+
+        public IRepositoryTransaction BeginTransaction()
+        {
+            return new WyrmTransaction(_store, _driver);
+        }
+        
+        private static TAggregate ConstructAggregate<TAggregate>(string id)
+        {
+            return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
+        }
+    }
+
+    public class WyrmTransaction : IRepositoryTransaction
+    {
+        private List<BundleItem> _bundles = new List<BundleItem>(); 
+        private readonly IStore _store;
         private readonly IWyrmDriver _wyrmDriver;
 
-        public WyrmRepository(IWyrmDriver wyrmDriver)
+        public WyrmTransaction(IStore store, IWyrmDriver wyrmDriver)
+        {
+            _store = store;
+            _wyrmDriver = wyrmDriver;
+        }
+
+        public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, long savePolicy = ExpectedVersion.Specified,
+            bool encrypt = true)
+        {
+            var version = savePolicy;
+            var events = aggregate.TakeUncommittedEvents().ToList();
+
+            if (savePolicy == ExpectedVersion.Specified)
+            {
+                version = aggregate.Version;
+            }
+
+            var bundleItem = new EventsBundleItem
+            {
+                StreamName = aggregate.Id,
+                StreamVersion = version,
+                Events = events.Select(x => new BundleEvent
+                {
+                    Body = _wyrmDriver.Serializer.Serialize(x),
+                    Metadata = _wyrmDriver.Serializer.Serialize(headers),
+                    EventId = Guid.NewGuid(),
+                    EventType = x.GetType().FullName,
+                }).ToList()
+            };
+            
+            _bundles.Add(bundleItem);
+            return WyrmResult.Empty();
+        }
+
+        public Task<TAggregate> GetByIdAsync<TAggregate>(string id) where TAggregate : IAggregate
+        {
+            return _store.GetByIdAsync<TAggregate>(id);
+        }
+
+        public async Task<WyrmResult> CreateStreamAsync(string streamName)
+        {
+            var bundleItem = new CreateBundleItem
+            {
+                StreamName = streamName,
+            };
+            
+            _bundles.Add(bundleItem);
+            return WyrmResult.Empty();
+        }
+
+        public async Task<WyrmResult> DeleteStreamAsync(string streamName, long version = -1)
+        {
+            var bundleItem = new DeleteBundleItem
+            {
+                StreamName = streamName,
+                StreamVersion = version,
+            };
+            
+            _bundles.Add(bundleItem);
+            return WyrmResult.Empty();
+        }
+
+        public void Dispose()
+        {
+            _bundles.Clear();
+        }
+
+        public Task<WyrmResult> Commit(CommitPolicy policy = CommitPolicy.All)
+        {
+            return _wyrmDriver.Append(new Bundle
+            {
+                Encrypt = true, // bad place
+                Policy = policy,
+                Items = _bundles,
+            });
+        }
+    }
+
+    public class WyrmStore : IStore
+    {
+        private readonly IWyrmDriver _wyrmDriver;
+
+        public WyrmStore(IWyrmDriver wyrmDriver)
         {
             _wyrmDriver = wyrmDriver;
         }
 
+        public IWyrmDriver Driver => _wyrmDriver;
+
         public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
             long savePolicy = ExpectedVersion.Specified,
-            bool encrypt = true, CommitPolicy commitPolicy = CommitPolicy.All)
+            bool encrypt = true)
         {
             var version = savePolicy;
             var events = aggregate.TakeUncommittedEvents().ToList();
@@ -33,7 +164,7 @@ namespace ESPlus.Wyrm
             return await _wyrmDriver.Append(new Bundle
             {
                 Encrypt = encrypt,
-                Policy = commitPolicy,
+                Policy = CommitPolicy.All,
                 Items = new List<BundleItem>
                 {
                     new EventsBundleItem

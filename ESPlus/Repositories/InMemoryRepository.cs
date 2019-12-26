@@ -7,7 +7,6 @@ using System;
 using ESPlus.EventHandlers;
 using ESPlus.Exceptions;
 using ESPlus.Wyrm;
-using CommitPolicy = ESPlus.Interfaces.CommitPolicy;
 
 namespace ESPlus.Repositories
 {
@@ -197,8 +196,9 @@ namespace ESPlus.Repositories
 */
 
 
-        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, long savePolicy = ExpectedVersion.Specified,
-            bool encrypt = true, Wyrm.CommitPolicy commitPolicy = Wyrm.CommitPolicy.All)
+        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
+            long savePolicy = ExpectedVersion.Specified,
+            bool encrypt = true)
         {
             throw new NotImplementedException();
         }
