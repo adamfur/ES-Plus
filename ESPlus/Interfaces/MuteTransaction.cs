@@ -22,7 +22,8 @@ namespace ESPlus.Interfaces
         {
         }
 
-        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, long savePolicy = ExpectedVersion.Specified,
+        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
+            long expectedVersion = ExpectedVersion.Specified,
             bool encrypt = true)
         {
             throw new System.NotImplementedException();

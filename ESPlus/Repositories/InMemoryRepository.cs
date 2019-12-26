@@ -197,7 +197,7 @@ namespace ESPlus.Repositories
 
 
         public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
-            long savePolicy = ExpectedVersion.Specified,
+            long expectedVersion = ExpectedVersion.Specified,
             bool encrypt = true)
         {
             throw new NotImplementedException();

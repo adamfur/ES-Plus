@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Exceptions;
 using ESPlus.Interfaces;
+using ESPlus.Wyrm;
 using Xunit;
 
 namespace ESPlus.IntegrationTests.Repositories
@@ -10,18 +11,21 @@ namespace ESPlus.IntegrationTests.Repositories
     public abstract class RepositoryTests
     {
         protected IRepository Repository;
+        private readonly string _id;
 
         protected abstract IRepository Create();
 
         public RepositoryTests()
         {
             Repository = Create();
+            _id = Guid.NewGuid().ToString();
         }
 
         [Fact]
         public async Task SaveAsync_InsertNewStream_Save()
         {
-            var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
+
+            var aggregate = new DummyAggregate(_id);
 
             await Repository.SaveAsync(aggregate);
         }
@@ -29,7 +33,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task SaveAsync_AppendToExistingStream_Save()
         {
-            var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new DummyAggregate(_id);
 
             await Repository.SaveAsync(aggregate);
             aggregate.Poke();
@@ -39,12 +43,12 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task SaveAsync_AppendToExistingStream_Save22222222222222222222222()
         {
-            var aggregate = new DummyAggregate(Guid.NewGuid().ToString(), true);
+            var aggregate = new DummyAggregate(_id, true);
 
             using (var transaction = Repository.BeginTransaction())
             {
                 await transaction.CreateStreamAsync("hello-world");
-                await transaction.SaveAsync(aggregate);
+                await transaction.SaveAsync(aggregate, expectedVersion: ExpectedVersion.Any);
                 aggregate.Poke();
                 await transaction.SaveAsync(aggregate);
                 var result = await transaction.Commit();
@@ -54,7 +58,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task SaveAsync_ReadExistingAndSave_Save()
         {
-            var id = Guid.NewGuid().ToString();
+            var id = _id;
             var aggregate = new DummyAggregate(id);
 
             await Repository.SaveAsync(aggregate);
@@ -67,7 +71,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task SaveAsync_AppendToExistingStreamV2_Save()
         {
-            var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new DummyAggregate(_id);
 
             await Repository.SaveAsync(aggregate);
             aggregate.Poke();
@@ -79,7 +83,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task SaveAsync_SameStream_Throw()
         {
-            var id = Guid.NewGuid().ToString();
+            var id = _id;
             var aggregate1 = new DummyAggregate(id);
             var aggregate2 = new DummyAggregate(id);
 
@@ -90,7 +94,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task DeleteAsync_DeleteExistingStream_Pass()
         {
-            var id = Guid.NewGuid().ToString();
+            var id = _id;
             var aggregate = new DummyAggregate(id);
 
             await Repository.SaveAsync(aggregate);
@@ -108,7 +112,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task GetAsync_ReadOneEventFromExistingStream_Pass()
         {
-            var id = Guid.NewGuid().ToString();
+            var id = _id;
             var aggregate = new DummyAggregate(id);
 
             await Repository.SaveAsync(aggregate);
@@ -120,7 +124,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task GetAsync_ReadTwoEventsFromExistingStream_Pass()
         {
-            var id = Guid.NewGuid().ToString();
+            var id = _id;
             var aggregate = new DummyAggregate(id);
 
             aggregate.Poke();
@@ -133,7 +137,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task GetAsync_WithNoReplayAttribute_Pass()
         {
-            var id = Guid.NewGuid().ToString();
+            var id = _id;
             var aggregate = new DummyAggregate(id);
 
             aggregate.AttachFile();
@@ -147,7 +151,7 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task GetAsync_ContainsData_Same()
         {
             var data = Guid.NewGuid();
-            var id = Guid.NewGuid().ToString();
+            var id = _id;
             var aggregate = new DummyAggregate(id);
 
             aggregate.AddGuid(data);
@@ -160,7 +164,7 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task DeleteAsync_DeleteExistingStream_Gone()
         {
-            var id = Guid.NewGuid().ToString();
+            var id = _id;
             var aggregate = new DummyAggregate(id);
 
             aggregate.AttachFile();

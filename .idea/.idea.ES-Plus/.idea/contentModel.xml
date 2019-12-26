@@ -142,7 +142,9 @@
           <e p="WyrmItem.cs" t="Include" />
           <e p="WyrmRepository.cs" t="Include" />
           <e p="WyrmResult.cs" t="Include" />
+          <e p="WyrmStore.cs" t="Include" />
           <e p="WyrmSubscriptionClient.cs" t="Include" />
+          <e p="WyrmTransaction.cs" t="Include" />
         </e>
         <e p="bin" t="ExcludeRecursive" />
         <e p="obj" t="ExcludeRecursive">
