@@ -53,13 +53,11 @@ namespace ESPlus.Wyrm
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id)
             where TAggregate : IAggregate
         {
-            var events = _wyrmDriver.ReadStreamForward(id);
             var aggregate = ConstructAggregate<TAggregate>(id);
-            var applyAggregate = (IAggregate)aggregate;
 
-            foreach (var @event in events)
+            foreach (var @event in _wyrmDriver.ReadStreamForward(id))
             {
-                @event.Accept(applyAggregate);
+                @event.Accept(aggregate);
             }
             
             aggregate.TakeUncommittedEvents();

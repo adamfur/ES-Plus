@@ -45,10 +45,5 @@ namespace ESPlus.Wyrm
         {
             return new WyrmTransaction(_store, _driver);
         }
-        
-        private static TAggregate ConstructAggregate<TAggregate>(string id)
-        {
-            return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
-        }
     }
 }
