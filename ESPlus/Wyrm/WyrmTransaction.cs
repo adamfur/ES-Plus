@@ -28,7 +28,7 @@ namespace ESPlus.Wyrm
 
             if (expectedVersion == ExpectedVersion.Specified)
             {
-                version = aggregate.Version - events.Count;
+                version = aggregate.Version - events.Count + 1;
             }
 
             var bundleItem = new EventsBundleItem
