@@ -25,7 +25,7 @@ namespace ESPlus.Wyrm
 
             if (expectedVersion == ExpectedVersion.Specified)
             {
-                version = aggregate.Version;
+                version = aggregate.Version - events.Count;
             }
 
             return await _wyrmDriver.Append(new Bundle

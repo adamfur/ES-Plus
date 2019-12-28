@@ -48,8 +48,8 @@ namespace ESPlus.IntegrationTests.Repositories
             using (var transaction = Repository.BeginTransaction())
             {
                 await transaction.CreateStreamAsync("hello-world");
-                await transaction.SaveAsync(aggregate, expectedVersion: ExpectedVersion.Any);
-                aggregate.Poke();
+//                await transaction.SaveAsync(aggregate, expectedVersion: ExpectedVersion.Any);
+//                aggregate.Poke();
                 await transaction.SaveAsync(aggregate);
                 var result = await transaction.Commit();
             }
