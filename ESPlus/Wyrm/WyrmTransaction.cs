@@ -25,6 +25,11 @@ namespace ESPlus.Wyrm
         {
             var version = expectedVersion;
             var events = aggregate.TakeUncommittedEvents().ToList();
+            
+            if (!events.Any())
+            {
+                return WyrmResult.Empty();
+            }
 
             if (expectedVersion == ExpectedVersion.Specified)
             {
