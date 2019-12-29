@@ -20,17 +20,25 @@ namespace ESPlus.Wyrm
 
         public void Dispose()
         {
-            _bundles.Clear();
+            Clear();
         }
 
-        public Task<WyrmResult> Commit(CommitPolicy policy = CommitPolicy.All)
+        public async Task<WyrmResult> Commit(CommitPolicy policy = CommitPolicy.All)
         {
-            return _wyrmDriver.Append(new Bundle
+            var result = await _wyrmDriver.Append(new Bundle
             {
                 Encrypt = true, // bad place
                 Policy = policy,
                 Items = _bundles,
             });
+            
+            Clear();
+            return result;
+        }
+
+        private void Clear()
+        {
+            _bundles.Clear();
         }
 
         protected override async Task<WyrmResult> Apply(BundleItem item)
