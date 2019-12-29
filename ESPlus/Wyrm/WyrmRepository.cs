@@ -52,7 +52,7 @@ namespace ESPlus.Wyrm
 
         public IRepositoryTransaction BeginTransaction()
         {
-            return new WyrmTransaction(_store, _driver);
+            return new WyrmTransaction(_driver);
         }
         
         private static TAggregate ConstructAggregate<TAggregate>(string id)

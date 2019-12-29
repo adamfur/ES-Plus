@@ -33,36 +33,46 @@ namespace ESPlus.Wyrm
                 version = aggregate.Version - events.Count + 1;
             }
 
-            return await _wyrmDriver.Append(new Bundle
-            {
-                Encrypt = encrypt,
-                Policy = CommitPolicy.All,
-                Items = new List<BundleItem>
+            return await Apply(
+                new EventsBundleItem
                 {
-                    new EventsBundleItem
+                    StreamName = aggregate.Id,
+                    StreamVersion = version,
+                    Events = events.Select(x => new BundleEvent
                     {
-                        StreamName = aggregate.Id,
-                        StreamVersion = version,
-                        Events = events.Select(x => new BundleEvent
-                        {
-                            Body = _wyrmDriver.Serializer.Serialize(x),
-                            Metadata = _wyrmDriver.Serializer.Serialize(headers),
-                            EventId = Guid.NewGuid(),
-                            EventType = x.GetType().FullName,
-                        }).ToList()
-                    }
-                }
-            });
+                        Body = _wyrmDriver.Serializer.Serialize(x),
+                        Metadata = _wyrmDriver.Serializer.Serialize(headers),
+                        EventId = Guid.NewGuid(),
+                        EventType = x.GetType().FullName,
+                    }).ToList()
+                });
         }
 
         public Task<WyrmResult> CreateStreamAsync(string streamName)
         {
-            return _wyrmDriver.CreateStreamAsync(streamName);
+            return Apply(new CreateBundleItem
+            {
+                StreamName = streamName,
+            });
         }
 
         public Task<WyrmResult> DeleteStreamAsync(string streamName, long version = -1)
         {
-            return _wyrmDriver.DeleteStreamAsync(streamName, version);
+            return Apply(new DeleteBundleItem
+            {
+                StreamName = streamName,
+                StreamVersion = version,
+            });
+        }
+
+        protected virtual async Task<WyrmResult> Apply(BundleItem item)
+        {
+            return await _wyrmDriver.Append(new Bundle
+            {
+                Encrypt = true,
+                Items = new List<BundleItem> {item},
+                Policy = CommitPolicy.All,
+            });
         }
     }
 }

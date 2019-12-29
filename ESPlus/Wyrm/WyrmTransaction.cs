@@ -7,73 +7,15 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Wyrm
 {
-    public class WyrmTransaction : IRepositoryTransaction
+    public class WyrmTransaction : WyrmStore, IRepositoryTransaction
     {
-        private List<BundleItem> _bundles = new List<BundleItem>(); 
-        private readonly IStore _store;
+        private readonly List<BundleItem> _bundles = new List<BundleItem>(); 
         private readonly IWyrmDriver _wyrmDriver;
 
-        public WyrmTransaction(IStore store, IWyrmDriver wyrmDriver)
+        public WyrmTransaction(IWyrmDriver wyrmDriver)
+            : base(wyrmDriver)
         {
-            _store = store;
             _wyrmDriver = wyrmDriver;
-        }
-
-        public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
-            long expectedVersion = ExpectedVersion.Specified,
-            bool encrypt = true)
-        {
-            var version = expectedVersion;
-            var events = aggregate.TakeUncommittedEvents().ToList();
-            
-            if (!events.Any())
-            {
-                return WyrmResult.Empty();
-            }
-
-            if (expectedVersion == ExpectedVersion.Specified)
-            {
-                version = aggregate.Version - events.Count + 1;
-            }
-
-            var bundleItem = new EventsBundleItem
-            {
-                StreamName = aggregate.Id,
-                StreamVersion = version,
-                Events = events.Select(x => new BundleEvent
-                {
-                    Body = _wyrmDriver.Serializer.Serialize(x),
-                    Metadata = _wyrmDriver.Serializer.Serialize(headers),
-                    EventId = Guid.NewGuid(),
-                    EventType = x.GetType().FullName,
-                }).ToList()
-            };
-            
-            _bundles.Add(bundleItem);
-            return WyrmResult.Empty();
-        }
-
-        public async Task<WyrmResult> CreateStreamAsync(string streamName)
-        {
-            var bundleItem = new CreateBundleItem
-            {
-                StreamName = streamName,
-            };
-            
-            _bundles.Add(bundleItem);
-            return WyrmResult.Empty();
-        }
-
-        public async Task<WyrmResult> DeleteStreamAsync(string streamName, long version = -1)
-        {
-            var bundleItem = new DeleteBundleItem
-            {
-                StreamName = streamName,
-                StreamVersion = version,
-            };
-            
-            _bundles.Add(bundleItem);
-            return WyrmResult.Empty();
         }
 
         public void Dispose()
@@ -89,6 +31,12 @@ namespace ESPlus.Wyrm
                 Policy = policy,
                 Items = _bundles,
             });
+        }
+
+        protected override async Task<WyrmResult> Apply(BundleItem item)
+        {
+            _bundles.Add(item);
+            return WyrmResult.Empty();
         }
     }
 }
