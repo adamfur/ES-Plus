@@ -28,7 +28,16 @@ namespace ESPlus.Wyrm
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id)
             where TAggregate : IAggregate
         {
-            return await _store.GetByIdAsync<TAggregate>(id);
+            var aggregate = ConstructAggregate<TAggregate>(id);
+
+            foreach (var @event in _driver.ReadStreamForward(id))
+            {
+                @event.Accept(aggregate);
+            }
+            
+            aggregate.TakeUncommittedEvents();
+            
+            return aggregate;
         }
 
         public Task<WyrmResult> CreateStreamAsync(string streamName)
@@ -44,6 +53,11 @@ namespace ESPlus.Wyrm
         public IRepositoryTransaction BeginTransaction()
         {
             return new WyrmTransaction(_store, _driver);
+        }
+        
+        private static TAggregate ConstructAggregate<TAggregate>(string id)
+        {
+            return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
     }
 }

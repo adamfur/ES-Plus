@@ -55,21 +55,6 @@ namespace ESPlus.Wyrm
             });
         }
 
-        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id)
-            where TAggregate : IAggregate
-        {
-            var aggregate = ConstructAggregate<TAggregate>(id);
-
-            foreach (var @event in _wyrmDriver.ReadStreamForward(id))
-            {
-                @event.Accept(aggregate);
-            }
-            
-            aggregate.TakeUncommittedEvents();
-            
-            return aggregate;
-        }
-
         public Task<WyrmResult> CreateStreamAsync(string streamName)
         {
             return _wyrmDriver.CreateStreamAsync(streamName);
@@ -78,11 +63,6 @@ namespace ESPlus.Wyrm
         public Task<WyrmResult> DeleteStreamAsync(string streamName, long version = -1)
         {
             return _wyrmDriver.DeleteStreamAsync(streamName, version);
-        }
-        
-        private static TAggregate ConstructAggregate<TAggregate>(string id)
-        {
-            return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
     }
 }

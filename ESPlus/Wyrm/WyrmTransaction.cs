@@ -53,11 +53,6 @@ namespace ESPlus.Wyrm
             return WyrmResult.Empty();
         }
 
-        public Task<TAggregate> GetByIdAsync<TAggregate>(string id) where TAggregate : IAggregate
-        {
-            return _store.GetByIdAsync<TAggregate>(id);
-        }
-
         public async Task<WyrmResult> CreateStreamAsync(string streamName)
         {
             var bundleItem = new CreateBundleItem
