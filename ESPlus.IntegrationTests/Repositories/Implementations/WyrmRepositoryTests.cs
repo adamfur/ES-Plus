@@ -9,7 +9,10 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
     {
         protected override IRepository Create()
         {
-            var connection = new WyrmDriver("192.168.1.2:9999", new EventJsonSerializer(EventTypeResolver.Default()), "key");
+            var eventTypeResolver = EventTypeResolver.Default();
+
+            eventTypeResolver.RegisterType(typeof(FileAddedEvent));
+            var connection = new WyrmDriver("192.168.1.2:9999", new EventJsonSerializer(eventTypeResolver), "key");
 
             return new WyrmRepository(new WyrmStore(connection), connection);            
         }

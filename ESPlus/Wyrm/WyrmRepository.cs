@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
@@ -29,8 +30,14 @@ namespace ESPlus.Wyrm
             where TAggregate : IAggregate
         {
             var aggregate = ConstructAggregate<TAggregate>(id);
+            var readStreamForward = _driver.ReadStreamForward(id);
 
-            foreach (var @event in _driver.ReadStreamForward(id))
+            if (!readStreamForward.Any())
+            {
+                throw new AggregateNotFoundException(id, typeof(TAggregate));
+            }
+            
+            foreach (var @event in readStreamForward)
             {
                 @event.Accept(aggregate);
             }

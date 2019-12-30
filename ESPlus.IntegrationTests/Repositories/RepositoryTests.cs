@@ -61,7 +61,7 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task SaveAsync_ReadExistingAndSave_Save()
         {
             var id = _id;
-            var aggregate = new DummyAggregate(id);
+            var aggregate = new DummyAggregate(id, true);
 
             await Repository.SaveAsync(aggregate);
 
@@ -85,12 +85,12 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task SaveAsync_SameStream_Throw()
         {
-            var id = _id;
-            var aggregate1 = new DummyAggregate(id);
-            var aggregate2 = new DummyAggregate(id);
+            var aggregate1 = new DummyAggregate(_id, true);
+            var aggregate2 = new DummyAggregate(_id, true);
 
             await Repository.SaveAsync(aggregate1);
-            await Assert.ThrowsAsync<WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
+            //await Assert.ThrowsAsync<WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
+            await Assert.ThrowsAsync<WyrmException>(() => Repository.SaveAsync(aggregate2));
         }
 
         [Fact]
@@ -115,7 +115,7 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task GetAsync_ReadOneEventFromExistingStream_Pass()
         {
             var id = _id;
-            var aggregate = new DummyAggregate(id);
+            var aggregate = new DummyAggregate(id, true);
 
             await Repository.SaveAsync(aggregate);
             var copy = await Repository.GetByIdAsync<DummyAggregate>(id);
@@ -139,12 +139,11 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task GetAsync_WithNoReplayAttribute_Pass()
         {
-            var id = _id;
-            var aggregate = new DummyAggregate(id);
+            var aggregate = new DummyAggregate(_id, true);
 
             aggregate.AttachFile();
             await Repository.SaveAsync(aggregate);
-            var copy = await Repository.GetByIdAsync<DummyAggregate>(id);
+            var copy = await Repository.GetByIdAsync<DummyAggregate>(_id);
 
             Assert.Equal(aggregate.Version, copy.Version);
         }
@@ -166,13 +165,12 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task DeleteAsync_DeleteExistingStream_Gone()
         {
-            var id = _id;
-            var aggregate = new DummyAggregate(id);
+            var aggregate = new DummyAggregate(_id, true);
 
             aggregate.AttachFile();
             await Repository.SaveAsync(aggregate);
-            await Repository.DeleteStreamAsync(id, aggregate.Version);
-            await Assert.ThrowsAsync<AggregateNotFoundException>(async () => await Repository.GetByIdAsync<DummyAggregate>(id));
+            await Repository.DeleteStreamAsync(_id, aggregate.Version);
+            await Assert.ThrowsAsync<AggregateNotFoundException>(() => Repository.GetByIdAsync<DummyAggregate>(_id));
         }        
     }
 
