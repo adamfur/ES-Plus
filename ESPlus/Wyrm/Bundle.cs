@@ -57,7 +57,7 @@ namespace ESPlus.Wyrm
     {
         public override int Count()
         {
-            return 20 + StreamName.Length + Events.Sum(x => x.Count());
+            return 21 + StreamName.Length + Events.Sum(x => x.Count());
         }
 
         public override BundleType Type => BundleType.Events;
@@ -71,7 +71,7 @@ namespace ESPlus.Wyrm
     {
         public int Count()
         {
-            return 29 + EventType.Length + Metadata.Length + Body.Length;
+            return 28 + EventType.Length + Metadata.Length + Body.Length;
         }
 
         public Guid EventId { get; set; }
