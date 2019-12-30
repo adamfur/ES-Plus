@@ -358,7 +358,6 @@ namespace ESPlus.Tests
 
                 await _wyrmDriver.Append(new Bundle
                 {
-                    Encrypt = false,
                     Policy = CommitPolicy.All,
                     Items = new List<BundleItem>
                     {
@@ -366,6 +365,7 @@ namespace ESPlus.Tests
                         {
                             StreamName = id,
                             StreamVersion = 0,
+                            Encrypt = true,
                             Events = new List<BundleEvent>
                             {
                                 new BundleEvent
@@ -381,6 +381,7 @@ namespace ESPlus.Tests
                         {
                             StreamName = id,
                             StreamVersion = 1,
+                            Encrypt = false,
                             Events = new List<BundleEvent>
                             {
                                 new BundleEvent

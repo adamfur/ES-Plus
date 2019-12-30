@@ -24,9 +24,9 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task SaveAsync_InsertNewStream_Save()
         {
-
             var aggregate = new DummyAggregate(_id);
 
+            aggregate.Poke();
             await Repository.SaveAsync(aggregate);
         }
 

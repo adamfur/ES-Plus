@@ -21,7 +21,6 @@ namespace ESPlus.Wyrm
     {
         public CommitPolicy Policy { get; set; }
         public List<BundleItem> Items { get; set; } = new List<BundleItem>();
-        public bool Encrypt { get; set; } = true;
     }
 
     public abstract class BundleItem
@@ -65,13 +64,14 @@ namespace ESPlus.Wyrm
 
         public long StreamVersion { get; set; } = 0;
         public List<BundleEvent> Events { get; set; } = new List<BundleEvent>();
+        public bool Encrypt { get; set; } = true;
     }
 
     public class BundleEvent
     {
         public int Count()
         {
-            return 24 + EventType.Length + 4 + Metadata.Length + Body.Length;
+            return 29 + EventType.Length + Metadata.Length + Body.Length;
         }
 
         public Guid EventId { get; set; }

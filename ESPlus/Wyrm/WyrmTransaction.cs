@@ -27,7 +27,6 @@ namespace ESPlus.Wyrm
         {
             var result = await _wyrmDriver.Append(new Bundle
             {
-                Encrypt = true, // bad place
                 Policy = policy,
                 Items = _bundles,
             });

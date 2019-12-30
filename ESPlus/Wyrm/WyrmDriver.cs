@@ -209,10 +209,9 @@ namespace ESPlus.Wyrm
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                writer.Write((int) 13 + bundle.Items.Sum(x => x.Count()));
+                writer.Write((int) 12 + bundle.Items.Sum(x => x.Count()));
                 writer.Write((int) Commands.Put);
                 writer.Write((int) CommitPolicy.All);
-                writer.Write((bool) bundle.Encrypt);
 
                 foreach (var item in bundle.Items)
                 {
@@ -235,7 +234,8 @@ namespace ESPlus.Wyrm
                         writer.Write((long) eventsItem.StreamVersion);
                         writer.Write((int) eventsItem.StreamName.Length);
                         writer.Write(Encoding.UTF8.GetBytes(eventsItem.StreamName));
-                        writer.Write((int) eventsItem.Events.Count());
+                        writer.Write((bool) eventsItem.Encrypt);
+                        writer.Write((int) eventsItem.Events.Count);
 
                         foreach (var evt in eventsItem.Events)
                         {

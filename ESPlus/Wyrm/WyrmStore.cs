@@ -38,6 +38,7 @@ namespace ESPlus.Wyrm
                 {
                     StreamName = aggregate.Id,
                     StreamVersion = version,
+                    Encrypt = encrypt,
                     Events = events.Select(x => new BundleEvent
                     {
                         Body = _wyrmDriver.Serializer.Serialize(x),
@@ -69,7 +70,6 @@ namespace ESPlus.Wyrm
         {
             return await _wyrmDriver.Append(new Bundle
             {
-                Encrypt = true,
                 Items = new List<BundleItem> {item},
                 Policy = CommitPolicy.All,
             });
