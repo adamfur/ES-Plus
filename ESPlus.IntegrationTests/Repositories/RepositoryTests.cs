@@ -36,10 +36,10 @@ namespace ESPlus.IntegrationTests.Repositories
             var aggregate = new DummyAggregate(_id);
 
             aggregate.Poke();
-            await Repository.SaveAsync(aggregate);
-            aggregate.Poke();
-            aggregate.Poke();
-            await Repository.SaveAsync(aggregate);
+            await Repository.SaveAsync(aggregate, expectedVersion: ExpectedVersion.EmptyStream);
+//            aggregate.Poke();
+//            aggregate.Poke();
+//            await Repository.SaveAsync(aggregate);
         }
         
         [Fact]
@@ -92,6 +92,22 @@ namespace ESPlus.IntegrationTests.Repositories
             //await Assert.ThrowsAsync<WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
             await Assert.ThrowsAsync<WyrmException>(() => Repository.SaveAsync(aggregate2));
         }
+        
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async Task SaveAsync_SameStream_Throwx(int times)
+        {
+            var aggregate = new DummyAggregate(_id, true);
+
+            for (var i = 0; i < times; ++i)
+            {
+                aggregate.Poke();
+            }
+           
+            await Repository.SaveAsync(aggregate);
+        }
 
         [Fact]
         public async Task DeleteAsync_DeleteExistingStream_Pass()
@@ -103,13 +119,13 @@ namespace ESPlus.IntegrationTests.Repositories
             await Repository.DeleteStreamAsync(id, aggregate.Version);
         }
 
-        // // //////////////////////////////[Fact]
-        // // //////////////////////////////public async Task DeleteAsync_DeleteNonexistingStream_Pass()
-        // // //////////////////////////////{
-        // // //////////////////////////////    var id = Guid.NewGuid().ToString();
-        // // //////////////////////////////
-        // // //////////////////////////////    await Repository.DeleteAsync(id);
-        // // //////////////////////////////}
+        //[Fact]
+        //public async Task DeleteAsync_DeleteNonexistingStream_Pass()
+        //{
+        //    var id = Guid.NewGuid().ToString();
+        //
+        //    await Repository.DeleteAsync(id);
+        //}
 
         [Fact]
         public async Task GetAsync_ReadOneEventFromExistingStream_Pass()

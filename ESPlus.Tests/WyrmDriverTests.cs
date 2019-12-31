@@ -352,7 +352,7 @@ namespace ESPlus.Tests
         [Fact]
         public async Task Feed()
         {
-            for (var i = 0; i < 200||false; ++i)
+            for (var i = 0; i < 10||false; ++i)
             {
                 var id = Guid.NewGuid().ToString();
 
