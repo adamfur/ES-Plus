@@ -11,11 +11,10 @@ namespace ESPlus.Aggregates
     public abstract class AggregateBase : IAggregate
     {
         private readonly Type _initialType;
-        private readonly LinkedList<object> _uncommitedEvents = new LinkedList<object>();
+        private readonly LinkedList<object> _uncommittedEvents = new LinkedList<object>();
         private readonly ConventionEventRouter _router = new ConventionEventRouter();
         public long Version { get; set; } = -1;
-        public string Id { get; private set; }
-        public static Dictionary<string, Type> _types = new Dictionary<string, Type>();
+        public string Id { get; }
 
         protected AggregateBase(string id, Type initialType = null)
         {
@@ -26,15 +25,7 @@ namespace ESPlus.Aggregates
 
         protected virtual void Invoke(object @event)
         {
-            try
-            {
-                _router.Dispatch(@event);
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine($":: {@event.GetType().Name} {ex}");
-                throw;
-            }
+            _router.Dispatch(@event);
         }
 
         void IAggregate.ApplyChange(object @event)
@@ -51,7 +42,7 @@ namespace ESPlus.Aggregates
             }
 
             Invoke(@event);
-            _uncommitedEvents.AddLast(@event);
+            _uncommittedEvents.AddLast(@event);
             ++Version;
         }
 
@@ -62,9 +53,9 @@ namespace ESPlus.Aggregates
 
         public IEnumerable<object> TakeUncommittedEvents()
         {
-            var result = _uncommitedEvents.ToList();
+            var result = _uncommittedEvents.ToList();
 
-            _uncommitedEvents.Clear();
+            _uncommittedEvents.Clear();
             return result;
         }
 
@@ -73,6 +64,7 @@ namespace ESPlus.Aggregates
             var obj = item.Serializer.Deserialize(item.EventType, item.Data);
 
             ApplyChange(obj);
+            _uncommittedEvents.Clear();
         }
 
         public void Visit(WyrmAheadItem item)

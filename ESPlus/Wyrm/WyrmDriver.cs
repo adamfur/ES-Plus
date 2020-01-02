@@ -447,7 +447,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public IEnumerable<WyrmItem> EnumerateAllGroupByStream(params Type[] filters)
+        public IEnumerable<WyrmItem> ReadAllGroupByStream(params Type[] filters)
         {
             using (var client = Create())
             using (var stream = client.GetStream())

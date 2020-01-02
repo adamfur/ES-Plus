@@ -36,10 +36,10 @@ namespace ESPlus.IntegrationTests.Repositories
             var aggregate = new DummyAggregate(_id);
 
             aggregate.Poke();
-            await Repository.SaveAsync(aggregate, expectedVersion: ExpectedVersion.EmptyStream);
-//            aggregate.Poke();
-//            aggregate.Poke();
-//            await Repository.SaveAsync(aggregate);
+            await Repository.SaveAsync(aggregate);
+            aggregate.Poke();
+            aggregate.Poke();
+            await Repository.SaveAsync(aggregate);
         }
         
         [Fact]

@@ -17,7 +17,7 @@ namespace ESPlus.Wyrm
         IEnumerable<WyrmItem> SubscribeStream(string streamName);
         IEnumerable<WyrmItem> SubscribeAll(Position from);
         IEnumerable<string> EnumerateStreams(params Type[] filters);
-        IEnumerable<WyrmItem> EnumerateAllGroupByStream(params Type[] filters);
+        IEnumerable<WyrmItem> ReadAllGroupByStream(params Type[] filters);
         Position Checkpoint();
         TimeSpan Ping();
     }

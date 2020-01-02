@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -42,10 +44,39 @@ namespace ESPlus.Wyrm
             {
                 @event.Accept(aggregate);
             }
-            
-            aggregate.TakeUncommittedEvents();
-            
+   
             return aggregate;
+        }
+        
+        public IEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>()
+            where TAggregate : IAggregate
+        {
+            var aggregate = default(TAggregate);
+            var events = _driver.ReadAllGroupByStream();
+            
+            foreach (var @event in events)
+            {
+                if (@event is WyrmAheadItem)
+                {
+                    if (aggregate != null)
+                    {
+                        aggregate.TakeUncommittedEvents();
+
+                        yield return aggregate;
+
+                        aggregate = default;
+                    }
+                }
+                else if (@event is WyrmEventItem eventItem)
+                {
+                    if (aggregate == null)
+                    {
+                        aggregate = ConstructAggregate<TAggregate>(eventItem.StreamName);
+                    }
+                    
+                    @event.Accept(aggregate);
+                }
+            }
         }
 
         public Task<WyrmResult> CreateStreamAsync(string streamName)

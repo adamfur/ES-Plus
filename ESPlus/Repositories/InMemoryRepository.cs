@@ -208,6 +208,11 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 
+        public IEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>() where TAggregate : IAggregate
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<WyrmResult> CreateStreamAsync(string streamName)
         {
             throw new NotImplementedException();
