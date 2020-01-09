@@ -202,6 +202,61 @@ namespace ESPlus.Wyrm
                 }
             }
         }
+        
+        public IEnumerable<TAggregate> GetAllByAggregateType2<TAggregate>(params Type[] filters) where TAggregate : IAggregate
+        {
+            var shard = ulong.Parse(Environment.GetEnvironmentVariable("SHARD") ?? "0");
+            var shards = ulong.Parse(Environment.GetEnvironmentVariable("SHARDS") ?? "6");
+            var aggregate = default(TAggregate);
+            var stream = default(string);
+            var applyAggregate = default(IAggregate);
+
+            int count = 0, of = 0;
+
+            Index<TAggregate>();
+            foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(filters))
+            {
+                var hash = (ulong) evnt.StreamName.XXH64();
+
+                if ((hash % shards) != shard)
+                {
+                    continue;
+                }
+                
+                if (evnt.StreamName != stream)
+                {
+                    if (!ReferenceEquals(aggregate, default(TAggregate)))
+                    {
+                        aggregate.TakeUncommittedEvents();
+                        yield return aggregate;
+                    }
+
+                    stream = evnt.StreamName;
+                    aggregate = ConstructAggregate<TAggregate>(evnt.StreamName);
+                    applyAggregate = aggregate;
+                }
+
+                Type type;
+
+                lock (_lock)
+                {
+                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
+                }
+
+                if (type != null)
+                {
+                    applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
+                }
+
+                applyAggregate.Version = evnt.Version;
+
+                if (evnt.IsAhead)
+                {
+                    aggregate.TakeUncommittedEvents();
+                    yield return aggregate;
+                }
+            }
+        }
 
         private static TAggregate ConstructAggregate<TAggregate>(string id)
         {
