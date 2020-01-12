@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using MongoDB.Bson;
 
 namespace ESPlus
 {
@@ -30,12 +31,12 @@ namespace ESPlus
             return result.ToString();
         }
 
-        public static string MongoHash(this string data)
+        public static ObjectId MongoHash(this string data)
         {
-            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
             var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(data));
 
-            return hash.AsHexString() + "00000000"; // 24 bytes
+            return ObjectId.Parse(hash.AsHexString() + "00000000"); // 24 bytes
         }
 
         public static Int64 XXH64(this string data)

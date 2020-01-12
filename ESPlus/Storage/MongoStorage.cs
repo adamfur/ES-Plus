@@ -25,7 +25,7 @@ namespace ESPlus.Storage
         public void Delete(string path)
         {
 //            Console.WriteLine($"Mongo::Delete {path}");
-            var id = ObjectId.Parse(path.MongoHash());
+            var id = path.MongoHash();
 
             _deletes.Add(id);
             _upserts.Remove(id);
@@ -84,7 +84,7 @@ namespace ESPlus.Storage
         public T Get<T>(string path)
             where T : HasObjectId
         {
-            var id = ObjectId.Parse(path.MongoHash());
+            var id = path.MongoHash();
 
             if (_deletes.Contains(id))
             {
@@ -110,7 +110,7 @@ namespace ESPlus.Storage
 
         public void Put(string path, HasObjectId item)
         {
-            var id = ObjectId.Parse(path.MongoHash());
+            var id = path.MongoHash();
 
             item.ID = id;
             _upserts[id] = item;
