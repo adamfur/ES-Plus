@@ -552,7 +552,6 @@ namespace ESPlus.Tests
                                 EventId = Guid.NewGuid(),
                                 EventType = $"EventType: [{Guid.NewGuid()}]",
                                 Metadata = Encoding.UTF8.GetBytes($"Metadata: [{Guid.NewGuid()}]"),
-//                                Body = new byte[5*1024*1024],
                                 Body = Encoding.UTF8.GetBytes($"Body: [{Guid.NewGuid()}]"),
                             }
                         }

@@ -202,7 +202,7 @@ namespace ESPlus.Wyrm
         {
             var position = Position.Start;
             long offset = 0;
-
+            
             using (var client = Create())
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
@@ -230,12 +230,19 @@ namespace ESPlus.Wyrm
                     }
                     else if (item is EventsBundleItem eventsItem)
                     {
+                        var eventsCount = eventsItem.Events.Count;
+
+                        if (eventsCount == 0)
+                        {
+                            continue;
+                        }
+                        
                         writer.Write((int) BundleOp.Events);
                         writer.Write((long) eventsItem.StreamVersion);
                         writer.Write((int) eventsItem.StreamName.Length);
                         writer.Write(Encoding.UTF8.GetBytes(eventsItem.StreamName));
                         writer.Write((bool) eventsItem.Encrypt);
-                        writer.Write((int) eventsItem.Events.Count);
+                        writer.Write((int) eventsCount);
 
                         foreach (var evt in eventsItem.Events)
                         {

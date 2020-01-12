@@ -40,10 +40,10 @@ namespace ESPlus.Wyrm
             _bundles.Clear();
         }
 
-        protected override async Task<WyrmResult> Apply(BundleItem item)
+        protected override Task<WyrmResult> Apply(BundleItem item)
         {
             _bundles.Add(item);
-            return WyrmResult.Empty();
+            return Task.FromResult(WyrmResult.Empty());
         }
     }
 }
