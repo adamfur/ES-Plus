@@ -211,7 +211,7 @@ namespace ESPlus.Wyrm
                 Authenticate(writer);
                 writer.Write((int) 12 + bundle.Items.Sum(x => x.Count()));
                 writer.Write((int) Commands.Put);
-                writer.Write((int) CommitPolicy.All);
+                writer.Write((int) bundle.Policy);
 
                 foreach (var item in bundle.Items)
                 {
