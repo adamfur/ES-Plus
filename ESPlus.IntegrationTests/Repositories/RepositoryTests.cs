@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Exceptions;
 using ESPlus.Interfaces;
+using ESPlus.Misc;
 using ESPlus.Wyrm;
 using Xunit;
 
@@ -28,6 +29,23 @@ namespace ESPlus.IntegrationTests.Repositories
 
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
+        }
+        
+        [Fact]
+        public async Task GetAsync_xxxxxxxxxxxxxxx()
+        {
+            await Assert.ThrowsAsync<AggregateNotFoundException>(() => Repository.GetByIdAsync<DummyAggregate>(_id));
+        }
+
+        [Fact]
+        public void SubscribeAll()
+        {
+            var connection = new WyrmDriver("192.168.1.2:9999", new EventJsonSerializer(new EventTypeResolver()), "key");
+
+            foreach (var item in connection.SubscribeAll(Position.Start))
+            {
+                Console.WriteLine(item.GetHashCode());
+            }
         }
 
         [Fact]

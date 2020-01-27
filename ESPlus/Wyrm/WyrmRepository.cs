@@ -31,21 +31,28 @@ namespace ESPlus.Wyrm
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id)
             where TAggregate : IAggregate
         {
-            var events = _driver.ReadStreamForward(id);
+            try
+            {
+                var events = _driver.ReadStreamForward(id);
 
-            if (!events.Any())
+                if (!events.Any())
+                {
+                    throw new AggregateNotFoundException(id, typeof(TAggregate));
+                }
+
+                var aggregate = ConstructAggregate<TAggregate>(id);
+
+                foreach (var @event in events)
+                {
+                    @event.Accept(aggregate);
+                }
+                
+                return aggregate;
+            }
+            catch (WyrmException ex)
             {
                 throw new AggregateNotFoundException(id, typeof(TAggregate));
             }
-            
-            var aggregate = ConstructAggregate<TAggregate>(id);
-            
-            foreach (var @event in events)
-            {
-                @event.Accept(aggregate);
-            }
-   
-            return aggregate;
         }
         
         public IEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>()

@@ -323,7 +323,6 @@ namespace ESPlus.Wyrm
                     else if (query == Queries.Ahead)
                     {
                         yield return ParseAhead(tokenizer);
-                        yield break; //oldman
                     }
                     else if (query == Queries.Exception)
                     {
