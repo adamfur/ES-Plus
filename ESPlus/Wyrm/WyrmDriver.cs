@@ -205,11 +205,11 @@ namespace ESPlus.Wyrm
                     throw new Exception("if (len != 8)");
                 }
 
-                var status = reader.ReadInt32();
-                if (status != 0)
-                {
-                    throw new Exception($"if (status != 0): {status}");
-                }
+                // var status = reader.ReadInt32();
+                // if (status != 0)
+                // {
+                //     throw new Exception($"if (status != 0): {status}");
+                // }
                 await Task.FromResult(0);
             }
         }
