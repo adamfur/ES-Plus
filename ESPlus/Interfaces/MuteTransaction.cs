@@ -13,7 +13,7 @@ namespace ESPlus.Interfaces
 
         public IEnumerable<WyrmEvent> Events { get; }
         
-        public async Task<WyrmResult> Commit(CommitPolicy policy = CommitPolicy.All)
+        public async Task<WyrmResult> CommitAsync(CommitPolicy policy = CommitPolicy.All)
         {
             return WyrmResult.Empty();
         }

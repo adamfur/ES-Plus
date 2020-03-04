@@ -62,7 +62,7 @@ namespace ESPlus.Storage
             
             Checkpoint = journal.Checkpoint;
 
-            if (journal.Checkpoint.Equals(Position.Start))
+            if (journal.Checkpoint.Equals(Position.Begin))
             {
                 SubscriptionMode = SubscriptionMode.Replay;
             }

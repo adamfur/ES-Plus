@@ -23,7 +23,7 @@ namespace ESPlus.Wyrm
             Clear();
         }
 
-        public async Task<WyrmResult> Commit(CommitPolicy policy = CommitPolicy.All)
+        public async Task<WyrmResult> CommitAsync(CommitPolicy policy = CommitPolicy.All)
         {
             var result = await _wyrmDriver.Append(new Bundle
             {

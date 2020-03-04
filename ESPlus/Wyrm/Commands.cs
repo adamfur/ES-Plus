@@ -22,5 +22,16 @@ namespace ESPlus.Wyrm
         ReadAllForwardGroupByStream = 18,
         Checkpoint = 19,
         CreateFilter = 20,
+        
+        ReadFrom = 21,
+        ReadStream = 22,
+        RegexFilter = 23,
+        Subscribe = 24,
+        Take = 25,
+        Skip = 26,
+        Direction = 27,
+        GroupByStream = 28,
+        ExecuteQuery = 29,
+        CreateEventFilter = 30,
     }
 }

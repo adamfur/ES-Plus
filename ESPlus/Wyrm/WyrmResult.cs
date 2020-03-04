@@ -13,7 +13,7 @@ namespace ESPlus.Wyrm
 
         public static WyrmResult Empty()
         {
-            return new WyrmResult(Position.Start, 0);
+            return new WyrmResult(Position.Begin, 0);
         }
     }
 }
