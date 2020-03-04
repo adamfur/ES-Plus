@@ -13,6 +13,7 @@ namespace ESPlus.Wyrm
         public IWyrmReadPipeline Subscribe();
         public IWyrmReadPipeline GroupByStream();
         public IWyrmReadPipeline ReadDirection(Direction direction);
-        public IAsyncEnumerable<WyrmItem> QueryAsync();
+        public IAsyncEnumerable<WyrmItem> QueryEventsAsync();
+        public IAsyncEnumerable<string> QueryStreamNamesAsync();
     }
 }

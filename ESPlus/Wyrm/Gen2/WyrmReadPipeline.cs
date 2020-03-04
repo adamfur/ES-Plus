@@ -78,7 +78,7 @@ namespace ESPlus.Wyrm
             return this;
         }
 
-        public IAsyncEnumerable<WyrmItem> QueryAsync()
+        public IAsyncEnumerable<WyrmItem> QueryEventsAsync()
         {
             if (_streamName != null)
             {
@@ -86,6 +86,11 @@ namespace ESPlus.Wyrm
             }
             
             return _wyrmDriver.ReadQueryAsync(_position, _subscribe, _regex, _createEventFilter, _eventFilter, _take, _groupByStream, _direction, _skip);
+        }
+
+        public IAsyncEnumerable<string> QueryStreamNamesAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 }

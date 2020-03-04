@@ -11,16 +11,19 @@ namespace ESPlus.Wyrm
             var driver = default(IWyrmDriverExp);
 
             await foreach (var item in driver.ReadFrom(Position.Begin)
-                .CreateEventFilter(new List<Type> {typeof(Bar)})
-                .EventFilter(new List<Type> {typeof(Bar)})
-                .StreamNameFilter(".*")
-                .Skip(20)
-                .Take(20)
-                .ReadDirection(Direction.Backwards)
-                .Subscribe()
-                .GroupByStream()
-                .QueryAsync())
+                // .CreateEventFilter(new List<Type> {typeof(Bar)})
+                // .EventFilter(new List<Type> {typeof(Bar)})
+                // .StreamNameFilter(".*")
+                // .Skip(20)
+                // .Take(20)
+                // .ReadDirection(Direction.Backwards)
+                // .Subscribe()
+                // .GroupByStream()
+                .Skip(-999)
+                .QueryEventsAsync())
             {
+                // nothing
+                // item.Accept();
             }
         }
     }

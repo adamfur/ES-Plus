@@ -17,7 +17,6 @@ namespace ESPlus.Wyrm
         private readonly string _host;
         private readonly int _port;
         private readonly IxxHash _algorithm;
-        
         public IEventSerializer Serializer { get; }
 
         public WyrmDriverExp(string connectionString, IEventSerializer eventSerializer, string apiKey = null)
@@ -102,7 +101,6 @@ namespace ESPlus.Wyrm
             
             using (var client = await Create())
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
@@ -154,11 +152,12 @@ namespace ESPlus.Wyrm
                     }
                 }
 
+                writer.Flush();
                 await stream.FlushAsync();
 
                 while (true)
                 {
-                    var (query, tokenizer) = reader.Query();
+                    var (query, tokenizer) = await stream.QueryAsync();
 
                     if (query == Queries.Success)
                     {
@@ -200,7 +199,6 @@ namespace ESPlus.Wyrm
         {
             using (var client = await Create())
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
@@ -208,11 +206,12 @@ namespace ESPlus.Wyrm
                 writer.Write((int) Commands.ListStreams);
                 writer.Flush();
 
+                writer.Flush();
                 await stream.FlushAsync();
 
                 while (true)
                 {
-                    var (query, tokenizer) = reader.Query();
+                    var (query, tokenizer) = await stream.QueryAsync();
 
                     if (query == Queries.Success)
                     {
@@ -240,18 +239,18 @@ namespace ESPlus.Wyrm
 
             using (var client = await Create())
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
                 writer.Write((int) 8);
                 writer.Write((int) Commands.Checkpoint);
 
+                writer.Flush();
                 await stream.FlushAsync();
 
                 while (true)
                 {
-                    var (query, tokenizer) = reader.Query();
+                    var (query, tokenizer) = await stream.QueryAsync();
 
                     if (query == Queries.Success)
                     {
@@ -278,17 +277,17 @@ namespace ESPlus.Wyrm
             var watch = Stopwatch.StartNew();
             using (var client = await Create())
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write((int) 8);
                 writer.Write((int) Commands.Ping);
 
+                writer.Flush();
                 await stream.FlushAsync();
 
                 while (true)
                 {
-                    var (query, tokenizer) = reader.Query();
+                    var (query, tokenizer) = await stream.QueryAsync();
 
                     if (query == Queries.Pong)
                     {
@@ -312,7 +311,6 @@ namespace ESPlus.Wyrm
         {
             return ReadQueryAsync(writer =>
             {
-                Authenticate(writer);
                 writer.Write((int) 40);
                 writer.Write((int) Commands.ReadFrom);
                 writer.Write(position.Binary);
@@ -336,64 +334,26 @@ namespace ESPlus.Wyrm
         {
             using (var client = await Create())
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
                 action(writer);
-
-                if (subscribe)
-                {
-                    writer.Write((int) 8);
-                    writer.Write((int) Commands.Subscribe);
-                }
-
-                if (regex != null)
-                {
-                    writer.Write((int) 12 + regex.Length);
-                    writer.Write((int) Commands.RegexFilter);
-                    writer.Write((int) regex.Length);
-                    writer.Write(Encoding.UTF8.GetBytes(regex));
-                }
-
+                Subscribe(subscribe, writer);
+                FilterOnStreamName(regex, writer);
                 AddFilter(createEventFilter, writer, Commands.CreateEventFilter);
                 AddFilter(eventFilter, writer, Commands.EventFilter);
-                
-                if (take != -1)
-                {
-                    writer.Write((int) 12);
-                    writer.Write((int) Commands.Take);
-                    writer.Write((int) take);
-                }         
-                
-                if (skip != -1)
-                {
-                    writer.Write((int) 12);
-                    writer.Write((int) Commands.Skip);
-                    writer.Write((int) take);
-                }     
-                
-                if (direction != Direction.Forward)
-                {
-                    writer.Write((int) 12);
-                    writer.Write((int) Commands.Direction);
-                    writer.Write((int) direction);
-                }
+                Take(take, writer);         
+                Skip(skip, writer);     
+                SetDirection(direction, writer);
+                GroupByStream(groupByStream, writer);
+                ExecuteQuery(writer);
 
-                if (groupByStream)
-                {
-                    writer.Write((int) 8);
-                    writer.Write((int) Commands.GroupByStream);
-                }
-                
-                writer.Write((int) 8);
-                writer.Write((int) Commands.ExecuteQuery);
-
+                writer.Flush();
                 await stream.FlushAsync();
 
                 while (true)
                 {
-                    var (query, tokenizer) = reader.Query();
+                    var (query, tokenizer) = await stream.QueryAsync();
 
                     if (query == Queries.Success)
                     {
@@ -416,6 +376,71 @@ namespace ESPlus.Wyrm
                         throw new NotImplementedException();
                     }
                 }
+            }
+        }
+
+        private static void ExecuteQuery(BinaryWriter writer)
+        {
+            writer.Write((int) 8);
+            writer.Write((int) Commands.ExecuteQuery);
+        }
+
+        private static void GroupByStream(bool groupByStream, BinaryWriter writer)
+        {
+            if (groupByStream)
+            {
+                writer.Write((int) 8);
+                writer.Write((int) Commands.GroupByStream);
+            }
+        }
+
+        private static void SetDirection(Direction direction, BinaryWriter writer)
+        {
+            if (direction != Direction.Forward)
+            {
+                writer.Write((int) 12);
+                writer.Write((int) Commands.Direction);
+                writer.Write((int) direction);
+            }
+        }
+
+        private static void Skip(int skip, BinaryWriter writer)
+        {
+            if (skip != -1)
+            {
+                writer.Write((int) 12);
+                writer.Write((int) Commands.Skip);
+                writer.Write((int) skip);
+            }
+        }
+
+        private static void Subscribe(bool subscribe, BinaryWriter writer)
+        {
+            if (subscribe)
+            {
+                writer.Write((int) 8);
+                writer.Write((int) Commands.Subscribe);
+            }
+        }
+
+        private static void FilterOnStreamName(string regex, BinaryWriter writer)
+        {
+            if (regex != null)
+            {
+                writer.Write((int) 12 + regex.Length);
+                writer.Write((int) Commands.RegexFilter);
+                writer.Write((int) regex.Length);
+                writer.Write(Encoding.UTF8.GetBytes(regex));
+            }
+        }
+
+        private static void Take(int take, BinaryWriter writer)
+        {
+            if (take != -1)
+            {
+                writer.Write((int) 12);
+                writer.Write((int) Commands.Take);
+                writer.Write((int) take);
             }
         }
 
@@ -558,7 +583,6 @@ namespace ESPlus.Wyrm
         {
             using (var client = await Create())
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
@@ -568,7 +592,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var (query, tokenizer) = reader.Query();
+                    var (query, tokenizer) = await stream.QueryAsync();
 
                     if (query == Queries.Success)
                     {
