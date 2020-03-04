@@ -7,8 +7,6 @@ namespace ESPlus.Wyrm
     public class WyrmReadPipeline : IWyrmReadPipeline
     {
         private readonly WyrmDriverExp _wyrmDriver;
-        private readonly string _streamName;
-        private readonly Position _position;
         private bool _subscribe = false;
         private string _regex;
         private List<Type> _createEventFilter;
@@ -17,17 +15,12 @@ namespace ESPlus.Wyrm
         private bool _groupByStream = false;
         private Direction _direction = Direction.Forward;
         private int _skip = -1;
+        private IApply _apply;
 
-        public WyrmReadPipeline(WyrmDriverExp wyrmDriver, string streamName)
+        public WyrmReadPipeline(WyrmDriverExp wyrmDriver, IApply apply)
         {
             _wyrmDriver = wyrmDriver;
-            _streamName = streamName;
-        }
-
-        public WyrmReadPipeline(WyrmDriverExp wyrmDriver, Position position)
-        {
-            _wyrmDriver = wyrmDriver;
-            _position = position;
+            _apply = apply;
         }
 
         public IWyrmReadPipeline CreateEventFilter(IEnumerable<Type> types)
@@ -80,12 +73,7 @@ namespace ESPlus.Wyrm
 
         public IAsyncEnumerable<WyrmItem> QueryEventsAsync()
         {
-            if (_streamName != null)
-            {
-                return _wyrmDriver.ReadQueryAsync(_streamName, _subscribe, _regex, _createEventFilter, _eventFilter, _take, _groupByStream, _direction, _skip);
-            }
-            
-            return _wyrmDriver.ReadQueryAsync(_position, _subscribe, _regex, _createEventFilter, _eventFilter, _take, _groupByStream, _direction, _skip);
+            return _wyrmDriver.ReadQueryAsync(_apply, _subscribe, _regex, _createEventFilter, _eventFilter, _take, _groupByStream, _direction, _skip);
         }
 
         public IAsyncEnumerable<string> QueryStreamNamesAsync()

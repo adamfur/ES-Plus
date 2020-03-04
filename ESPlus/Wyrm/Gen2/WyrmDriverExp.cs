@@ -187,12 +187,12 @@ namespace ESPlus.Wyrm
 
         public IWyrmReadPipeline ReadFrom(Position position)
         {
-            return new WyrmReadPipeline(this, position);
+            return new WyrmReadPipeline(this, new ApplyPosition(position));
         }
 
         public IWyrmReadPipeline ReadStream(string streamName)
         {
-            return new WyrmReadPipeline(this, streamName);
+            return new WyrmReadPipeline(this, new ApplyStream(streamName));
         }
 
         public async IAsyncEnumerable<string> EnumerateStreams()
@@ -304,40 +304,15 @@ namespace ESPlus.Wyrm
                 }
             }
         }
-
-        protected internal IAsyncEnumerable<WyrmItem> ReadQueryAsync(Position position, bool subscribe, string regex,
-            List<Type> createEventFilter, List<Type> eventFilter, int take, bool groupByStream, Direction direction,
-            int skip)
-        {
-            return ReadQueryAsync(writer =>
-            {
-                writer.Write((int) 40);
-                writer.Write((int) Commands.ReadFrom);
-                writer.Write(position.Binary);
-            }, subscribe, regex, createEventFilter, eventFilter, take, groupByStream, direction, skip);            
-        }
-
-        protected internal IAsyncEnumerable<WyrmItem> ReadQueryAsync(string streamName, bool subscribe, string regex,
-            List<Type> createEventFilter, List<Type> eventFilter, int take, bool groupByStream, Direction direction,
-            int skip)
-        {
-            return ReadQueryAsync(writer =>
-            {
-                writer.Write((int) 12 + streamName.Length);
-                writer.Write((int) Commands.ReadStream);
-                writer.Write((int) streamName.Length);
-                writer.Write(Encoding.UTF8.GetBytes(streamName));
-            }, subscribe, regex, createEventFilter, eventFilter, take, groupByStream, direction, skip);
-        }
         
-        private async IAsyncEnumerable<WyrmItem> ReadQueryAsync(Action<BinaryWriter> action, bool subscribe, string regex, List<Type> createEventFilter, List<Type> eventFilter, int take, bool groupByStream, Direction direction, int skip)
+        protected internal async IAsyncEnumerable<WyrmItem> ReadQueryAsync(IApply apply, bool subscribe, string regex, List<Type> createEventFilter, List<Type> eventFilter, int take, bool groupByStream, Direction direction, int skip)
         {
             using (var client = await Create())
             using (var stream = client.GetStream())
             using (var writer = new BinaryWriter(stream))
             {
                 Authenticate(writer);
-                action(writer);
+                apply.Apply(writer);
                 Subscribe(subscribe, writer);
                 FilterOnStreamName(regex, writer);
                 AddFilter(createEventFilter, writer, Commands.CreateEventFilter);
