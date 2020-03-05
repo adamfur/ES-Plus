@@ -34,29 +34,32 @@ namespace ESPlus.Wyrm
             where TAggregate : IAggregate
         {
             var any = false;
-            
+
             try
             {
-                var events = _driver.ReadStream(id).QueryEventsAsync();
                 var aggregate = ConstructAggregate<TAggregate>(id);
 
-                await foreach (var @event in events)
+                await foreach (var @event in _driver.ReadStream(id).EventFilter(aggregate.Types()).QueryEventsAsync())
                 {
                     any = true;
                     @event.Accept(aggregate);
                 }
-                
+
+                if (!any)
+                {
+                    throw new AggregateNotFoundException(id, typeof(TAggregate));
+                }
+
                 return aggregate;
+            }
+            catch (AggregateNotFoundException)
+            {
+                throw;
             }
             catch (WyrmException ex)
             {
                 throw new AggregateNotFoundException(id, typeof(TAggregate));
             }
-            
-            if (!any)
-            {
-                throw new AggregateNotFoundException(id, typeof(TAggregate));
-            }            
         }
         
         public async IAsyncEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>()

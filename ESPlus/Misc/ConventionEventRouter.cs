@@ -60,12 +60,9 @@ namespace ESPlus.Aggregates
             }
         }
 
-        public IEnumerable<long> Filter()
+        public IEnumerable<Type> Filter()
         {
-            var algorithm = System.Data.HashFunction.xxHash.xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
-
-            return _handle.Select(x => BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(x)).Hash, 0))
-                .OrderBy(x => x);
+            return _handlers.Keys;
         }
 
         public bool CanHandle(string type)
