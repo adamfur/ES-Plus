@@ -208,7 +208,7 @@ namespace ESPlus.Repositories
             throw new NotImplementedException();
         }
 
-        public IEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>() where TAggregate : IAggregate
+        public IAsyncEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>() where TAggregate : IAggregate
         {
             throw new NotImplementedException();
         }

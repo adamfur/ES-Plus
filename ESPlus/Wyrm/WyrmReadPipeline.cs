@@ -6,7 +6,7 @@ namespace ESPlus.Wyrm
 {
     public class WyrmReadPipeline : IWyrmReadPipeline
     {
-        private readonly WyrmDriverExp _wyrmDriver;
+        private readonly WyrmDriver _wyrmDriver;
         private bool _subscribe = false;
         private string _regex;
         private List<Type> _createEventFilter;
@@ -17,7 +17,7 @@ namespace ESPlus.Wyrm
         private int _skip = -1;
         private IApply _apply;
 
-        public WyrmReadPipeline(WyrmDriverExp wyrmDriver, IApply apply)
+        public WyrmReadPipeline(WyrmDriver wyrmDriver, IApply apply)
         {
             _wyrmDriver = wyrmDriver;
             _apply = apply;

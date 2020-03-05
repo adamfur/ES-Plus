@@ -10,10 +10,12 @@ namespace ESPlus.Wyrm
     public class WyrmStore : IStore
     {
         private readonly IWyrmDriver _wyrmDriver;
+        private readonly IEventSerializer _eventSerializer;
 
-        public WyrmStore(IWyrmDriver wyrmDriver)
+        public WyrmStore(IWyrmDriver wyrmDriver, IEventSerializer eventSerializer)
         {
             _wyrmDriver = wyrmDriver;
+            _eventSerializer = eventSerializer;
         }
 
         public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
@@ -41,8 +43,8 @@ namespace ESPlus.Wyrm
                     Encrypt = encrypt,
                     Events = events.Select(x => new BundleEvent
                     {
-                        Body = _wyrmDriver.Serializer.Serialize(x),
-                        Metadata = _wyrmDriver.Serializer.Serialize(headers),
+                        Body = _eventSerializer.Serialize(x),
+                        Metadata = _eventSerializer.Serialize(headers),
                         EventId = Guid.NewGuid(),
                         EventType = x.GetType().FullName,
                     }).ToList()
@@ -68,7 +70,7 @@ namespace ESPlus.Wyrm
 
         protected virtual async Task<WyrmResult> Apply(BundleItem item)
         {
-            return await _wyrmDriver.Append(new Bundle
+            return await _wyrmDriver.AppendAsync(new Bundle
             {
                 Items = new List<BundleItem> {item},
                 Policy = CommitPolicy.All,

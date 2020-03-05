@@ -12,8 +12,8 @@ namespace ESPlus.Wyrm
         private readonly List<BundleItem> _bundles = new List<BundleItem>(); 
         private readonly IWyrmDriver _wyrmDriver;
 
-        public WyrmTransaction(IWyrmDriver wyrmDriver)
-            : base(wyrmDriver)
+        public WyrmTransaction(IWyrmDriver wyrmDriver, IEventSerializer eventSerializer)
+            : base(wyrmDriver, eventSerializer)
         {
             _wyrmDriver = wyrmDriver;
         }
@@ -25,7 +25,7 @@ namespace ESPlus.Wyrm
 
         public async Task<WyrmResult> CommitAsync(CommitPolicy policy = CommitPolicy.All)
         {
-            var result = await _wyrmDriver.Append(new Bundle
+            var result = await _wyrmDriver.AppendAsync(new Bundle
             {
                 Policy = policy,
                 Items = _bundles,

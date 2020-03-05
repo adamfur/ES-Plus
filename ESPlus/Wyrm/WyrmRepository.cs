@@ -14,11 +14,13 @@ namespace ESPlus.Wyrm
     {
         private readonly IStore _store;
         private readonly IWyrmDriver _driver;
+        private readonly IEventSerializer _eventSerializer;
 
-        public WyrmRepository(IStore store, IWyrmDriver driver)
+        public WyrmRepository(IStore store, IWyrmDriver driver, IEventSerializer eventSerializer)
         {
             _store = store;
             _driver = driver;
+            _eventSerializer = eventSerializer;
         }
 
         public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
@@ -31,19 +33,16 @@ namespace ESPlus.Wyrm
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id)
             where TAggregate : IAggregate
         {
+            var any = false;
+            
             try
             {
-                var events = _driver.ReadStreamForward(id);
-
-                if (!events.Any())
-                {
-                    throw new AggregateNotFoundException(id, typeof(TAggregate));
-                }
-
+                var events = _driver.ReadStream(id).QueryEventsAsync();
                 var aggregate = ConstructAggregate<TAggregate>(id);
 
-                foreach (var @event in events)
+                await foreach (var @event in events)
                 {
+                    any = true;
                     @event.Accept(aggregate);
                 }
                 
@@ -53,15 +52,19 @@ namespace ESPlus.Wyrm
             {
                 throw new AggregateNotFoundException(id, typeof(TAggregate));
             }
+            
+            if (!any)
+            {
+                throw new AggregateNotFoundException(id, typeof(TAggregate));
+            }            
         }
         
-        public IEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>()
+        public async IAsyncEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>()
             where TAggregate : IAggregate
         {
             var aggregate = default(TAggregate);
-            var events = _driver.ReadAllGroupByStream();
             
-            foreach (var @event in events)
+            await foreach (var @event in _driver.ReadFrom(Position.Begin).GroupByStream().QueryEventsAsync())
             {
                 if (@event is WyrmAheadItem)
                 {
@@ -98,7 +101,7 @@ namespace ESPlus.Wyrm
 
         public IRepositoryTransaction BeginTransaction()
         {
-            return new WyrmTransaction(_driver);
+            return new WyrmTransaction(_driver, _eventSerializer);
         }
         
         private static TAggregate ConstructAggregate<TAggregate>(string id)
