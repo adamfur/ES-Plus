@@ -346,6 +346,10 @@ namespace ESPlus.Wyrm
                     {
                         ParseException(tokenizer);
                     }
+                    else if (query == Queries.Ahead)
+                    {
+                        yield return ParseAhead(tokenizer);
+                    }
                     else
                     {
                         throw new NotImplementedException();
