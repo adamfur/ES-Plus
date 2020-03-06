@@ -28,6 +28,30 @@ namespace ESPlus.Wyrm
             return _wyrmDriver.ReadQueryAsync(_apply, _subscribe, _regex, _createEventFilter, _eventFilter, _take, _groupByStream, _direction, _skip);
         }
 
+        ISimpleReadPipeline IWyrmReadPipelineBase<ISimpleReadPipeline>.EventFilter(IEnumerable<Type> types)
+        {
+            _eventFilter = types.ToList();
+            return this;
+        }
+
+        ISimpleReadPipeline IWyrmReadPipelineBase<ISimpleReadPipeline>.EventFilter(params Type[] types)
+        {
+            _eventFilter = types.ToList();
+            return this;
+        }
+
+        IWyrmGroupedReadPipeline IWyrmReadPipelineBase<IWyrmGroupedReadPipeline>.EventFilter(IEnumerable<Type> types)
+        {
+            _eventFilter = types.ToList();
+            return this;
+        }
+
+        IWyrmGroupedReadPipeline IWyrmReadPipelineBase<IWyrmGroupedReadPipeline>.EventFilter(params Type[] types)
+        {
+            _eventFilter = types.ToList();
+            return this;
+        }
+
         public IWyrmGroupedReadPipeline CreateEventFilter(IEnumerable<Type> types)
         {
             _createEventFilter = types.ToList(); 
@@ -43,30 +67,6 @@ namespace ESPlus.Wyrm
         public IWyrmGroupedReadPipeline StreamNameFilter(string regex)
         {
             _regex = regex;
-            return this;
-        }
-
-        IWyrmGroupedReadPipeline IWyrmGroupedReadPipeline.EventFilter(IEnumerable<Type> types)
-        {
-            _eventFilter = types.ToList();
-            return this;
-        }
-
-        IWyrmGroupedReadPipeline IWyrmGroupedReadPipeline.EventFilter(params Type[] types)
-        {
-            _eventFilter = types.ToList();
-            return this;
-        }
-
-        public ISimpleReadPipeline EventFilter(IEnumerable<Type> types)
-        {
-            _eventFilter = types.ToList();
-            return this;
-        }
-
-        public ISimpleReadPipeline EventFilter(params Type[] types)
-        {
-            _eventFilter = types.ToList();
             return this;
         }
 
