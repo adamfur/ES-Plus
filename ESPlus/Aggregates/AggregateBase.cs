@@ -79,14 +79,5 @@ namespace ESPlus.Aggregates
         public void Visit(WyrmDeleteItem item)
         {
         }
-
-        public IEnumerable<Type> ApplyTypes()
-        {
-            return GetType()
-                .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
-                .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
-                .Select(x => x.GetParameters().Single().ParameterType);
-        }
     }
 }

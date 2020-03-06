@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Exceptions;
 using ESPlus.Interfaces;
+using MongoDB.Driver;
 
 namespace ESPlus.Wyrm
 {
@@ -39,7 +40,7 @@ namespace ESPlus.Wyrm
             {
                 var aggregate = ConstructAggregate<TAggregate>(id);
 
-                await foreach (var @event in _driver.ReadStream(id).EventFilter(aggregate.ApplyTypes()).QueryAsync())
+                await foreach (var @event in _driver.ReadStream(id).EventFilter(TypeResolver.Resolve(typeof(TAggregate))).QueryAsync())
                 {
                     any = true;
                     @event.Accept(aggregate);
@@ -70,7 +71,7 @@ namespace ESPlus.Wyrm
             
             await foreach (var @event in _driver.ReadGroupByStream()
                 .CreateEventFilter(origin.InitialType)
-                .EventFilter(origin.ApplyTypes())
+                .EventFilter(TypeResolver.Resolve(typeof(TAggregate)))
                 .QueryAsync())
             {
                 if (@event is WyrmAheadItem)

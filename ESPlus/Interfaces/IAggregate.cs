@@ -12,7 +12,6 @@ namespace ESPlus.Interfaces
         Type InitialType { get; }
         void ApplyChange(object @event);
         IEnumerable<object> TakeUncommittedEvents();
-        IEnumerable<Type> ApplyTypes();
     }
 
     // public interface ICopyable<T>
