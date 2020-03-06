@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ESPlus.Wyrm
 {
-    public class WyrmReadPipeline : IWyrmReadPipeline
+    public class WyrmStartPipeline : IWyrmGroupedReadPipeline, IWyrmStartPipeline, ISimpleReadPipeline
     {
         private readonly WyrmDriver _wyrmDriver;
         private bool _subscribe = false;
@@ -17,70 +17,10 @@ namespace ESPlus.Wyrm
         private int _skip = -1;
         private IApply _apply;
 
-        public WyrmReadPipeline(WyrmDriver wyrmDriver, IApply apply)
+        public WyrmStartPipeline(WyrmDriver wyrmDriver, IApply apply)
         {
             _wyrmDriver = wyrmDriver;
             _apply = apply;
-        }
-
-        public IWyrmReadPipeline CreateEventFilter(IEnumerable<Type> types)
-        {
-            _createEventFilter = types.ToList(); 
-            return this;
-        }
-
-        public IWyrmReadPipeline CreateEventFilter(params Type[] types)
-        {
-            _createEventFilter = types.ToList(); 
-            return this;
-        }
-
-        public IWyrmReadPipeline StreamNameFilter(string regex)
-        {
-            _regex = regex;
-            return this;
-        }
-
-        public IWyrmReadPipeline EventFilter(IEnumerable<Type> types)
-        {
-            _eventFilter = types.ToList();
-            return this;
-        }
-
-        public IWyrmReadPipeline EventFilter(params Type[] types)
-        {
-            _eventFilter = types.ToList();
-            return this;
-        }
-
-        public IWyrmReadPipeline Take(int count)
-        {
-            _take = count;
-            return this;
-        }
-
-        public IWyrmReadPipeline Skip(int count)
-        {
-            _skip = count;
-            return this;
-        }
-
-        public IWyrmReadPipeline Subscribe()
-        {
-            _subscribe = true;
-            return this;
-        }
-
-        public IWyrmReadPipeline GroupByStream()
-        {
-            _groupByStream = true;
-            return this;
-        }
-
-        public IWyrmReadPipeline ReadDirection(Direction direction)
-        {
-            _direction = direction;
-            return this;
         }
 
         public IAsyncEnumerable<WyrmItem> QueryEventsAsync()
@@ -88,9 +28,64 @@ namespace ESPlus.Wyrm
             return _wyrmDriver.ReadQueryAsync(_apply, _subscribe, _regex, _createEventFilter, _eventFilter, _take, _groupByStream, _direction, _skip);
         }
 
-        public IAsyncEnumerable<string> QueryStreamNamesAsync()
+        public IWyrmGroupedReadPipeline CreateEventFilter(IEnumerable<Type> types)
         {
-            throw new NotImplementedException();
+            _createEventFilter = types.ToList(); 
+            return this;
+        }
+
+        public IWyrmGroupedReadPipeline CreateEventFilter(params Type[] types)
+        {
+            _createEventFilter = types.ToList(); 
+            return this;
+        }
+
+        public IWyrmGroupedReadPipeline StreamNameFilter(string regex)
+        {
+            _regex = regex;
+            return this;
+        }
+
+        public ISimpleReadPipeline EventFilter(IEnumerable<Type> types)
+        {
+            _eventFilter = types.ToList();
+            return this;
+        }
+
+        public ISimpleReadPipeline EventFilter(params Type[] types)
+        {
+            _eventFilter = types.ToList();
+            return this;
+        }
+
+        public ISimpleReadPipeline Take(int count)
+        {
+            _take = count;
+            return this;
+        }
+
+        public ISimpleReadPipeline Skip(int count)
+        {
+            _skip = count;
+            return this;
+        }
+
+        public ISimpleReadPipeline Subscribe()
+        {
+            _subscribe = true;
+            return this;
+        }
+
+        public ISimpleReadPipeline ReadDirection(Direction direction)
+        {
+            _direction = direction;
+            return this;
+        }
+
+        public IWyrmGroupedReadPipeline GroupByStream()
+        {
+            _groupByStream = true;
+            return this;
         }
     }
 }
