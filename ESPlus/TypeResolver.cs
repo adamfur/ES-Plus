@@ -8,7 +8,7 @@ namespace ESPlus
 {
     public static class TypeResolver
     {
-        public static Dictionary<Type, List<Type>> _types = new Dictionary<Type, List<Type>>();
+        private static readonly Dictionary<Type, List<Type>> Types = new Dictionary<Type, List<Type>>();
 
         static TypeResolver()
         {
@@ -16,7 +16,7 @@ namespace ESPlus
                 .SelectMany(x => x.GetTypes())
                 .Where(x => typeof(IAggregate).IsAssignableFrom(x))
                 .ToList()
-                .ForEach(type => _types[type] = ResolveFor(type));
+                .ForEach(type => Types[type] = ResolveFor(type));
         }
         
         private static List<Type> ResolveFor(Type type)
@@ -31,7 +31,7 @@ namespace ESPlus
 
         public static IEnumerable<Type> Resolve(Type type)
         {
-            return _types[type];
+            return Types[type];
         }
     }
 }

@@ -5,7 +5,7 @@ using ESPlus.Misc;
 
 namespace ESPlus.Aggregates
 {
-    public class ProcessManager : AggregateBase
+    public class ProcessManager : AggregateBase<Object>
     {
 //        private bool _dead = false;
         private ISet<string> _processed = new HashSet<string>();

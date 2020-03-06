@@ -24,7 +24,7 @@ namespace ESPlus.Wyrm
             _eventSerializer = eventSerializer;
         }
 
-        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
+        public Task<WyrmResult> SaveAsync(IAggregate aggregate, object headers = null,
             long expectedVersion = ExpectedVersion.Specified,
             bool encrypt = true)
         {
@@ -62,6 +62,19 @@ namespace ESPlus.Wyrm
                 throw new AggregateNotFoundException(id, typeof(TAggregate));
             }
         }
+
+        private Type InheritedType<TAggregate>()
+            where TAggregate : IAggregate
+        {
+            var type = typeof(TAggregate);
+            var interfaceType = type
+                .GetInterfaces()
+                .First(x => x.GetGenericTypeDefinition() == typeof(AggregateBase<>));
+            var genericArguments = interfaceType.GetGenericArguments();
+            var firstGenericArgument = genericArguments.First();
+
+            return firstGenericArgument;
+        }
         
         public async IAsyncEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>()
             where TAggregate : IAggregate
@@ -70,7 +83,7 @@ namespace ESPlus.Wyrm
             var aggregate = default(TAggregate);
             
             await foreach (var @event in _driver.ReadGroupByStream()
-                .CreateEventFilter(origin.InitialType)
+                .CreateEventFilter(InheritedType<TAggregate>())
                 .EventFilter(TypeResolver.Resolve(typeof(TAggregate)))
                 .QueryAsync())
             {

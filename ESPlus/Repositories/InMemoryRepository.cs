@@ -196,7 +196,7 @@ namespace ESPlus.Repositories
 */
 
 
-        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
+        public Task<WyrmResult> SaveAsync(IAggregate aggregate, object headers = null,
             long expectedVersion = ExpectedVersion.Specified,
             bool encrypt = true)
         {

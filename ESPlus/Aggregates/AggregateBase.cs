@@ -8,17 +8,15 @@ using ESPlus.Wyrm;
 
 namespace ESPlus.Aggregates
 {
-    public abstract class AggregateBase : IAggregate
+    public abstract class AggregateBase<TCreateEvent> : IAggregate
     {
-        public Type InitialType { get; }
         private readonly LinkedList<object> _uncommittedEvents = new LinkedList<object>();
         private readonly ConventionEventRouter _router = new ConventionEventRouter();
         public long Version { get; set; } = -1;
         public string Id { get; }
 
-        protected AggregateBase(string id, Type initialType = null)
+        protected AggregateBase(string id)
         {
-            InitialType = initialType;
             Id = id;
             _router.Register(this);
         }
@@ -32,9 +30,9 @@ namespace ESPlus.Aggregates
         {
             if (Version == -1)
             {
-                if (InitialType != null)
+                if (typeof(TCreateEvent) != typeof(Object))
                 {
-                    if (@event.GetType() != InitialType)
+                    if (@event.GetType() != typeof(TCreateEvent))
                     {
                         throw new Exception("Invalid Aggregate");
                     }
