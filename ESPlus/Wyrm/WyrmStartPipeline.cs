@@ -23,7 +23,7 @@ namespace ESPlus.Wyrm
             _apply = apply;
         }
 
-        public IAsyncEnumerable<WyrmItem> QueryEventsAsync()
+        public IAsyncEnumerable<WyrmItem> QueryAsync()
         {
             return _wyrmDriver.ReadQueryAsync(_apply, _subscribe, _regex, _createEventFilter, _eventFilter, _take, _groupByStream, _direction, _skip);
         }

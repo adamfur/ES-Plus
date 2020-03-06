@@ -5,7 +5,7 @@ namespace ESPlus.Wyrm
 {
     public interface IWyrmReadPipelineBase
     {
-        public IAsyncEnumerable<WyrmItem> QueryEventsAsync();
+        public IAsyncEnumerable<WyrmItem> QueryAsync();
     }
     
     public interface ISimpleReadPipeline : IWyrmReadPipelineBase
@@ -18,7 +18,7 @@ namespace ESPlus.Wyrm
         public ISimpleReadPipeline ReadDirection(Direction direction);
     }
 
-    public interface IWyrmStartPipeline : IWyrmReadPipelineBase, ISimpleReadPipeline
+    public interface IWyrmStartPipeline : ISimpleReadPipeline
     {
         public IWyrmGroupedReadPipeline GroupByStream();
     }

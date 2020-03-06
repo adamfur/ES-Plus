@@ -39,7 +39,7 @@ namespace ESPlus.Wyrm
             {
                 var aggregate = ConstructAggregate<TAggregate>(id);
 
-                await foreach (var @event in _driver.ReadStream(id).EventFilter(aggregate.Types()).QueryEventsAsync())
+                await foreach (var @event in _driver.ReadStream(id).EventFilter(aggregate.Types()).QueryAsync())
                 {
                     any = true;
                     @event.Accept(aggregate);
@@ -67,7 +67,7 @@ namespace ESPlus.Wyrm
         {
             var aggregate = default(TAggregate);
             
-            await foreach (var @event in _driver.ReadFrom(Position.Begin).GroupByStream().QueryEventsAsync())
+            await foreach (var @event in _driver.ReadFrom(Position.Begin).GroupByStream().QueryAsync())
             {
                 if (@event is WyrmAheadItem)
                 {

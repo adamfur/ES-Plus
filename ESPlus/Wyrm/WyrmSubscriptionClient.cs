@@ -21,7 +21,7 @@ namespace ESPlus.Wyrm
 
         public async IAsyncEnumerator<Event> GetEnumerator()
         {
-            await foreach (var @event in _wyrmConnection.ReadFrom(_subscriptionContext.Position).Subscribe().QueryEventsAsync())
+            await foreach (var @event in _wyrmConnection.ReadFrom(_subscriptionContext.Position).Subscribe().QueryAsync())
             {
                 if (@event is WyrmEventItem evt)
                 {
