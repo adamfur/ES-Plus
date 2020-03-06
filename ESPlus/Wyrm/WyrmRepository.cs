@@ -79,7 +79,6 @@ namespace ESPlus.Wyrm
         public async IAsyncEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>()
             where TAggregate : IAggregate
         {
-            var origin = ConstructAggregate<TAggregate>("dummy");
             var aggregate = default(TAggregate);
             
             await foreach (var @event in _driver.ReadGroupByStream()

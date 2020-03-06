@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
+using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 
 namespace ESPlus.Misc
@@ -21,13 +22,15 @@ namespace ESPlus.Misc
             AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes())
                 .Where(x => typeof(IAggregate).IsAssignableFrom(x))
-                .SelectMany(x => x.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+                .SelectMany(x => x.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                 .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
                 .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
                 .Select(x => x.GetParameters().First().ParameterType)
                 .ToList()
                 .ForEach(t => instance.RegisterType(t));
+                // .ForEach(t => Console.WriteLine(t));
 
+            // Console.WriteLine(string.Join(",", instance._typesByFullName.Keys));
             return instance;
         }
 

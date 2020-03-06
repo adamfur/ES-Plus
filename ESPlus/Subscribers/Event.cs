@@ -1,10 +1,7 @@
-using ESPlus.Misc;
-
 namespace ESPlus.Subscribers
 {
     public class Event
     {
-        private readonly IEventTypeResolver _eventTypeResolver;
         private readonly IEventSerializer _eventSerializer;
 
         public Position Position { get; set; }
@@ -17,9 +14,8 @@ namespace ESPlus.Subscribers
         public long TotalOffset { get; set; }
         public string CreateEvent { get; set; }
 
-        public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
+        public Event(IEventSerializer eventSerializer)
         {
-            _eventTypeResolver = eventTypeResolver;
             _eventSerializer = eventSerializer;
         }
 

@@ -35,7 +35,7 @@ namespace ESPlus.Subscribers
                 Monitor.Pulse(_mutex);
             }
 
-            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver);
+            return new WyrmSubscriptionClient(context, _wyrmConnection);
         }
     }
 }
