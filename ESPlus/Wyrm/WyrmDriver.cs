@@ -194,7 +194,7 @@ namespace ESPlus.Wyrm
             return new WyrmStartPipeline(this, new ApplyStream(streamName));
         }
 
-        public IWyrmGroupedReadPipeline GroupByStream()
+        public IWyrmGroupedReadPipeline ReadGroupByStream()
         {
             return new WyrmStartPipeline(this, new ApplyPosition(Position.Begin)).GroupByStream();
         }
@@ -324,7 +324,7 @@ namespace ESPlus.Wyrm
                 Take(take, writer);         
                 Skip(skip, writer);     
                 SetDirection(direction, writer);
-                GroupByStream(groupByStream, writer);
+                ReadGroupByStream(groupByStream, writer);
                 ExecuteQuery(writer);
 
                 writer.Flush();
@@ -368,7 +368,7 @@ namespace ESPlus.Wyrm
             writer.Write((int) Commands.ExecuteQuery);
         }
 
-        private static void GroupByStream(bool groupByStream, BinaryWriter writer)
+        private static void ReadGroupByStream(bool groupByStream, BinaryWriter writer)
         {
             if (groupByStream)
             {

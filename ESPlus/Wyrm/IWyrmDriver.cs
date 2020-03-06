@@ -12,7 +12,7 @@ namespace ESPlus.Wyrm
         Task<WyrmResult> AppendAsync(Bundle bundle);
         ISimpleReadPipeline ReadFrom(Position position);
         ISimpleReadPipeline ReadStream(string streamName);
-        IWyrmGroupedReadPipeline GroupByStream();
+        IWyrmGroupedReadPipeline ReadGroupByStream();
         IAsyncEnumerable<string> EnumerateStreams();
         Task<Position> CheckpointAsync();
         Task<TimeSpan> PingAsync();

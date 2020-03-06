@@ -68,7 +68,7 @@ namespace ESPlus.Wyrm
             var origin = ConstructAggregate<TAggregate>("dummy");
             var aggregate = default(TAggregate);
             
-            await foreach (var @event in _driver.GroupByStream()
+            await foreach (var @event in _driver.ReadGroupByStream()
                 .CreateEventFilter(origin.InitialType)
                 .EventFilter(origin.ApplyTypes())
                 .QueryAsync())
