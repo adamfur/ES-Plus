@@ -18,15 +18,12 @@ namespace ESPlus.Wyrm
         public ISimpleReadPipeline ReadDirection(Direction direction);
     }
 
-    public interface IWyrmStartPipeline : ISimpleReadPipeline
-    {
-        public IWyrmGroupedReadPipeline GroupByStream();
-    }
-
     public interface IWyrmGroupedReadPipeline : IWyrmReadPipelineBase
     {
         public IWyrmGroupedReadPipeline CreateEventFilter(IEnumerable<Type> types);
         public IWyrmGroupedReadPipeline CreateEventFilter(params Type[] types);
         public IWyrmGroupedReadPipeline StreamNameFilter(string regex);
+        public IWyrmGroupedReadPipeline EventFilter(IEnumerable<Type> types);
+        public IWyrmGroupedReadPipeline EventFilter(params Type[] types);        
     }
 }

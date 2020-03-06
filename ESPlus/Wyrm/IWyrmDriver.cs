@@ -10,8 +10,9 @@ namespace ESPlus.Wyrm
         Task<WyrmResult> CreateStreamAsync(string streamName);
         Task<WyrmResult> DeleteStreamAsync(string streamName, long version);
         Task<WyrmResult> AppendAsync(Bundle bundle);
-        IWyrmStartPipeline ReadFrom(Position position);
-        IWyrmStartPipeline ReadStream(string streamName);
+        ISimpleReadPipeline ReadFrom(Position position);
+        ISimpleReadPipeline ReadStream(string streamName);
+        IWyrmGroupedReadPipeline GroupByStream();
         IAsyncEnumerable<string> EnumerateStreams();
         Task<Position> CheckpointAsync();
         Task<TimeSpan> PingAsync();

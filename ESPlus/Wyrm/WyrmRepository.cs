@@ -39,7 +39,7 @@ namespace ESPlus.Wyrm
             {
                 var aggregate = ConstructAggregate<TAggregate>(id);
 
-                await foreach (var @event in _driver.ReadStream(id).EventFilter(aggregate.Types()).QueryAsync())
+                await foreach (var @event in _driver.ReadStream(id).EventFilter(aggregate.ApplyTypes()).QueryAsync())
                 {
                     any = true;
                     @event.Accept(aggregate);
@@ -65,9 +65,13 @@ namespace ESPlus.Wyrm
         public async IAsyncEnumerable<TAggregate> GetAllByTypeAsync<TAggregate>()
             where TAggregate : IAggregate
         {
+            var origin = ConstructAggregate<TAggregate>("dummy");
             var aggregate = default(TAggregate);
             
-            await foreach (var @event in _driver.ReadFrom(Position.Begin).GroupByStream().QueryAsync())
+            await foreach (var @event in _driver.GroupByStream()
+                .CreateEventFilter(origin.InitialType)
+                .EventFilter(origin.ApplyTypes())
+                .QueryAsync())
             {
                 if (@event is WyrmAheadItem)
                 {

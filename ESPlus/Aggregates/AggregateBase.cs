@@ -10,7 +10,7 @@ namespace ESPlus.Aggregates
 {
     public abstract class AggregateBase : IAggregate
     {
-        private readonly Type _initialType;
+        public Type InitialType { get; }
         private readonly LinkedList<object> _uncommittedEvents = new LinkedList<object>();
         private readonly ConventionEventRouter _router = new ConventionEventRouter();
         public long Version { get; set; } = -1;
@@ -18,7 +18,7 @@ namespace ESPlus.Aggregates
 
         protected AggregateBase(string id, Type initialType = null)
         {
-            _initialType = initialType;
+            InitialType = initialType;
             Id = id;
             _router.Register(this);
         }
@@ -32,9 +32,9 @@ namespace ESPlus.Aggregates
         {
             if (Version == -1)
             {
-                if (_initialType != null)
+                if (InitialType != null)
                 {
-                    if (@event.GetType() != _initialType)
+                    if (@event.GetType() != InitialType)
                     {
                         throw new Exception("Invalid Aggregate");
                     }
@@ -80,7 +80,7 @@ namespace ESPlus.Aggregates
         {
         }
 
-        public IEnumerable<Type> Types()
+        public IEnumerable<Type> ApplyTypes()
         {
             return GetType()
                 .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)

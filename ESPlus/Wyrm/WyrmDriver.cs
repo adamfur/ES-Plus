@@ -184,14 +184,19 @@ namespace ESPlus.Wyrm
             return new WyrmResult(position, offset);
         }
 
-        public IWyrmStartPipeline ReadFrom(Position position)
+        public ISimpleReadPipeline ReadFrom(Position position)
         {
             return new WyrmStartPipeline(this, new ApplyPosition(position));
         }
 
-        public IWyrmStartPipeline ReadStream(string streamName)
+        public ISimpleReadPipeline ReadStream(string streamName)
         {
             return new WyrmStartPipeline(this, new ApplyStream(streamName));
+        }
+
+        public IWyrmGroupedReadPipeline GroupByStream()
+        {
+            return new WyrmStartPipeline(this, new ApplyPosition(Position.Begin)).GroupByStream();
         }
 
         public async IAsyncEnumerable<string> EnumerateStreams()

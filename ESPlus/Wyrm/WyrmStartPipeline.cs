@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ESPlus.Wyrm
 {
-    public class WyrmStartPipeline : IWyrmGroupedReadPipeline, IWyrmStartPipeline, ISimpleReadPipeline
+    public class WyrmStartPipeline : IWyrmGroupedReadPipeline, ISimpleReadPipeline
     {
         private readonly WyrmDriver _wyrmDriver;
         private bool _subscribe = false;
@@ -43,6 +43,18 @@ namespace ESPlus.Wyrm
         public IWyrmGroupedReadPipeline StreamNameFilter(string regex)
         {
             _regex = regex;
+            return this;
+        }
+
+        IWyrmGroupedReadPipeline IWyrmGroupedReadPipeline.EventFilter(IEnumerable<Type> types)
+        {
+            _eventFilter = types.ToList();
+            return this;
+        }
+
+        IWyrmGroupedReadPipeline IWyrmGroupedReadPipeline.EventFilter(params Type[] types)
+        {
+            _eventFilter = types.ToList();
             return this;
         }
 
