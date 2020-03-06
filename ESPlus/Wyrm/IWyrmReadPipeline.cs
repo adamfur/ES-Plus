@@ -6,8 +6,10 @@ namespace ESPlus.Wyrm
     public interface IWyrmReadPipeline
     {
         public IWyrmReadPipeline CreateEventFilter(IEnumerable<Type> types);
+        public IWyrmReadPipeline CreateEventFilter(params Type[] types);
         public IWyrmReadPipeline StreamNameFilter(string regex);
         public IWyrmReadPipeline EventFilter(IEnumerable<Type> types);
+        public IWyrmReadPipeline EventFilter(params Type[] types);
         public IWyrmReadPipeline Take(int count);
         public IWyrmReadPipeline Skip(int count);
         public IWyrmReadPipeline Subscribe();

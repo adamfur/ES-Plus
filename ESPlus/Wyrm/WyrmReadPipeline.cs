@@ -29,6 +29,12 @@ namespace ESPlus.Wyrm
             return this;
         }
 
+        public IWyrmReadPipeline CreateEventFilter(params Type[] types)
+        {
+            _createEventFilter = types.ToList(); 
+            return this;
+        }
+
         public IWyrmReadPipeline StreamNameFilter(string regex)
         {
             _regex = regex;
@@ -36,6 +42,12 @@ namespace ESPlus.Wyrm
         }
 
         public IWyrmReadPipeline EventFilter(IEnumerable<Type> types)
+        {
+            _eventFilter = types.ToList();
+            return this;
+        }
+
+        public IWyrmReadPipeline EventFilter(params Type[] types)
         {
             _eventFilter = types.ToList();
             return this;
