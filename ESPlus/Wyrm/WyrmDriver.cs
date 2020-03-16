@@ -9,13 +9,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Exceptions;
-using ESPlus.Extentions;
-using ESPlus.Storage;
 using LZ4;
 
 namespace ESPlus.Wyrm
 {
-    public partial class WyrmDriver : IWyrmDriver
+    public class WyrmDriver : IWyrmDriver
     {
         private readonly string _host;
         private readonly int _port;
@@ -102,7 +100,7 @@ namespace ESPlus.Wyrm
 
                     var evt = ReadEvent(reader, length - sizeof(Int32));
 
-                    Console.WriteLine($"Stream: {evt.StreamName}.({evt.Version}){evt.EventType}");
+                    // Console.WriteLine($"Stream: {evt.StreamName}.({evt.Version}){evt.EventType}");
 
                     yield return evt;
                 }
