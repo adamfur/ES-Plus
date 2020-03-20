@@ -127,6 +127,11 @@ namespace ESPlus.Storage
             _pathExits.Clear();
         }
 
+        public void Put(string path, HasObjectId item, long[] keywords)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void Delete(string path)
         {
             Directory.Delete(path);
