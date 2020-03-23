@@ -145,8 +145,14 @@ namespace ESPlus.Storage
                 Map = new Dictionary<string, string>(map),
                 Deletes = new HashSet<string>(deletes),
             };
+            
             _metadataStorage.Put(JournalPath, journal);
-            _metadataStorage.Flush();
+
+            if (_metadataStorage != _dataStorage)
+            {
+                _metadataStorage.Flush();
+            }
+
             // Console.WriteLine($"Put Journal {Checkpoint}");
         }
 

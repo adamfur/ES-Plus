@@ -1,16 +1,11 @@
 using ESPlus.EventHandlers;
 using ESPlus.Subscribers;
-using System;
-using System.Threading;
 
 namespace ESPlus.FlushPolicies
 {
     public class FlushWhenAheadPolicy : IFlushPolicy
     {
         public IEventHandler EventHandler { get; set; }
-        private readonly TimeSpan _timeout;
-        private const int _eventThreshold = 100;
-        private int _events = 0;
 
         public void FlushWhenAhead()
         {
@@ -23,15 +18,10 @@ namespace ESPlus.FlushPolicies
 
         public void FlushOnEvent()
         {
-            if (++_events > _eventThreshold)
-            {
-                Flush();
-            }
         }
 
         private void Flush()
         {
-            _events = 0;
             EventHandler.Flush();
         }
     }
