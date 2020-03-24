@@ -211,8 +211,6 @@ namespace ESPlus.Wyrm
             var stream = default(string);
             var applyAggregate = default(IAggregate);
 
-            int count = 0, of = 0;
-
             Index<TAggregate>();
             foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(filters))
             {

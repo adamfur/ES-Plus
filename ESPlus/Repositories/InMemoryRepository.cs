@@ -176,7 +176,7 @@ namespace ESPlus.Repositories
             return Task.FromResult(0);
         }
 
-        Task<WyrmResult> IRepository.AppendAsync(AggregateBase aggregate, object headers = null)
+        Task<WyrmResult> IRepository.AppendAsync(AggregateBase aggregate, object headers)
         {
             throw new NotImplementedException();
         }

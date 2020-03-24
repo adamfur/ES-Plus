@@ -9,17 +9,17 @@ namespace ESPlus.MoonGoose
         {
         }
 
-        protected MoonGooseExceptions(SerializationInfo? info, StreamingContext context)
+        protected MoonGooseExceptions(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
 
-        public MoonGooseExceptions(string? message)
+        public MoonGooseExceptions(string message)
             : base(message)
         {
         }
 
-        public MoonGooseExceptions(string? message, Exception? innerException)
+        public MoonGooseExceptions(string message, Exception innerException)
             : base(message, innerException)
         {
         }

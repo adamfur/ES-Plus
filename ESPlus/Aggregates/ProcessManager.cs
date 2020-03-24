@@ -19,18 +19,18 @@ namespace ESPlus.Aggregates
         public bool AlreadyProcessed(string eventId)
         {
             throw new NotImplementedException();
-            if (_processed.Contains(eventId))
-            {
-                return false;
-            }
-
-            ApplyChange(new ProcessManagerProcessed
-            (
-                corrolationId: Id,
-                eventId: eventId
-            ));
-            
-            return true;
+            // if (_processed.Contains(eventId))
+            // {
+            //     return false;
+            // }
+            //
+            // ApplyChange(new ProcessManagerProcessed
+            // (
+            //     corrolationId: Id,
+            //     eventId: eventId
+            // ));
+            //
+            // return true;
         }
 
         public virtual void Wakeup(string token)
