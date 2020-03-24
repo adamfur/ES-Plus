@@ -5,6 +5,9 @@ namespace ESPlus.FlushPolicies
 {
     public class FlushWhenAheadPolicy : IFlushPolicy
     {
+        private const int EventThreshold = 100;
+        private int _events = 0;
+
         public IEventHandler EventHandler { get; set; }
 
         public void FlushWhenAhead()
@@ -18,14 +21,19 @@ namespace ESPlus.FlushPolicies
 
         public void FlushOnEvent()
         {
+            if (++_events > EventThreshold)
+            {
+                Flush();
+            }
         }
 
         private void Flush()
         {
             EventHandler.Flush();
+            _events = 0;
         }
     }
-    
+
 //    public class FlushWhenAheadPolicy : IFlushPolicy
 //    {
 //        public IEventHandler EventHandler { get; set; }

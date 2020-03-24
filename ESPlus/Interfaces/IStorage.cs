@@ -9,6 +9,5 @@ namespace ESPlus.Interfaces
         void Delete(string path);
         T Get<T>(string path) where T : HasObjectId;        
         void Reset();
-        void Put(string path, HasObjectId item, long[] keywords);
     }
 }
