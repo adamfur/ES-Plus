@@ -26,10 +26,7 @@ namespace ESPlus.SpecificationTests
             {
                 var map = new Dictionary<string, Action>
                 {
-                    ["Given"] = () => Given(() =>
-                    {
-                        Aggregate = new DummyAggregate("id");
-                    }),
+                    ["Given"] = () => Given(() => Aggregate = new DummyAggregate("id")),
                     ["When"] = () => When(() => { }),
                     ["Then"] = () => Then(() => { }),
                 };

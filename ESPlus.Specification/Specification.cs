@@ -11,7 +11,7 @@ namespace ESPlus.Specification
         where TAggregate : IAggregate
     {
         private readonly List<object> _emittedEvents = new List<object>();
-        protected TAggregate Aggregate = default(TAggregate);
+        protected TAggregate Aggregate = default;
         private Action _given = null;
         private Action _when = null;
         private Action _then = null;

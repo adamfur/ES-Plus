@@ -8,8 +8,8 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
     {
         protected override IRepository Create()
         {
-            var connection = new WyrmDriver("localhost:8888", new EventJsonSerializer());
             var eventSerializer = new EventJsonSerializer();
+            var connection = new WyrmDriver("localhost:8888", eventSerializer);
 
             return new WyrmRepository(connection);            
         }
