@@ -28,30 +28,9 @@ namespace ESPlus.MoonGoose
             var client = new TcpClient();
             client.NoDelay = false;
 
-            await Retry(() => client.Connect(_host, _port));
+            await Retry.RetryAsync(() => client.Connect(_host, _port));
 
             return client;
-        }
-
-        private async Task Retry(Action action)
-        {
-            Exception exception = null;
-
-            for (var tries = 0; tries < 3; ++tries)
-            {
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                    await Task.Delay(TimeSpan.FromSeconds(1 << tries));
-                }
-            }
-
-            throw exception;
         }
         
         public async Task<byte[]> GetAsync(string database, string key)

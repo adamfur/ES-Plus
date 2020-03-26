@@ -42,9 +42,9 @@ namespace ESPlus
             });
         }
 
-        public string Subject => _lazyMetaObject.Value.Subject;
-        public string IP => _lazyMetaObject.Value.IP;
-        public string GivenName => _lazyMetaObject.Value.GivenName;
-        public DateTime TimestampUtc => _lazyMetaObject.Value.TimestampUtc;
+        public string Subject => _lazyMetaObject.Value?.Subject;
+        public string IP => _lazyMetaObject.Value?.IP;
+        public string GivenName => _lazyMetaObject.Value?.GivenName;
+        public DateTime TimestampUtc => _lazyMetaObject.Value?.TimestampUtc ?? DateTime.MinValue;
     }
 }

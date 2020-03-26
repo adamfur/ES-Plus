@@ -48,30 +48,9 @@ namespace ESPlus.Wyrm
             var client = new TcpClient();
             client.NoDelay = false;
             
-            Retry(() => client.Connect(_host, _port));
+            Retry.RetryAsync(() => client.Connect(_host, _port)).Wait();
 
             return client;
-        }
-        
-        private void Retry(Action action)
-        {
-            Exception exception = null;
-            
-            for (var tries = 0; tries < 3; ++tries)
-            {
-                try
-                {
-                    action();
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                    Thread.Sleep(TimeSpan.FromSeconds(1 << tries));
-                }
-            }
-
-            throw exception;
         }
         
         public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
