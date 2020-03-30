@@ -15,10 +15,6 @@ namespace ESPlus.FlushPolicies
             Flush();
         }
 
-        public void FlushEndOfBatch()
-        {
-        }
-
         public void FlushOnEvent()
         {
             if (++_events > EventThreshold)

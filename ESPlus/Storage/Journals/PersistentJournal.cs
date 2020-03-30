@@ -196,11 +196,6 @@ namespace ESPlus.Storage
             throw new System.NotImplementedException();
         }
 
-        public void Put(string path, HasObjectId item, long[] keywords)
-        {
-            throw new NotImplementedException();
-        }
-
         public virtual void Delete(string path)
         {
 //            Console.WriteLine($"PersistantJournal delete: {path}");

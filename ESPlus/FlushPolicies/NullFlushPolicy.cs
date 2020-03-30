@@ -7,10 +7,6 @@ namespace ESPlus.FlushPolicies
     {
         public IEventHandler EventHandler { get; set; }
 
-        public void FlushEndOfBatch()
-        {
-        }
-
         public void FlushOnEvent()
         {
         }

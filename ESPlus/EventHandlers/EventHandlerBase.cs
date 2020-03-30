@@ -57,11 +57,6 @@ namespace ESPlus.EventHandlers
             _flushPolicy.FlushWhenAhead();
         }
 
-        public void FlushEndOfBatch()
-        {
-            _flushPolicy.FlushEndOfBatch();
-        }
-
         public void FlushOnEvent()
         {
             _flushPolicy.FlushOnEvent();

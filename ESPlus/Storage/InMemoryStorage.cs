@@ -35,10 +35,5 @@ namespace ESPlus.Storage
         {
             _data.Clear();
         }
-
-        public void Put(string path, HasObjectId item, long[] keywords)
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }

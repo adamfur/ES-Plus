@@ -36,9 +36,16 @@ namespace ESPlus
             _serializer = serializer;
             _lazyMetaObject = new Lazy<MetaObject>(() =>
             {
-                var obj = (MetaObject) _serializer.Deserialize(typeof(MetaObject), eventMeta);
+                try
+                {
+                    var obj = (MetaObject) _serializer.Deserialize(typeof(MetaObject), eventMeta);
 
-                return obj;
+                    return obj;
+                }
+                catch (Exception)
+                {
+                    return new MetaObject();
+                }
             });
         }
 
