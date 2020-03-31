@@ -23,7 +23,8 @@ namespace ESPlus.Storage
             {
                 return (T) _data[path];
             }
-            return default (T);
+            
+            return default;
         }
 
         public void Put(string path, HasObjectId item)

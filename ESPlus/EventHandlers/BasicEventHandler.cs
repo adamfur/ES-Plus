@@ -81,6 +81,7 @@ namespace ESPlus.EventHandlers
 
             var status = false;
 
+            Context.TimestampUtc = @event.TimestampUtc;
             Context.Checkpoint = @event.Position;
             Context.Offset = @event.Offset;
             Context.TotalOffset = @event.TotalOffset;

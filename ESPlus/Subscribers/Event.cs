@@ -1,3 +1,4 @@
+using System;
 using ESPlus.Misc;
 
 namespace ESPlus.Subscribers
@@ -16,6 +17,7 @@ namespace ESPlus.Subscribers
         public long Offset { get; set; }
         public long TotalOffset { get; set; }
         public string CreateEvent { get; set; }
+        public DateTime TimestampUtc { get; set; }
 
         public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {

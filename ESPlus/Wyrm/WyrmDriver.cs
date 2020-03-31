@@ -151,7 +151,7 @@ namespace ESPlus.Wyrm
                 TotalOffset = totalOffset,
                 EventId = eventId,
                 Version = version,
-                Timestamp = time,
+                TimestampUtc = time,
                 Metadata = metadata,
                 Data = data,
                 EventType = eventType,
