@@ -139,11 +139,11 @@ namespace ESPlus.EventHandlers
             return result;
         }        
 
-        public override Task<bool> DispatchEventAsync(object @event)
-        {
-            var result = this.DispatchEvent(@event);
-
-            return Task.FromResult(result);
-        }
+        // public override Task<bool> DispatchEventAsync(object @event)
+        // {
+        //     var result = this.DispatchEvent(@event);
+        //
+        //     return Task.FromResult(result);
+        // }
     }
 }

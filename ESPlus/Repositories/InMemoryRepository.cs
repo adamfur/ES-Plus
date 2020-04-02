@@ -166,7 +166,7 @@ namespace ESPlus.Repositories
         {
             foreach (var subscriber in _subscribers)
             {
-                await subscriber.DispatchEventAsync(@event);
+                // await subscriber.DispatchEventAsync(@event);
             }
         }
 

@@ -46,7 +46,7 @@ namespace ESPlus.EventHandlers
         public abstract IEnumerable<object> TakeEmittedEvents();
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
         public abstract bool Dispatch(Event @event);
-        public abstract Task<bool> DispatchEventAsync(object @event);
+        // public abstract Task<bool> DispatchEventAsync(object @event);
 
         public virtual void Ahead()
         {

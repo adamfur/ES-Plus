@@ -47,10 +47,10 @@ namespace ESPlus.Tests.EventHandlers
                 EmitOnSubmit(@event.Key, @event.Payload);
             }
 
-            public override Task<bool> DispatchEventAsync(object @event)
-            {
-                throw new System.NotImplementedException();
-            }
+            // public override Task<bool> DispatchEventAsync(object @event)
+            // {
+            //     throw new System.NotImplementedException();
+            // }
         }
 
         public interface IReceiverDummyEventHandler : IEventHandler,

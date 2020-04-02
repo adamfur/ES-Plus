@@ -67,9 +67,9 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override Task<bool> DispatchEventAsync(object @event)
-        {
-            throw new NotImplementedException();
-        }
+        // public override Task<bool> DispatchEventAsync(object @event)
+        // {
+        //     throw new NotImplementedException();
+        // }
     }
 }

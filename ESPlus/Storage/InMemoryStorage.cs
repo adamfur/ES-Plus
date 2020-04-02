@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESPlus.Interfaces;
 
 namespace ESPlus.Storage
@@ -6,6 +7,8 @@ namespace ESPlus.Storage
     public class InMemoryStorage : IStorage
     {
         private readonly Dictionary<string, HasObjectId> _data = new Dictionary<string, HasObjectId>();
+
+        public Dictionary<string, HasObjectId> Internal => _data;
 
         public void Delete(string path)
         {

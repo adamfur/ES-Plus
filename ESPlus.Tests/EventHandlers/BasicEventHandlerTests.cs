@@ -49,10 +49,10 @@ namespace ESPlus.Tests.EventHandlers
                 EmitOnSubmit("abc", "def");
             }
 
-            public override Task<bool> DispatchEventAsync(object @event)
-            {
-                throw new NotImplementedException();
-            }
+            // public override Task<bool> DispatchEventAsync(object @event)
+            // {
+            //     throw new NotImplementedException();
+            // }
         }
 
         private IEventHandlerContext _context;
