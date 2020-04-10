@@ -44,7 +44,7 @@ namespace ESPlus
                 }
                 catch (Exception)
                 {
-                    return new MetaObject();
+                    return null;
                 }
             });
         }

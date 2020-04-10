@@ -162,12 +162,14 @@ namespace ESPlus.Repositories
             return Position.Start;
         }
 
-        private async Task NotifySubscribers(object @event)
+        private Task NotifySubscribers(object @event)
         {
             foreach (var subscriber in _subscribers)
             {
                 // await subscriber.DispatchEventAsync(@event);
             }
+
+            return Task.CompletedTask;
         }
 
         public Task DeleteAsync(string streamName, long version)
