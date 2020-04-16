@@ -14,13 +14,27 @@ namespace ESPlus.Wyrm
         private readonly IEventSerializer _eventSerializer;
         private readonly IWyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
-        private object _lock = new object();
+        private readonly object _lock = new object();
         private RepositoryTransaction _transaction = null;
+        private List<Action<object>> _observers = new List<Action<object>>();
 
         public WyrmRepository(IWyrmDriver wyrmConnection)
         {
             _wyrmConnection = wyrmConnection;
             _eventSerializer = wyrmConnection.Serializer;
+        }
+
+        public void Observe(Action<object> @event)
+        {
+            _observers.Add(@event);
+        }
+
+        private void Notify(object @event)
+        {
+            foreach (var observer in _observers)
+            {
+                observer(@event);
+            }
         }
 
         private void Index<TAggregate>()
@@ -96,21 +110,33 @@ namespace ESPlus.Wyrm
 
         private async Task<WyrmResult> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
         {
-            if (!newEvents.Any())
+            var copy = newEvents.ToList();
+            
+            if (!copy.Any())
             {
                 return new WyrmResult(Position.Start, 0);
             }
 
             var streamName = aggregate.Id;
-            var eventsToSave = newEvents.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
+            var eventsToSave = copy.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 
             if (_transaction != null)
             {
                 _transaction.Append(eventsToSave);
+                foreach (var @event in copy)
+                {
+                    Notify(@event);
+                }
+                
                 return new WyrmResult(Position.Start, 0);
             }
             else
             {
+                foreach (var @event in copy)
+                {
+                    Notify(@event);
+                }
+                
                 return await _wyrmConnection.Append(eventsToSave);
             }
         }
@@ -144,7 +170,10 @@ namespace ESPlus.Wyrm
                     continue;
                 }
 
-                applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
+                var @event = _eventSerializer.Deserialize(type, evnt.Data);
+                
+                applyAggregate.ApplyChange(@event);
+                Notify(@event);
                 applyAggregate.Version = evnt.Version;
             }
 

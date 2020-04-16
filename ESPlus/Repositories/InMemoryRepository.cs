@@ -192,5 +192,10 @@ namespace ESPlus.Repositories
         {
             throw new NotImplementedException();
         }
+
+        public void Observe(Action<object> @event)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -45,6 +45,19 @@ namespace ESPlus.EventHandlers
                 return true;
             }
         }
+        
+        public bool DispatchEventX(object @event)
+        {
+            Context.Checkpoint = Position.Start;
+            Context.Metadata = new MetaData();
+            
+            lock (_mutex)
+            {
+                _once.Execute();
+                _router.Dispatch(@event);
+                return true;
+            }
+        }        
 
         protected void Emit(object @event)
         {

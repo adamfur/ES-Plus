@@ -30,7 +30,12 @@ namespace ESPlus
     {
         private readonly IEventSerializer _serializer;
         private readonly Lazy<MetaObject> _lazyMetaObject;
-        
+
+        public MetaData()
+        {
+            _lazyMetaObject = new Lazy<MetaObject>(() => null);
+        }
+
         public MetaData(byte[] eventMeta, IEventSerializer serializer)
         {
             _serializer = serializer;

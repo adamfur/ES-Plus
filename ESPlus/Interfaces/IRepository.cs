@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Wyrm;
@@ -13,5 +14,6 @@ namespace ESPlus.Interfaces
         Task DeleteAsync(string streamName, long version = -1);
         IRepositoryTransaction BeginTransaction();
         Task<WyrmResult> Commit();
+        void Observe(Action<object> @event);
     }
 }
