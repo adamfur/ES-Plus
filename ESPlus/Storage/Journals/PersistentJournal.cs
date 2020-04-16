@@ -76,6 +76,7 @@ namespace ESPlus.Storage
 
         public void Flush()
         {
+            Console.WriteLine(" -- Journal flush");
             if (_changed == false)
             {
                 return;

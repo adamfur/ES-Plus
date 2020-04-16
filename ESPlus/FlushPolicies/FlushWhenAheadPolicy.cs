@@ -76,7 +76,7 @@ namespace ESPlus.FlushPolicies
 //
 //        public void FlushEndOfBatch()
 //        {
-//        }
+//        }146:19
 //
 //        public void FlushOnEvent()
 //        {

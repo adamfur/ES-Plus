@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESPlus.Interfaces;
@@ -22,6 +23,8 @@ namespace ESPlus.Storage
         public T Get<T>(string path)
             where T : HasObjectId
         {
+            Console.WriteLine(string.Join(", ", _data.Values));
+            
             if (_data.ContainsKey(path))
             {
                 return (T) _data[path];
@@ -33,6 +36,7 @@ namespace ESPlus.Storage
         public void Put(string path, HasObjectId item)
         {
             _data[path] = item;
+            Console.WriteLine($" -- PUT: {path}");
         }
 
         public void Reset()
