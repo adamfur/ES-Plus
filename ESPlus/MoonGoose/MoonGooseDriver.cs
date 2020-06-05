@@ -13,7 +13,6 @@ namespace ESPlus.MoonGoose
     {
         private readonly string _host;
         private readonly int _port;
-        public IEventSerializer Serializer { get; }
 
         public MoonGooseDriver(string connectionString)
         {
@@ -28,7 +27,7 @@ namespace ESPlus.MoonGoose
             var client = new TcpClient();
             client.NoDelay = false;
 
-            await Retry.RetryAsync(() => client.Connect(_host, _port));
+            await Retry.RetryAsync(() => client.ConnectAsync(_host, _port));
 
             return client;
         }
