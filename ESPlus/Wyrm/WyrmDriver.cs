@@ -43,19 +43,18 @@ namespace ESPlus.Wyrm
             return rv;
         }
 
-        private TcpClient Create()
+        private async Task<TcpClient> Create()
         {
             var client = new TcpClient();
             client.NoDelay = false;
             
-            Retry.RetryAsync(() => client.ConnectAsync(_host, _port)).Wait();
-
+            await Retry.RetryAsync(() => client.ConnectAsync(_host, _port));
             return client;
         }
         
         public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
         {
-            using (var client = Create())
+            using (var client = Create().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -165,7 +164,7 @@ namespace ESPlus.Wyrm
 
         public async Task DeleteAsync(string streamName, long version)
         {
-            using (var client = Create())
+            using (var client = Create().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -198,7 +197,7 @@ namespace ESPlus.Wyrm
                 return Task.FromResult(new WyrmResult(Position.Start, 0L));
             }
 
-            using (var client = Create())
+            using (var client = Create().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -264,7 +263,7 @@ namespace ESPlus.Wyrm
         {
             var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
 
-            using (var client = Create())
+            using (var client = Create().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -296,7 +295,7 @@ namespace ESPlus.Wyrm
         public Position LastCheckpoint()
         {
             Console.WriteLine($"LastCheckpoint");
-            using (var client = Create())
+            using (var client = Create().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -316,7 +315,7 @@ namespace ESPlus.Wyrm
         public IEnumerable<WyrmEvent2> Subscribe(Position from)
         {
             Console.WriteLine($"Subscribe: {from.AsHexString()}");
-            using (var client = Create())
+            using (var client = Create().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -343,7 +342,7 @@ namespace ESPlus.Wyrm
         public IEnumerable<WyrmEvent2> EnumerateAll(Position from)
         {
             Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
-            using (var client = Create())
+            using (var client = Create().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -371,7 +370,7 @@ namespace ESPlus.Wyrm
         {
             var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
 
-            using (var client = Create())
+            using (var client = Create().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
