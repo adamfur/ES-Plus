@@ -15,5 +15,6 @@ namespace ESPlus.Wyrm
         IEnumerable<WyrmEvent2> Subscribe(Position from);
         IEnumerable<WyrmEvent2> EnumerateAll(Position from);
         IEnumerable<WyrmEvent2> EnumerateAllByStreams(params Type[] filters);
+        void Ping();
     }
 }

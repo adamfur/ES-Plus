@@ -85,6 +85,16 @@ namespace ESPlus.EventHandlers
             return result;
         }
 
+        public override Task<object> Search(long[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<object> Get(string path)
+        {
+            throw new NotImplementedException();
+        }
+
         public override bool Dispatch(Event @event)
         {
             if (@event.Offset == 1)

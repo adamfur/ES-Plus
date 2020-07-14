@@ -161,6 +161,11 @@ namespace ESPlus.Wyrm
                 CreateEvent = createEvent 
             };
         }
+        
+        public void Ping()
+        {
+            EnumerateStream(Guid.NewGuid().ToString());
+        }        
 
         public async Task DeleteAsync(string streamName, long version)
         {

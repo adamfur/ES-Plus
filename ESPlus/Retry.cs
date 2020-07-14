@@ -5,11 +5,11 @@ namespace ESPlus
 {
     public static class Retry
     {
-        public static async Task RetryAsync(Func<Task> action)
+        public static async Task RetryAsync(Func<Task> action, int times = 3)
         {
             Exception exception = null;
             
-            for (var iteration = 0; iteration < 3; ++iteration)
+            for (var iteration = 0; iteration < times; ++iteration)
             {
                 try
                 {
@@ -26,11 +26,11 @@ namespace ESPlus
             throw exception;
         }        
         
-        public static async Task RetryAsync(Action action)
+        public static async Task RetryAsync(Action action, int times = 3)
         {
             Exception exception = null;
             
-            for (var iteration = 0; iteration < 3; ++iteration)
+            for (var iteration = 0; iteration < times; ++iteration)
             {
                 try
                 {

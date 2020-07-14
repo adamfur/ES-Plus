@@ -14,5 +14,7 @@ namespace ESPlus.EventHandlers
         Position Checkpoint { get; set; }
         IEnumerable<object> TakeEmittedEvents();
         IEnumerable<object> TakeEmittedOnSubmitEvents();
+        Task<object> Search(long[] parameters);
+        Task<object> Get(string path);
     }
 }

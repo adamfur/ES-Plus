@@ -8,16 +8,13 @@ namespace ESPlus.Subscribers
     public class SubscriptionManager : ISubscriptionManager
     {
         private readonly List<SubscriptionContext> _contexts = new List<SubscriptionContext>();
-        private object _mutex = new object();
         private readonly IWyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
-        private readonly IEventSerializer _eventSerializer;
 
-        public SubscriptionManager(IWyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
+        public SubscriptionManager(IWyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver)
         {
             _wyrmConnection = wyrmConnection;
             _eventTypeResolver = eventTypeResolver;
-            _eventSerializer = eventSerializer;
         }
 
         public ISubscriptionClient Subscribe(Position position)
@@ -28,13 +25,9 @@ namespace ESPlus.Subscribers
                 Manager = this,
                 Future = position
             };
-
-            lock (_mutex)
-            {
-                _contexts.Add(context);
-                Monitor.Pulse(_mutex);
-            }
-
+            
+            _contexts.Add(context);
+                
             return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver);
         }
     }

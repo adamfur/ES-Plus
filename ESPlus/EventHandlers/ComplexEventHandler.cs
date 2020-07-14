@@ -47,6 +47,16 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
+        public override Task<object> Search(long[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<object> Get(string path)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Flush()
         {
             var payload = new List<object>();
