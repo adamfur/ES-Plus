@@ -76,7 +76,7 @@ namespace ESPlus.Storage
 
         public void Flush()
         {
-            Console.WriteLine(" -- Journal flush");
+            // Console.WriteLine(" -- Journal flush");
             if (_changed == false)
             {
                 return;
@@ -128,11 +128,11 @@ namespace ESPlus.Storage
         public void Update<T>(string path, Action<T> action) where T : HasObjectId
         {
             var model = Get<T>(path);
-//
-//            if (model is null)
-//            {
-//                throw new Exception($"{nameof(PersistentJournal)}::Update, Path: {path}. model is null");
-//            }
+
+            if (model is null)
+            {
+                throw new Exception($"{nameof(PersistentJournal)}::Update, Path: {path}. model is null");
+            }
 
             action(model);
             Put(path, model);
