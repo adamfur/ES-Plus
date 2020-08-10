@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Exceptions;
@@ -65,7 +66,7 @@ namespace ESPlus.Wyrm
 
         public async Task DeleteAsync(string id, long version)
         {
-            await _wyrmConnection.DeleteAsync(id, version);
+            await _wyrmConnection.DeleteAsync(id, version, CancellationToken.None);
         }
 
         public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null)
@@ -188,14 +189,14 @@ namespace ESPlus.Wyrm
             return aggregate;
         }
 
-        public IEnumerable<TAggregate> GetAllByAggregateType<TAggregate>(params Type[] filters) where TAggregate : IAggregate
+        public async IAsyncEnumerable<TAggregate> GetAllByAggregateType<TAggregate>(params Type[] filters) where TAggregate : IAggregate
         {
             var aggregate = default(TAggregate);
             var stream = default(string);
             var applyAggregate = default(IAggregate);
 
             Index<TAggregate>();
-            foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(filters))
+            await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(CancellationToken.None, filters))
             {
                 if (evnt.StreamName != stream)
                 {
@@ -232,7 +233,7 @@ namespace ESPlus.Wyrm
             }
         }
         
-        public IEnumerable<TAggregate> GetAllByAggregateType2<TAggregate>(params Type[] filters) where TAggregate : IAggregate
+        public async IAsyncEnumerable<TAggregate> GetAllByAggregateType2<TAggregate>(params Type[] filters) where TAggregate : IAggregate
         {
             var shard = ulong.Parse(Environment.GetEnvironmentVariable("SHARD") ?? "0");
             var shards = ulong.Parse(Environment.GetEnvironmentVariable("SHARDS") ?? "6");
@@ -241,7 +242,7 @@ namespace ESPlus.Wyrm
             var applyAggregate = default(IAggregate);
 
             Index<TAggregate>();
-            foreach (var evnt in _wyrmConnection.EnumerateAllByStreams(filters))
+            await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(CancellationToken.None, filters))
             {
                 var hash = (ulong) evnt.StreamName.XXH64();
 

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Exceptions;
+using ESPlus.Extentions;
 using LZ4;
 
 namespace ESPlus.Wyrm
@@ -43,7 +44,7 @@ namespace ESPlus.Wyrm
             return rv;
         }
 
-        private async Task<TcpClient> Create()
+        private async Task<TcpClient> CreateAsync()
         {
             var client = new TcpClient();
             client.NoDelay = false;
@@ -54,7 +55,7 @@ namespace ESPlus.Wyrm
         
         public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
         {
-            using (var client = Create().Result)
+            using (var client = CreateAsync().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -161,15 +162,93 @@ namespace ESPlus.Wyrm
                 CreateEvent = createEvent 
             };
         }
-        
-        public void Ping()
+
+        private async Task<WyrmEvent2> ReadEventAsync(NetworkStream reader, int length,
+            CancellationToken cancellationToken)
         {
-            EnumerateStream(Guid.NewGuid().ToString());
+            ReadOnlyMemory<byte> payload = await reader.ReadBinaryAsync(length, cancellationToken); // stackalloc byte[length];
+            var createEvent = "";
+
+            int disp = 0;
+            var position = payload.Slice(disp, 32).ToArray();
+            disp += 32;
+            var offset = BitConverter.ToInt64(payload.Slice(disp, 8).ToArray());
+            disp += 8;
+            var totalOffset = BitConverter.ToInt64(payload.Slice(disp, 8).ToArray());
+            disp += 8;
+            var ahead = BitConverter.ToBoolean(payload.Slice(disp, 1).ToArray());
+            disp += 1;
+            var eventId = new Guid(payload.Slice(disp, 16).ToArray());
+            disp += 16;
+            var version = BitConverter.ToInt64(payload.Slice(disp, 8).ToArray());
+            disp += 8;
+            var uncompressedSize = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+            disp += 4;
+            var compressedSize = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+            disp += 4;
+            var encryptedSize = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+            disp += 4;
+            var clock = BitConverter.ToInt64(payload.Slice(disp, 8).ToArray());
+            disp += 8;
+            var ms = BitConverter.ToInt64(payload.Slice(disp, 8).ToArray());
+            disp += 8;
+            var eventTypeLength = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+            disp += 4;
+            var streamNameLength = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+            disp += 4;
+            var metaDataLength = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+            disp += 4;
+            var payloadLength = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+            disp += 4;
+            var streamName = Encoding.UTF8.GetString(payload.Slice(disp, (int) streamNameLength).ToArray());
+            disp += (int) streamNameLength;
+            var eventType = Encoding.UTF8.GetString(payload.Slice(disp, (int) eventTypeLength).ToArray());
+            disp += (int) eventTypeLength;
+            var time = Epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
+            var compressed = payload.Slice(disp, (int) compressedSize).ToArray();
+            disp += compressedSize;
+            var uncompressed = new byte[uncompressedSize];
+            var compressedLength =
+                LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
+            var metadata = new byte[metaDataLength];
+            var data = new byte[payloadLength];
+
+            if (eventType == "Wyrm.StreamDeleted" && disp < payload.Length)
+            {
+                var createEventLength = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+                disp += 4;
+                createEvent = Encoding.UTF8.GetString(payload.Slice(disp, createEventLength).ToArray());
+            }
+
+            Array.Copy(uncompressed, metadata, metadata.Length);
+            Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
+
+            return new WyrmEvent2
+            {
+                Offset = offset,
+                TotalOffset = totalOffset,
+                EventId = eventId,
+                Version = version,
+                TimestampUtc = time,
+                Metadata = metadata,
+                Data = data,
+                EventType = eventType,
+                StreamName = streamName,
+                Position = position,
+                Serializer = Serializer,
+                IsAhead = ahead,
+                CreateEvent = createEvent
+            };
+        }
+
+        public Task PingAsync()
+        {
+            return Task.CompletedTask;
         }        
 
-        public async Task DeleteAsync(string streamName, long version)
+        public async Task DeleteAsync(string streamName, long version, CancellationToken cancellationToken)
         {
-            using (var client = Create().Result)
+            using (var client = CreateAsync().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -179,7 +258,7 @@ namespace ESPlus.Wyrm
                 writer.Write(name.Length);
                 writer.Write(name, 0, name.Length);
 
-                var len = reader.ReadInt32();
+                var len = await stream.ReadInt32Async(cancellationToken);
 
                 if (len != 8)
                 {
@@ -191,7 +270,6 @@ namespace ESPlus.Wyrm
                 // {
                 //     throw new Exception($"if (status != 0): {status}");
                 // }
-                await Task.FromResult(0);
             }
         }
 
@@ -202,7 +280,7 @@ namespace ESPlus.Wyrm
                 return Task.FromResult(new WyrmResult(Position.Start, 0L));
             }
 
-            using (var client = Create().Result)
+            using (var client = CreateAsync().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -264,13 +342,12 @@ namespace ESPlus.Wyrm
             public Int32 BodyLength;
         }
 
-        public IEnumerable<string> EnumerateStreams(params Type[] filters)
+        public async IAsyncEnumerable<string> EnumerateStreams(CancellationToken cancellationToken, params Type[] filters)
         {
             var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
 
-            using (var client = Create().Result)
+            using (var client = CreateAsync().Result)
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(OperationType.LIST_STREAMS);
@@ -283,26 +360,25 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
+                    var length = await stream.ReadInt32Async(cancellationToken);
 
                     if (length == 0)
                     {
                         yield break;
                     }
 
-                    var buffer = reader.ReadBytes(length);
+                    var buffer = await stream.ReadBinaryAsync(length, cancellationToken);
 
                     yield return Encoding.UTF8.GetString(buffer);
                 }
             }
         }
         
-        public Position LastCheckpoint()
+        public async Task<Position> LastCheckpointAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine($"LastCheckpoint");
-            using (var client = Create().Result)
+            using (var client = CreateAsync().Result)
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(OperationType.LAST_CHECKPOINT);
@@ -310,7 +386,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var position = reader.ReadBytes(32);
+                    var position = await stream.ReadBinaryAsync(32, cancellationToken);
 
                     return new Position(position);
                 }
@@ -320,7 +396,7 @@ namespace ESPlus.Wyrm
         public IEnumerable<WyrmEvent2> Subscribe(Position from)
         {
             Console.WriteLine($"Subscribe: {from.AsHexString()}");
-            using (var client = Create().Result)
+            using (var client = CreateAsync().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -343,11 +419,37 @@ namespace ESPlus.Wyrm
                 }
             }
         }
+        
+        public async IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position @from, CancellationToken cancellationToken)
+        {
+            Console.WriteLine($"Subscribe: {from.AsHexString()}");
+            using (var client = CreateAsync().Result)
+            using (var stream = client.GetStream())
+            using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write(OperationType.SUBSCRIBE);
+                writer.Write(from.Binary);
+                writer.Flush();
+
+                while (true)
+                {
+                    var length = await stream.ReadInt32Async(cancellationToken);
+
+                    if (length == 8)
+                    {
+                        //Console.WriteLine("reached end!");
+                        break;
+                    }
+
+                    yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
+                }
+            }
+        }
 
         public IEnumerable<WyrmEvent2> EnumerateAll(Position from)
         {
             Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
-            using (var client = Create().Result)
+            using (var client = CreateAsync().Result)
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -371,13 +473,13 @@ namespace ESPlus.Wyrm
             }
         }        
 
-        public IEnumerable<WyrmEvent2> EnumerateAllByStreams(params Type[] filters)
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken,
+            params Type[] filters)
         {
-            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
 
-            using (var client = Create().Result)
+            using (var client = CreateAsync().Result)
             using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(OperationType.READ_ALL_STREAMS_FORWARD);
@@ -391,7 +493,7 @@ namespace ESPlus.Wyrm
 
                 while (true)
                 {
-                    var length = reader.ReadInt32();
+                    var length = await stream.ReadInt32Async(cancellationToken);
 
                     if (length == 8)
                     {
@@ -399,7 +501,7 @@ namespace ESPlus.Wyrm
                         break;
                     }
 
-                    yield return ReadEvent(reader, length - sizeof(Int32));
+                    yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
                 }
             }
         }
