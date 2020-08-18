@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.HashFunction.xxHash;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -19,7 +20,6 @@ namespace ESPlus.Wyrm
         private readonly string _host;
         private readonly int _port;
         public IEventSerializer Serializer { get; }
-        private static readonly DateTime Epooch = new DateTime(1970, 1, 1);
 
         public WyrmDriver(string connectionString, IEventSerializer eventSerializer)
         {
@@ -127,7 +127,7 @@ namespace ESPlus.Wyrm
             disp += (int)streamNameLength;
             var eventType = Encoding.UTF8.GetString(payload.Slice(disp, (int)eventTypeLength));
             disp += (int)eventTypeLength;
-            var time = Epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
+            var time = DateTimeOffset.FromUnixTimeSeconds(clock).AddMilliseconds(ms / 1_000);
             var compressed = payload.Slice(disp, (int)compressedSize).ToArray();
             disp += compressedSize;
             var uncompressed = new byte[uncompressedSize];
@@ -151,7 +151,7 @@ namespace ESPlus.Wyrm
                 TotalOffset = totalOffset,
                 EventId = eventId,
                 Version = version,
-                TimestampUtc = time,
+                TimestampUtc = time.DateTime,
                 Metadata = metadata,
                 Data = data,
                 EventType = eventType,
@@ -159,7 +159,7 @@ namespace ESPlus.Wyrm
                 Position = position,
                 Serializer = Serializer,
                 IsAhead = ahead,
-                CreateEvent = createEvent 
+                CreateEvent = createEvent,
             };
         }
 
@@ -204,7 +204,7 @@ namespace ESPlus.Wyrm
             disp += (int) streamNameLength;
             var eventType = Encoding.UTF8.GetString(payload.Slice(disp, (int) eventTypeLength).ToArray());
             disp += (int) eventTypeLength;
-            var time = Epooch.AddSeconds(clock).AddMilliseconds(ms).ToLocalTime();
+            var time = DateTimeOffset.FromUnixTimeSeconds(clock).AddMilliseconds(ms/1_000);
             var compressed = payload.Slice(disp, (int) compressedSize).ToArray();
             disp += compressedSize;
             var uncompressed = new byte[uncompressedSize];
@@ -229,7 +229,7 @@ namespace ESPlus.Wyrm
                 TotalOffset = totalOffset,
                 EventId = eventId,
                 Version = version,
-                TimestampUtc = time,
+                TimestampUtc = time.DateTime,
                 Metadata = metadata,
                 Data = data,
                 EventType = eventType,
@@ -237,7 +237,7 @@ namespace ESPlus.Wyrm
                 Position = position,
                 Serializer = Serializer,
                 IsAhead = ahead,
-                CreateEvent = createEvent
+                CreateEvent = createEvent,
             };
         }
 
