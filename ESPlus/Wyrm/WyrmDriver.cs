@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -166,7 +167,7 @@ namespace ESPlus.Wyrm
         private async Task<WyrmEvent2> ReadEventAsync(NetworkStream reader, int length,
             CancellationToken cancellationToken)
         {
-            ReadOnlyMemory<byte> payload = await reader.ReadBinaryAsync(length, cancellationToken); // stackalloc byte[length];
+            ReadOnlyMemory<byte> payload = await reader.ReadBinaryAsync(length, cancellationToken);
             var createEvent = "";
 
             int disp = 0;
@@ -248,7 +249,7 @@ namespace ESPlus.Wyrm
 
         public async Task DeleteAsync(string streamName, long version, CancellationToken cancellationToken)
         {
-            using (var client = CreateAsync().Result)
+            using (var client = await CreateAsync())
             using (var stream = client.GetStream())
             using (var reader = new BinaryReader(stream))
             using (var writer = new BinaryWriter(stream))
@@ -420,10 +421,10 @@ namespace ESPlus.Wyrm
             }
         }
         
-        public async IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position @from, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             Console.WriteLine($"Subscribe: {from.AsHexString()}");
-            using (var client = CreateAsync().Result)
+            using (var client = await CreateAsync())
             using (var stream = client.GetStream())
             using (var writer = new BinaryWriter(stream))
             {
@@ -431,7 +432,7 @@ namespace ESPlus.Wyrm
                 writer.Write(from.Binary);
                 writer.Flush();
 
-                while (true)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     var length = await stream.ReadInt32Async(cancellationToken);
 
