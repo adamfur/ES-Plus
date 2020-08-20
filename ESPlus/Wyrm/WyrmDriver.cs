@@ -128,7 +128,7 @@ namespace ESPlus.Wyrm
             disp += (int)streamNameLength;
             var eventType = Encoding.UTF8.GetString(payload.Slice(disp, (int)eventTypeLength));
             disp += (int)eventTypeLength;
-            var time = DateTimeOffset.FromUnixTimeSeconds(clock).AddMilliseconds(ms / 1_000);
+            var time = DateTimeOffset.FromUnixTimeSeconds(clock).AddTicks(ms * 10);
             var compressed = payload.Slice(disp, (int)compressedSize).ToArray();
             disp += compressedSize;
             var uncompressed = new byte[uncompressedSize];
@@ -205,10 +205,7 @@ namespace ESPlus.Wyrm
             disp += (int) streamNameLength;
             var eventType = Encoding.UTF8.GetString(payload.Slice(disp, (int) eventTypeLength).ToArray());
             disp += (int) eventTypeLength;
-            var time = DateTimeOffset.FromUnixTimeSeconds(clock)
-                // .AddMilliseconds(ms/1_000)
-                .AddTicks(ms*10) 
-                ;
+            var time = DateTimeOffset.FromUnixTimeSeconds(clock).AddTicks(ms * 10);
             var compressed = payload.Slice(disp, (int) compressedSize).ToArray();
             disp += compressedSize;
             var uncompressed = new byte[uncompressedSize];
