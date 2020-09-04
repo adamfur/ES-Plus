@@ -15,9 +15,30 @@ namespace ESPlus.Wyrm
         private readonly IEventSerializer _eventSerializer;
         private readonly IWyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
-        private readonly object _lock = new object();
         private RepositoryTransaction _transaction = null;
         private List<Action<object>> _observers = new List<Action<object>>();
+
+        static WyrmRepository()
+        {
+            var aggregates = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(x => typeof(IAggregate).IsAssignableFrom(x))
+                .ToList();
+
+            foreach (var aggregate in aggregates)
+            {
+                aggregate.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
+                    .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
+                    .Select(x => x.GetParameters().First().ParameterType)
+                    .ToList()
+                    .ForEach(t =>
+                    {
+                        //Console.WriteLine($"Register type: {t.FullName}");
+                        _types[t.FullName] = t;
+                    }); 
+            }
+        }
 
         public WyrmRepository(IWyrmDriver wyrmConnection)
         {
@@ -35,23 +56,6 @@ namespace ESPlus.Wyrm
             foreach (var observer in _observers)
             {
                 observer(@event);
-            }
-        }
-
-        private void Index<TAggregate>()
-        {
-            lock (_lock)
-            {
-                typeof(TAggregate).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                    .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
-                    .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
-                    .Select(x => x.GetParameters().First().ParameterType)
-                    .ToList()
-                    .ForEach(t =>
-                    {
-                        //Console.WriteLine($"Register type: {t.FullName}");
-                        _types[t.FullName] = t;
-                    });
             }
         }
 
@@ -153,16 +157,9 @@ namespace ESPlus.Wyrm
                 throw new ArgumentException("Cannot get version < 0");
             }
 
-            Index<TAggregate>();
-
             foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
-                Type type;
-
-                lock (_lock)
-                {
-                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
-                }
+                var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
 
                 any = true;
                 if (type == null)
@@ -195,7 +192,6 @@ namespace ESPlus.Wyrm
             var stream = default(string);
             var applyAggregate = default(IAggregate);
 
-            Index<TAggregate>();
             await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(CancellationToken.None, filters))
             {
                 if (evnt.StreamName != stream)
@@ -211,12 +207,7 @@ namespace ESPlus.Wyrm
                     applyAggregate = aggregate;
                 }
 
-                Type type;
-
-                lock (_lock)
-                {
-                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
-                }
+                var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
 
                 if (type != null)
                 {
@@ -241,7 +232,6 @@ namespace ESPlus.Wyrm
             var stream = default(string);
             var applyAggregate = default(IAggregate);
 
-            Index<TAggregate>();
             await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(CancellationToken.None, filters))
             {
                 var hash = (ulong) evnt.StreamName.XXH64();
@@ -264,12 +254,7 @@ namespace ESPlus.Wyrm
                     applyAggregate = aggregate;
                 }
 
-                Type type;
-
-                lock (_lock)
-                {
-                    type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
-                }
+                var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
 
                 if (type != null)
                 {
