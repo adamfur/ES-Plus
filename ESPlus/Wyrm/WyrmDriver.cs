@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.HashFunction.xxHash;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -11,7 +10,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Exceptions;
-using ESPlus.Extentions;
 using LZ4;
 
 namespace ESPlus.Wyrm
@@ -54,114 +52,32 @@ namespace ESPlus.Wyrm
             return client;
         }
         
-        public IEnumerable<WyrmEvent2> EnumerateStream(string streamName)
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateStream(string streamName, CancellationToken cancellationToken = default)
         {
-            using (var client = CreateAsync().Result)
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
-            {
-                var name = Encoding.UTF8.GetBytes(streamName);
-                writer.Write(OperationType.READ_STREAM_FORWARD);
-                writer.Write(name.Length);
-                writer.Write(name, 0, name.Length);
-                writer.Write((int)0); //filter
-                writer.Flush();
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            using var reader = new BinaryReader(stream);
+            await using var writer = new BinaryWriter(stream);
+            var name = Encoding.UTF8.GetBytes(streamName);
+            
+            writer.Write(OperationType.READ_STREAM_FORWARD);
+            writer.Write(name.Length);
+            writer.Write(name, 0, name.Length);
+            writer.Write((int)0); //filter
+            writer.Flush();
 
-                while (true)
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var length = reader.ReadInt32();
+
+                if (length == 8)
                 {
-                    var length = reader.ReadInt32();
-
-                    if (length == 8)
-                    {
-                        //Console.WriteLine("reached end!");
-                        break;
-                    }
-
-                    var evt = ReadEvent(reader, length - sizeof(Int32));
-
-                    // Console.WriteLine($"Stream: {evt.StreamName}.({evt.Version}){evt.EventType}");
-
-                    yield return evt;
+                    //Console.WriteLine("reached end!");
+                    break;
                 }
+
+                yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
             }
-        }
-
-        private WyrmEvent2 ReadEvent(BinaryReader reader, int length)
-        {
-            ReadOnlySpan<byte> payload = reader.ReadBytes(length);// stackalloc byte[length];
-            var createEvent = "";
-            // reader.ReadBytes(payload, length);
-
-            int disp = 0;
-            var position = payload.Slice(disp, 32).ToArray();
-            disp += 32;
-            var offset = BitConverter.ToInt64(payload.Slice(disp, 8));
-            disp += 8;
-            var totalOffset = BitConverter.ToInt64(payload.Slice(disp, 8));
-            disp += 8;
-            var ahead = BitConverter.ToBoolean(payload.Slice(disp, 1));
-            disp += 1;
-            var eventId = new Guid(payload.Slice(disp, 16));
-            disp += 16;
-            var version = BitConverter.ToInt64(payload.Slice(disp, 8));
-            disp += 8;
-            var uncompressedSize = BitConverter.ToInt32(payload.Slice(disp, 4));
-            disp += 4;
-            var compressedSize = BitConverter.ToInt32(payload.Slice(disp, 4));
-            disp += 4;
-            var encryptedSize = BitConverter.ToInt32(payload.Slice(disp, 4));
-            disp += 4;
-            var clock = BitConverter.ToInt64(payload.Slice(disp, 8));
-            disp += 8;
-            var ms = BitConverter.ToInt64(payload.Slice(disp, 8));
-            disp += 8;
-            var eventTypeLength = BitConverter.ToInt32(payload.Slice(disp, 4));
-            disp += 4;
-            var streamNameLength = BitConverter.ToInt32(payload.Slice(disp, 4));
-            disp += 4;
-            var metaDataLength = BitConverter.ToInt32(payload.Slice(disp, 4));
-            disp += 4;
-            var payloadLength = BitConverter.ToInt32(payload.Slice(disp, 4));
-            disp += 4;
-            var streamName = Encoding.UTF8.GetString(payload.Slice(disp, (int)streamNameLength));
-            disp += (int)streamNameLength;
-            var eventType = Encoding.UTF8.GetString(payload.Slice(disp, (int)eventTypeLength));
-            disp += (int)eventTypeLength;
-            var time = DateTimeOffset.FromUnixTimeSeconds(clock).AddTicks(ms * 10);
-            var compressed = payload.Slice(disp, (int)compressedSize).ToArray();
-            disp += compressedSize;
-            var uncompressed = new byte[uncompressedSize];
-            var compressedLength = LZ4Codec.Decode(compressed, 0, compressed.Length, uncompressed, 0, uncompressed.Length);
-            var metadata = new byte[metaDataLength];
-            var data = new byte[payloadLength];
-            
-            if (eventType == "Wyrm.StreamDeleted" && disp < payload.Length)
-            {
-                var createEventLength = BitConverter.ToInt32(payload.Slice(disp, 4));
-                disp += 4;
-                createEvent = Encoding.UTF8.GetString(payload.Slice(disp, createEventLength));
-            }
-            
-            Array.Copy(uncompressed, metadata, metadata.Length);
-            Array.Copy(uncompressed, metadata.Length, data, 0, data.Length);
-
-            return new WyrmEvent2
-            {
-                Offset = offset,
-                TotalOffset = totalOffset,
-                EventId = eventId,
-                Version = version,
-                TimestampUtc = time.DateTime,
-                Metadata = metadata,
-                Data = data,
-                EventType = eventType,
-                StreamName = streamName,
-                Position = position,
-                Serializer = Serializer,
-                IsAhead = ahead,
-                CreateEvent = createEvent,
-            };
         }
 
         private async Task<WyrmEvent2> ReadEventAsync(NetworkStream reader, int length,
@@ -249,83 +165,74 @@ namespace ESPlus.Wyrm
 
         public async Task DeleteAsync(string streamName, long version, CancellationToken cancellationToken)
         {
-            using (var client = await CreateAsync())
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            using var reader = new BinaryReader(stream);
+            await using var writer = new BinaryWriter(stream);
+            var name = Encoding.UTF8.GetBytes(streamName);
+            
+            writer.Write(OperationType.DELETE);
+            writer.Write(name.Length);
+            writer.Write(name, 0, name.Length);
+
+            var len = await stream.ReadInt32Async(cancellationToken);
+
+            if (len != 8)
             {
-                var name = Encoding.UTF8.GetBytes(streamName);
-                writer.Write(OperationType.DELETE);
-                writer.Write(name.Length);
-                writer.Write(name, 0, name.Length);
-
-                var len = await stream.ReadInt32Async(cancellationToken);
-
-                if (len != 8)
-                {
-                    throw new Exception("if (len != 8)");
-                }
-
-                // var status = reader.ReadInt32();
-                // if (status != 0)
-                // {
-                //     throw new Exception($"if (status != 0): {status}");
-                // }
+                throw new Exception("if (len != 8)");
             }
         }
 
-        public Task<WyrmResult> Append(IEnumerable<WyrmEvent> events)
+        public async Task<WyrmResult> Append(IEnumerable<WyrmEvent> events)
         {
             if (!events.Any())
             {
-                return Task.FromResult(new WyrmResult(Position.Start, 0L));
+                return new WyrmResult(Position.Start, 0L);
             }
 
-            using (var client = CreateAsync().Result)
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            using var reader = new BinaryReader(stream);
+            await using var writer = new BinaryWriter(stream);
+            var concat = Combine(events.Select(x => Assemble(x)).ToArray());
+            int length = concat.Length;
+
+            writer.Write(OperationType.PUT);
+            writer.Write(length);
+            writer.Write(concat, 0, length);
+            writer.Flush();
+
+            var len = reader.ReadInt32();
+
+            if (len == 8 + 32)
             {
-                var concat = Combine(events.Select(x => Assemble(x)).ToArray());
-                int length = concat.Length;
+                var status = reader.ReadInt32();
+                var hash = reader.ReadBytes(32);
+                var offset = 0;
 
-                writer.Write(OperationType.PUT);
-                writer.Write(length);
-                writer.Write(concat, 0, length);
-                writer.Flush();
-
-                var len = reader.ReadInt32();
-
-                if (len == 8 + 32)
+                if (status != 0)
                 {
-                    var status = reader.ReadInt32();
-                    var hash = reader.ReadBytes(32);
-                    var offset = 0;
-
-                    if (status != 0)
-                    {
-                        throw new WrongExpectedVersionException($"Bad status: {status}");
-                    }
-
-                    return Task.FromResult(new WyrmResult(new Position(hash), offset));
+                    throw new WrongExpectedVersionException($"Bad status: {status}");
                 }
-                else if (len == 8 + 32 + 8)
+
+                return new WyrmResult(new Position(hash), offset);
+            }
+            else if (len == 8 + 32 + 8)
+            {
+                var status = reader.ReadInt32();
+                var hash = reader.ReadBytes(32);
+                var offset = reader.ReadInt64();
+
+                if (status != 0)
                 {
-                    var status = reader.ReadInt32();
-                    var hash = reader.ReadBytes(32);
-                    var offset = reader.ReadInt64();
-
-                    if (status != 0)
-                    {
-                        throw new WrongExpectedVersionException($"Bad status: {status}");
-                    }
-
-                    return Task.FromResult(new WyrmResult(new Position(hash), offset));
+                    throw new WrongExpectedVersionException($"Bad status: {status}");
                 }
-                else
-                {
-                    throw new Exception("if (len != 8 + 32 + 8?)");
-                }
+
+                return new WyrmResult(new Position(hash), offset);
+            }
+            else
+            {
+                throw new Exception("if (len != 8 + 32 + 8?)");
             }
         }
 
@@ -346,10 +253,9 @@ namespace ESPlus.Wyrm
         public async IAsyncEnumerable<string> EnumerateStreams(CancellationToken cancellationToken, params Type[] filters)
         {
             var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
-
-            using (var client = CreateAsync().Result)
-            using (var stream = client.GetStream())
-            using (var writer = new BinaryWriter(stream))
+            using var client = await CreateAsync();
+            await using (var stream = client.GetStream())
+            await using (var writer = new BinaryWriter(stream))
             {
                 writer.Write(OperationType.LIST_STREAMS);
                 writer.Write(filters.Length);
@@ -359,7 +265,7 @@ namespace ESPlus.Wyrm
                 }
                 writer.Flush();
 
-                while (true)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     var length = await stream.ReadInt32Async(cancellationToken);
 
@@ -378,58 +284,90 @@ namespace ESPlus.Wyrm
         public async Task<Position> LastCheckpointAsync(CancellationToken cancellationToken)
         {
             Console.WriteLine($"LastCheckpoint");
-            using (var client = CreateAsync().Result)
-            using (var stream = client.GetStream())
-            using (var writer = new BinaryWriter(stream))
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+            
+            writer.Write(OperationType.LAST_CHECKPOINT);
+            writer.Flush();
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                writer.Write(OperationType.LAST_CHECKPOINT);
-                writer.Flush();
+                var position = await stream.ReadBinaryAsync(32, cancellationToken);
 
-                while (true)
-                {
-                    var position = await stream.ReadBinaryAsync(32, cancellationToken);
-
-                    return new Position(position);
-                }
+                return new Position(position);
             }
+
+            return Position.Start;
         }
 
-        public IEnumerable<WyrmEvent2> Subscribe(Position from)
-        {
-            Console.WriteLine($"Subscribe: {from.AsHexString()}");
-            using (var client = CreateAsync().Result)
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
-            {
-                writer.Write(OperationType.SUBSCRIBE);
-                writer.Write(@from.Binary);
-                writer.Flush();
-
-                while (true)
-                {
-                    var length = reader.ReadInt32();
-
-                    if (length == 8)
-                    {
-                        //Console.WriteLine("reached end!");
-                        break;
-                    }
-
-                    yield return ReadEvent(reader, length - sizeof(Int32));
-                }
-            }
-        }
-        
         public async IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             Console.WriteLine($"Subscribe: {from.AsHexString()}");
-            using (var client = await CreateAsync())
-            using (var stream = client.GetStream())
-            using (var writer = new BinaryWriter(stream))
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+            
+            writer.Write(OperationType.SUBSCRIBE);
+            writer.Write(@from.Binary);
+            writer.Flush();
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                writer.Write(OperationType.SUBSCRIBE);
-                writer.Write(from.Binary);
+                var length = await stream.ReadInt32Async(cancellationToken);
+
+                if (length == 8)
+                {
+                    //Console.WriteLine("reached end!");
+                    break;
+                }
+
+                yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
+            }
+        }
+
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateAll(Position from, CancellationToken cancellationToken)
+        {
+            Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            using var reader = new BinaryReader(stream);
+            await using var writer = new BinaryWriter(stream);
+            
+            writer.Write(OperationType.READ_ALL_FORWARD);
+            writer.Write(@from.Binary);
+            writer.Flush();
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var length = reader.ReadInt32();
+
+                if (length == 8)
+                {
+                    //Console.WriteLine("reached end!");
+                    break;
+                }
+
+                yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
+            }
+        }        
+
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken,
+            params Type[] filters)
+        {
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
+
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            await using (var writer = new BinaryWriter(stream))
+            {
+                writer.Write(OperationType.READ_ALL_STREAMS_FORWARD);
+                writer.Write(filters.Length);
+                foreach (var filter in filters)
+                {
+                    writer.Write(BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(filter.FullName)).Hash));
+                }
+
                 writer.Flush();
 
                 while (!cancellationToken.IsCancellationRequested)
@@ -447,105 +385,42 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public IEnumerable<WyrmEvent2> EnumerateAll(Position from)
-        {
-            Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
-            using (var client = CreateAsync().Result)
-            using (var stream = client.GetStream())
-            using (var reader = new BinaryReader(stream))
-            using (var writer = new BinaryWriter(stream))
-            {
-                writer.Write(OperationType.READ_ALL_FORWARD);
-                writer.Write(@from.Binary);
-                writer.Flush();
-
-                while (true)
-                {
-                    var length = reader.ReadInt32();
-
-                    if (length == 8)
-                    {
-                        //Console.WriteLine("reached end!");
-                        break;
-                    }
-
-                    yield return ReadEvent(reader, length - sizeof(Int32));
-                }
-            }
-        }        
-
-        public async IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken,
-            params Type[] filters)
-        {
-            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
-
-            using (var client = CreateAsync().Result)
-            using (var stream = client.GetStream())
-            using (var writer = new BinaryWriter(stream))
-            {
-                writer.Write(OperationType.READ_ALL_STREAMS_FORWARD);
-                writer.Write(filters.Length);
-                foreach (var filter in filters)
-                {
-                    writer.Write(BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(filter.FullName)).Hash));
-                }
-
-                writer.Flush();
-
-                while (true)
-                {
-                    var length = await stream.ReadInt32Async(cancellationToken);
-
-                    if (length == 8)
-                    {
-                        //Console.WriteLine("reached end!");
-                        break;
-                    }
-
-                    yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
-                }
-            }
-        }
-
         private byte[] Assemble(WyrmEvent @event)
         {
-            using (var target = new MemoryStream())
-            using (var writer = new BinaryWriter(target))
+            using var target = new MemoryStream();
+            using var writer = new BinaryWriter(target);
+            var streamName = Encoding.UTF8.GetBytes(@event.StreamName);
+            var eventType = Encoding.UTF8.GetBytes(@event.EventType);
+            var metadata = @event.Metadata;
+            var body = @event.Body;
+            var uncompressed = BuildPayload(metadata, body);
+            var uncompressedLength = uncompressed.Length;
+            var compressed = new byte[LZ4Codec.MaximumOutputLength(uncompressedLength)];
+            var compressedLength = LZ4Codec.Encode(uncompressed, 0, uncompressedLength, compressed, 0, compressed.Length);
+            var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
+            var apa = new Apa
             {
-                var streamName = Encoding.UTF8.GetBytes(@event.StreamName);
-                var eventType = Encoding.UTF8.GetBytes(@event.EventType);
-                var metadata = @event.Metadata;
-                var body = @event.Body;
-                var uncompressed = BuildPayload(metadata, body);
-                var uncompressedLength = uncompressed.Length;
-                var compressed = new byte[LZ4Codec.MaximumOutputLength(uncompressedLength)];
-                var compressedLength = LZ4Codec.Encode(uncompressed, 0, uncompressedLength, compressed, 0, compressed.Length);
+                Length = length,
+                StreamNameLength = streamName.Length,
+                EventTypeLength = eventType.Length,
+                Version = @event.Version,
+                CompressedLength = compressedLength,
+                UncompressedLength = uncompressedLength,
+                EventId = @event.EventId,
+                MetaDataLength = metadata.Length,
+                BodyLength = body.Length
+            };
 
-                var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
-                var apa = new Apa
-                {
-                    Length = length,
-                    StreamNameLength = streamName.Length,
-                    EventTypeLength = eventType.Length,
-                    Version = @event.Version,
-                    CompressedLength = compressedLength,
-                    UncompressedLength = uncompressedLength,
-                    EventId = @event.EventId,
-                    MetaDataLength = metadata.Length,
-                    BodyLength = body.Length
-                };
+            writer.WriteStruct(apa);
+            writer.Write(streamName);
+            writer.Write(eventType);
+            writer.Write(compressed, 0, compressedLength);
+            writer.Flush();
 
-                writer.WriteStruct(apa);
-                writer.Write(streamName);
-                writer.Write(eventType);
-                writer.Write(compressed, 0, compressedLength);
-                writer.Flush();
-
-                var result = new byte[target.Length];
-                target.Seek(0, SeekOrigin.Begin);
-                target.Read(result, 0, result.Length);
-                return result;
-            }
+            var result = new byte[target.Length];
+            target.Seek(0, SeekOrigin.Begin);
+            target.Read(result, 0, result.Length);
+            return result;
         }
 
         private byte[] BuildPayload(byte[] metadata, byte[] data)

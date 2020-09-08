@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using ESPlus.Misc;
 using ESPlus.Subscribers;
 
@@ -7,7 +8,7 @@ namespace ESPlus.Wyrm
 {
     public class WyrmSubscriptionClient : ISubscriptionClient
     {
-        private SubscriptionContext _subscriptionContext;
+        private readonly SubscriptionContext _subscriptionContext;
         private readonly IWyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
 
@@ -17,10 +18,10 @@ namespace ESPlus.Wyrm
             _wyrmConnection = wyrmConnection;
             _eventTypeResolver = eventTypeResolver;
         }
-
-        public IEnumerator<Event> GetEnumerator()
+        
+        public async IAsyncEnumerator<Event> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            foreach (var @event in _wyrmConnection.Subscribe(_subscriptionContext.Position))
+            await foreach (var @event in _wyrmConnection.SubscribeAsync(_subscriptionContext.Position, cancellationToken))
             {
                 yield return new Event(_eventTypeResolver, @event.Serializer)
                 {
@@ -36,11 +37,6 @@ namespace ESPlus.Wyrm
                     TimestampUtc = @event.TimestampUtc,
                 };
             }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }

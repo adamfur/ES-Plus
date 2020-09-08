@@ -157,7 +157,7 @@ namespace ESPlus.Wyrm
                 throw new ArgumentException("Cannot get version < 0");
             }
 
-            foreach (var evnt in _wyrmConnection.EnumerateStream(id))
+            await foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
                 if (applyAggregate.Version == -1)
                 {

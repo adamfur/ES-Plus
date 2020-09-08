@@ -8,16 +8,15 @@ namespace ESPlus.Wyrm
     public interface IWyrmDriver
     {
         IEventSerializer Serializer { get; }
-        IEnumerable<WyrmEvent2> EnumerateStream(string streamName);
-        Task DeleteAsync(string streamName, long version, CancellationToken cancellationToken);
+        IAsyncEnumerable<WyrmEvent2> EnumerateStream(string streamName, CancellationToken cancellationToken = default);
+        Task DeleteAsync(string streamName, long version, CancellationToken cancellationToken = default);
         Task<WyrmResult> Append(IEnumerable<WyrmEvent> events);
         IAsyncEnumerable<string> EnumerateStreams(CancellationToken cancellationToken, params Type[] filters);
-        Task<Position> LastCheckpointAsync(CancellationToken cancellationToken);
-        IEnumerable<WyrmEvent2> Subscribe(Position from);
-        IEnumerable<WyrmEvent2> EnumerateAll(Position from);
-        IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken,
+        Task<Position> LastCheckpointAsync(CancellationToken cancellationToken = default);
+        IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken = default,
             params Type[] filters);
         Task PingAsync();
-        IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from, CancellationToken cancellationToken);
+        IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<WyrmEvent2> EnumerateAll(Position from, CancellationToken cancellationToken = default);
     }
 }
