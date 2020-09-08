@@ -1,10 +1,12 @@
 ﻿
+using System;
 using System.Collections.Generic;
 
 namespace ESPlus.Interfaces
 {
     public interface IAggregate
     {
+        Type InitialType();
         long Version { get; set; }
         string Id { get; }
         void ApplyChange(object @event);

@@ -13,6 +13,11 @@ namespace ESPlus.Aggregates
         public long Version { get; set; } = -1;
         public string Id { get; private set; }
 
+        Type IAggregate.InitialType()
+        {
+            return _initialType;
+        }
+
         protected AggregateBase(string id, Type initialType = null)
         {
             _initialType = initialType;

@@ -159,6 +159,14 @@ namespace ESPlus.Wyrm
 
             foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
+                if (applyAggregate.Version == -1)
+                {
+                    if (evnt.EventType != applyAggregate.InitialType().FullName)
+                    {
+                        throw new Exception("Invalid Aggregate");
+                    }
+                }
+                
                 var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
 
                 any = true;
