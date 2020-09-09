@@ -4,6 +4,7 @@ using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using System.Linq;
 using System;
+using System.Threading;
 using ESPlus.EventHandlers;
 using ESPlus.Exceptions;
 using ESPlus.Wyrm;
@@ -94,18 +95,19 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
-        public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null)
+        public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
         {
             await SaveImpl(aggregate, aggregate.Version);
             return new WyrmResult(Position.Start, 0);
         }
 
-        public Task AppendAsync(AggregateBase aggregate, object headers)
+        public async Task<WyrmResult> AppendAsync(AggregateBase aggregate, object headers, CancellationToken cancellationToken = default)
         {
-            return SaveImpl(aggregate, WritePolicy.Any);
+            await SaveImpl(aggregate, WritePolicy.Any);
+            return new WyrmResult(Position.Start, 0);            
         }
 
-        public Task<Position> SaveNewAsync(IAggregate aggregate, object headers)
+        public Task<Position> SaveNewAsync(IAggregate aggregate, object headers, CancellationToken cancellationToken = default)
         {
             return SaveImpl(aggregate, WritePolicy.EmptyStream);
         }
@@ -178,17 +180,12 @@ namespace ESPlus.Repositories
             return Task.FromResult(0);
         }
 
-        Task<WyrmResult> IRepository.AppendAsync(AggregateBase aggregate, object headers)
-        {
-            throw new NotImplementedException();
-        }
-
         public IRepositoryTransaction BeginTransaction()
         {
             throw new NotImplementedException();
         }
 
-        public Task<WyrmResult> Commit()
+        public Task<WyrmResult> Commit(CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

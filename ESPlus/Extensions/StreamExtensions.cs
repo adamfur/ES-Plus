@@ -9,7 +9,7 @@ namespace ESPlus.Extentions
 {
     public static class StreamExtensions
     {
-        public static async Task<byte[]> ReadBytesAsync(this Stream stream, int length)
+        public static async Task<byte[]> ReadBytesAsync(this Stream stream, int length, CancellationToken cancellationToken)
         {
             var buffer = new byte[length];
             var offset = 0;
@@ -17,7 +17,7 @@ namespace ESPlus.Extentions
 
             while (remaining > 0)
             {
-                var result = await stream.ReadAsync(buffer, offset, remaining);
+                var result = await stream.ReadAsync(buffer, offset, remaining, cancellationToken);
 
                 if (result < 0)
                 {
@@ -31,11 +31,11 @@ namespace ESPlus.Extentions
             return buffer;
         }
 
-        public static async Task<T> ReadStructAsync<T>(this Stream reader)
+        public static async Task<T> ReadStructAsync<T>(this Stream reader, CancellationToken cancellationToken)
         {
             // Console.WriteLine($"ReadStructAsync: {typeof(T).FullName}");
             var size = Marshal.SizeOf(typeof(T));
-            var buffer = await reader.ReadBytesAsync(size);
+            var buffer = await reader.ReadBytesAsync(size, cancellationToken);
 
             // Pin the managed memory while, copy it out the data, then unpin it
             var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);

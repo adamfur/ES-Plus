@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Exceptions;
+using ESPlus.Extentions;
 using LZ4;
 
 namespace ESPlus.Wyrm
@@ -56,7 +57,7 @@ namespace ESPlus.Wyrm
         {
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
-            using var reader = new BinaryReader(stream);
+            
             await using var writer = new BinaryWriter(stream);
             var name = Encoding.UTF8.GetBytes(streamName);
             
@@ -68,7 +69,7 @@ namespace ESPlus.Wyrm
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var length = reader.ReadInt32();
+                var length = await stream.ReadInt32Async(cancellationToken);
 
                 if (length == 8)
                 {
@@ -167,7 +168,7 @@ namespace ESPlus.Wyrm
         {
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
-            using var reader = new BinaryReader(stream);
+            
             await using var writer = new BinaryWriter(stream);
             var name = Encoding.UTF8.GetBytes(streamName);
             
@@ -183,7 +184,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public async Task<WyrmResult> Append(IEnumerable<WyrmEvent> events)
+        public async Task<WyrmResult> Append(IEnumerable<WyrmEvent> events, CancellationToken cancellationToken)
         {
             if (!events.Any())
             {
@@ -192,7 +193,7 @@ namespace ESPlus.Wyrm
 
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
-            using var reader = new BinaryReader(stream);
+            
             await using var writer = new BinaryWriter(stream);
             var concat = Combine(events.Select(x => Assemble(x)).ToArray());
             int length = concat.Length;
@@ -202,12 +203,12 @@ namespace ESPlus.Wyrm
             writer.Write(concat, 0, length);
             writer.Flush();
 
-            var len = reader.ReadInt32();
+            var len = await stream.ReadInt32Async(cancellationToken);
 
             if (len == 8 + 32)
             {
-                var status = reader.ReadInt32();
-                var hash = reader.ReadBytes(32);
+                var status = await stream.ReadInt32Async(cancellationToken);
+                var hash = await stream.ReadBytesAsync(32, cancellationToken);
                 var offset = 0;
 
                 if (status != 0)
@@ -219,9 +220,9 @@ namespace ESPlus.Wyrm
             }
             else if (len == 8 + 32 + 8)
             {
-                var status = reader.ReadInt32();
-                var hash = reader.ReadBytes(32);
-                var offset = reader.ReadInt64();
+                var status = await stream.ReadInt32Async(cancellationToken);
+                var hash = await stream.ReadBytesAsync(32, cancellationToken);
+                var offset = await stream.ReadInt64Async(cancellationToken);
 
                 if (status != 0)
                 {
@@ -331,7 +332,7 @@ namespace ESPlus.Wyrm
             Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
-            using var reader = new BinaryReader(stream);
+            
             await using var writer = new BinaryWriter(stream);
             
             writer.Write(OperationType.READ_ALL_FORWARD);
@@ -340,7 +341,7 @@ namespace ESPlus.Wyrm
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var length = reader.ReadInt32();
+                var length = await stream.ReadInt32Async(cancellationToken);
 
                 if (length == 8)
                 {

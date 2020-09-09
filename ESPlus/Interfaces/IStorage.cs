@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ESPlus.Storage;
 
 namespace ESPlus.Interfaces
@@ -9,5 +10,6 @@ namespace ESPlus.Interfaces
         void Delete(string path);
         T Get<T>(string path) where T : HasObjectId;        
         void Reset();
+        IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters);
     }
 }

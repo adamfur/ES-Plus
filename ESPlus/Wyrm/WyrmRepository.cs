@@ -73,21 +73,21 @@ namespace ESPlus.Wyrm
             await _wyrmConnection.DeleteAsync(id, version, CancellationToken.None);
         }
 
-        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null)
+        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
             var expectedVersion = originalVersion == -1 ? ExpectedVersion.NoStream : originalVersion;
 
-            return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers);
+            return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers, cancellationToken);
         }
 
-        public Task<WyrmResult> AppendAsync(AggregateBase aggregate, object headers = null)
+        public Task<WyrmResult> AppendAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
 
-            return SaveAggregate(aggregate, newEvents, expectedVersion, headers);
+            return SaveAggregate(aggregate, newEvents, expectedVersion, headers, cancellationToken);
         }
 
         public int Version(long first, int index)
@@ -113,7 +113,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        private async Task<WyrmResult> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
+        private async Task<WyrmResult> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers, CancellationToken cancellationToken)
         {
             var copy = newEvents.ToList();
             
@@ -142,7 +142,7 @@ namespace ESPlus.Wyrm
                     Notify(@event);
                 }
                 
-                return await _wyrmConnection.Append(eventsToSave);
+                return await _wyrmConnection.Append(eventsToSave, cancellationToken);
             }
         }
 
@@ -244,7 +244,7 @@ namespace ESPlus.Wyrm
             {
                 var hash = (ulong) evnt.StreamName.XXH64();
 
-                if ((hash % shards) != shard)
+                if (hash % shards != shard)
                 {
                     continue;
                 }
@@ -284,7 +284,7 @@ namespace ESPlus.Wyrm
             return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
 
-        public Task<Position> SaveNewAsync(IAggregate aggregate, object headers)
+        public Task<Position> SaveNewAsync(IAggregate aggregate, object headers, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
@@ -298,11 +298,11 @@ namespace ESPlus.Wyrm
             return transaction;
         }
 
-        public async Task<WyrmResult> Commit()
+        public async Task<WyrmResult> Commit(CancellationToken cancellationToken = default)
         {
             if (_transaction != null)
             {
-                var result = await _wyrmConnection.Append(_transaction.Events);
+                var result = await _wyrmConnection.Append(_transaction.Events, cancellationToken);
 
                 return result;
             }

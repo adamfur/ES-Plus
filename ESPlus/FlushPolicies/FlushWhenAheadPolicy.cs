@@ -30,7 +30,7 @@ namespace ESPlus.FlushPolicies
         }
     }
 
-//    public class FlushWhenAheadPolicy : IFlushPolicy
+    //    public class FlushWhenAheadPolicy : IFlushPolicy
 //    {
 //        public IEventHandler EventHandler { get; set; }
 //        private readonly TimeSpan _timeout;

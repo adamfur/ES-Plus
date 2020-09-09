@@ -24,6 +24,13 @@ namespace ESPlus.Wyrm
             
             return BitConverter.ToInt32(data);
         }
+        
+        public static async Task<long> ReadInt64Async(this NetworkStream reader, CancellationToken cancellationToken)
+        {
+            var data = await reader.ReadBinaryAsync(sizeof(Int64), cancellationToken);
+            
+            return BitConverter.ToInt32(data);
+        }
 
         public static async Task<byte[]> ReadBinaryAsync(this NetworkStream reader, int count,
             CancellationToken cancellationToken)

@@ -43,5 +43,10 @@ namespace ESPlus.Storage
         {
             _data.Clear();
         }
+
+        public IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

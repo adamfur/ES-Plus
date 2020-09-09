@@ -197,6 +197,11 @@ namespace ESPlus.Storage
             throw new System.NotImplementedException();
         }
 
+        public IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters)
+        {
+            return _dataStorage.SearchAsync(database, parameters);
+        }
+
         public virtual void Delete(string path)
         {
 //            Console.WriteLine($"PersistantJournal delete: {path}");

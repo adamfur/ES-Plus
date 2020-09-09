@@ -127,6 +127,11 @@ namespace ESPlus.Storage
             _pathExits.Clear();
         }
 
+        public IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void Delete(string path)
         {
             Directory.Delete(path);
