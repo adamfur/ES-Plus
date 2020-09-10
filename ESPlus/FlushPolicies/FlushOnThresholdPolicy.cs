@@ -10,7 +10,7 @@ namespace ESPlus.FlushPolicies
 
         public IEventHandler EventHandler { get; set; }
 
-        public void FlushWhenAhead()
+        public virtual void FlushWhenAhead()
         {
         }
 
@@ -22,7 +22,7 @@ namespace ESPlus.FlushPolicies
             }
         }
 
-        private void Flush()
+        protected void Flush()
         {
             EventHandler.Flush();
             _events = 0;
