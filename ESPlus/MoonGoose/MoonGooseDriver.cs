@@ -4,6 +4,7 @@ using System.Data.HashFunction.xxHash;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Wyrm;
 
@@ -32,7 +33,7 @@ namespace ESPlus.MoonGoose
             return client;
         }
         
-        public async Task<byte[]> GetAsync(string database, string key)
+        public async Task<byte[]> GetAsync(string database, string key, CancellationToken cancellationToken = default)
         {
             using (var client = await Create())
             using (var stream = client.GetStream())
@@ -47,19 +48,18 @@ namespace ESPlus.MoonGoose
                 writer.Write((int) Commands.Get);
                 writer.Write((int)key.Length);
                 writer.Write(Encoding.UTF8.GetBytes(key));
-
                 writer.Flush();
-                await stream.FlushAsync();
+                await stream.FlushAsync(cancellationToken);
 
                 while (true)
                 {
-                    var (query, tokenizer) = await stream.QueryAsync();
+                    var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
 
                     if (query == Queries.Payload)
                     {
                         var length = tokenizer.ReadI32();
                         var payload = tokenizer.ReadBinary(length).ToArray();
-                        var text = Encoding.UTF8.GetString(payload);
+
                         return payload;
                     }
                     else if (query == Queries.Exception)
@@ -74,7 +74,7 @@ namespace ESPlus.MoonGoose
             }
         }
         
-        public async Task PutAsync(string database, IEnumerable<Document> documents)
+        public async Task PutAsync(string database, IEnumerable<Document> documents, CancellationToken cancellationToken = default)
         {
             using (var client = await Create())
             using (var stream = client.GetStream())
@@ -99,13 +99,12 @@ namespace ESPlus.MoonGoose
 
                 writer.Write((int) 8);
                 writer.Write((int) Commands.Commit);
-
                 writer.Flush();
-                await stream.FlushAsync();
+                await stream.FlushAsync(cancellationToken);
 
                 while (true)
                 {
-                    var (query, tokenizer) = await stream.QueryAsync();
+                    var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
 
                     if (query == Queries.Success)
                     {
@@ -131,7 +130,7 @@ namespace ESPlus.MoonGoose
             throw new MoonGooseExceptions(message);
         }
 
-        public async IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters)
+        public async IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters, CancellationToken cancellationToken = default)
         {
             using (var client = await Create())
             using (var stream = client.GetStream())
@@ -146,13 +145,12 @@ namespace ESPlus.MoonGoose
                 writer.Write((int) Commands.Search);
                 writer.Write((int) parameters.Length);
                 writer.Write(LongArrayToByteArray(parameters));
-
                 writer.Flush();
-                await stream.FlushAsync();
+                await stream.FlushAsync(cancellationToken);
 
                 while (true)
                 {
-                    var (query, tokenizer) = await stream.QueryAsync();
+                    var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
 
                     if (query == Queries.Success)
                     {
