@@ -53,7 +53,7 @@ namespace ESPlus.Wyrm
             return client;
         }
         
-        public async IAsyncEnumerable<WyrmEvent2> EnumerateStream(string streamName, CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateStream(string streamName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
@@ -251,7 +251,7 @@ namespace ESPlus.Wyrm
             public Int32 BodyLength;
         }
 
-        public async IAsyncEnumerable<string> EnumerateStreams(CancellationToken cancellationToken, params Type[] filters)
+        public async IAsyncEnumerable<string> EnumerateStreams([EnumeratorCancellation] CancellationToken cancellationToken, params Type[] filters)
         {
             var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
             using var client = await CreateAsync();
@@ -327,7 +327,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public async IAsyncEnumerable<WyrmEvent2> EnumerateAll(Position from, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateAll(Position from, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
             using var client = await CreateAsync();
@@ -353,7 +353,7 @@ namespace ESPlus.Wyrm
             }
         }        
 
-        public async IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken,
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync([EnumeratorCancellation] CancellationToken cancellationToken,
             params Type[] filters)
         {
             var algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });

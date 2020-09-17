@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.HashFunction.xxHash;
 using System.IO;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -130,7 +131,7 @@ namespace ESPlus.MoonGoose
             throw new MoonGooseExceptions(message);
         }
 
-        public async IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters, CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using (var client = await Create())
             using (var stream = client.GetStream())
