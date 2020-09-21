@@ -18,13 +18,14 @@ namespace ESPlus
                 catch (Exception ex)
                 {
                     exception = ex;
-                    await Task.Delay(TimeSpan.FromSeconds(1 << iteration));
+
+                    await Delay(iteration);
                 }
             }
 
             throw exception;
         }
-        
+
         public static async Task RetryAsync(Func<Task> action, int tries = 3)
         {
             Exception exception = null;
@@ -39,11 +40,22 @@ namespace ESPlus
                 catch (Exception ex)
                 {
                     exception = ex;
-                    await Task.Delay(TimeSpan.FromSeconds(1 << iteration));
+
+                    await Delay(iteration);
                 }
             }
 
             throw exception;
         }        
+        
+        private static async Task Delay(int iteration)
+        {
+            if (iteration == 0)
+            {
+                return;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(100 << (iteration - 1)));
+        }
     }
 }
