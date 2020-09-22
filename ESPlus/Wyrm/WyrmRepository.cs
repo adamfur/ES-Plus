@@ -152,7 +152,7 @@ namespace ESPlus.Wyrm
             var applyAggregate = (IAggregate)aggregate;
             bool any = false;
 
-            if (version <= 0)
+            if (version < 0)
             {
                 throw new ArgumentException("Cannot get version < 0");
             }
