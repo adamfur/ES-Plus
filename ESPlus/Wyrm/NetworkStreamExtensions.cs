@@ -45,7 +45,7 @@ namespace ESPlus.Wyrm
 
                 if (result <= 0)
                 {
-                    throw new Exception();
+                    throw new Exception("- EOF -");
                 }
 
                 offset += result;
@@ -54,5 +54,32 @@ namespace ESPlus.Wyrm
 
             return buffer;
         }
+        
+        public static async Task<byte[]> ReadBinaryAsyncXYZ(this NetworkStream reader, int count,
+            CancellationToken cancellationToken)
+        {
+            var buffer = new byte[count];
+            var remaining = count;
+            var offset = 0;
+
+            while (remaining != 0)
+            {
+                var result = await reader.ReadAsync(buffer, offset, remaining, cancellationToken);
+
+                if (result <= 0)
+                {
+                    byte[] fileBytes = new Byte[offset];
+                    
+                    Buffer.BlockCopy(buffer, 0, fileBytes, 0, offset);
+
+                    return fileBytes;
+                }
+
+                offset += result;
+                remaining -= result;
+            }
+
+            return buffer;
+        }        
     }
 }

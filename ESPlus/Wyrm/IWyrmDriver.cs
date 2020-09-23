@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,5 +19,6 @@ namespace ESPlus.Wyrm
         Task PingAsync();
         IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from, CancellationToken cancellationToken = default);
         IAsyncEnumerable<WyrmEvent2> EnumerateAll(Position from, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<byte[]> Pull(CancellationToken cancellationToken = default);
     }
 }

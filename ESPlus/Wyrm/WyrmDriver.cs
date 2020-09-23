@@ -351,7 +351,32 @@ namespace ESPlus.Wyrm
 
                 yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
             }
-        }        
+        }
+
+        public async IAsyncEnumerable<byte[]> Pull([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            int size = 256 * 512;
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+            
+            writer.Write(OperationType.PULL);
+            writer.Write(Position.Start.Binary);
+            writer.Write((int)0);
+            writer.Flush();
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var buffer = await stream.ReadBinaryAsyncXYZ(size, cancellationToken);
+
+                if (buffer.Length == 0)
+                {
+                    break;
+                }
+
+                yield return buffer;
+            }
+        }
 
         public async IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync([EnumeratorCancellation] CancellationToken cancellationToken,
             params Type[] filters)

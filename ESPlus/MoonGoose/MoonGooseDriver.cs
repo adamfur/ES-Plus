@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data.HashFunction.xxHash;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -51,6 +50,8 @@ namespace ESPlus.MoonGoose
                 writer.Write(Encoding.UTF8.GetBytes(key));
                 writer.Flush();
                 await stream.FlushAsync(cancellationToken);
+                
+                byte[] payload = new byte[0];
 
                 while (true)
                 {
@@ -59,8 +60,11 @@ namespace ESPlus.MoonGoose
                     if (query == Queries.Payload)
                     {
                         var length = tokenizer.ReadI32();
-                        var payload = tokenizer.ReadBinary(length).ToArray();
-
+                        
+                        payload = tokenizer.ReadBinary(length).ToArray();
+                    }
+                    else if (query == Queries.Success)
+                    {
                         return payload;
                     }
                     else if (query == Queries.Exception)
@@ -69,7 +73,7 @@ namespace ESPlus.MoonGoose
                     }
                     else
                     {
-                        throw new NotImplementedException($"query: {query}");
+                        // throw new NotImplementedException($"query: {query}");
                     }
                 }
             }
