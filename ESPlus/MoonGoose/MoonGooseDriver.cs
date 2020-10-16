@@ -44,10 +44,11 @@ namespace ESPlus.MoonGoose
                 writer.Write((int) database.Length);
                 writer.Write(Encoding.UTF8.GetBytes(database));
 
-                writer.Write((int) 4 + 4 + 4 + key.Length);
+                var keyBuffer = Encoding.UTF8.GetBytes(key);
+                writer.Write((int) 12 + keyBuffer.Length);
                 writer.Write((int) Commands.Get);
-                writer.Write((int)key.Length);
-                writer.Write(Encoding.UTF8.GetBytes(key));
+                writer.Write((int)keyBuffer.Length);
+                writer.Write(keyBuffer);
                 writer.Flush();
                 await stream.FlushAsync(cancellationToken);
                 
@@ -92,10 +93,11 @@ namespace ESPlus.MoonGoose
 
                 foreach (var document in documents)
                 {
-                    writer.Write((int) 4+4+4+4+4 + document.Payload.Length + document.Keywords.Length * sizeof(long) + document.Key.Length);
+                    writer.Write((int) 20 + document.Payload.Length + document.Keywords.Length * sizeof(long) + document.Key.Length);
                     writer.Write((int) Commands.Put);
-                    writer.Write((int) document.Key.Length);
-                    writer.Write(Encoding.UTF8.GetBytes(document.Key));
+                    var key = Encoding.UTF8.GetBytes(document.Key);
+                    writer.Write((int) key.Length);
+                    writer.Write(key);
                     writer.Write((int) document.Payload.Length);
                     writer.Write(document.Payload);
                     writer.Write((int) document.Keywords.Length);
