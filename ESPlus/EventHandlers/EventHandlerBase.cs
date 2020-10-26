@@ -9,9 +9,13 @@ namespace ESPlus.EventHandlers
     {
         private readonly IFlushPolicy _flushPolicy;
         protected TContext Context { get; private set; }
-        protected object Mutex = new object();
+        protected readonly object _mutex = new object();
 
-        IEventHandler IFlushPolicy.EventHandler { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        IEventHandler IFlushPolicy.EventHandler
+        {
+            get => throw new System.NotImplementedException();
+            set => throw new System.NotImplementedException();
+        }
 
         public EventHandlerBase(TContext context, IFlushPolicy flushPolicy)
         {
@@ -20,13 +24,19 @@ namespace ESPlus.EventHandlers
             _flushPolicy = flushPolicy;
         }
 
+        public Position Checkpoint
+        {
+            get => Context.Checkpoint;
+            set => Context.Checkpoint = value;
+        }
+
         public virtual void Initialize()
         {
         }
 
         public virtual void Flush()
         {
-            lock (Mutex)
+            lock (_mutex)
             {
                 Context.Flush();
             }
@@ -35,17 +45,19 @@ namespace ESPlus.EventHandlers
         public abstract bool DispatchEvent(object @event);
         public abstract IEnumerable<object> TakeEmittedEvents();
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
+        public abstract Task<object> Search(long[] parameters);
+        public abstract Task<object> Get(string path);
+
         public abstract bool Dispatch(Event @event);
-        public abstract Task<bool> DispatchEventAsync(object @event);
+        // public abstract Task<bool> DispatchEventAsync(object @event);
+
+        public virtual void Ahead()
+        {
+        }
 
         public void FlushWhenAhead()
         {
             _flushPolicy.FlushWhenAhead();
-        }
-
-        public void FlushEndOfBatch()
-        {
-            _flushPolicy.FlushEndOfBatch();
         }
 
         public void FlushOnEvent()

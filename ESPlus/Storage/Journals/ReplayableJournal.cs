@@ -3,11 +3,11 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Storage
 {
-    public class ReplayableJournal : PersistantJournal
+    public class ReplayableJournal : PersistentJournal
     {
         private readonly IStorage _stageStorage;
-        protected readonly Dictionary<string, HasObjectId> _dataStageCache = new Dictionary<string, HasObjectId>();
-        protected readonly Dictionary<string, string> _map = new Dictionary<string, string>();
+        private readonly Dictionary<string, HasObjectId> _dataStageCache = new Dictionary<string, HasObjectId>();
+        private readonly Dictionary<string, string> _map = new Dictionary<string, string>();
 
         public ReplayableJournal(IStorage metadataStorage, IStorage stageStorage, IStorage dataStorage)
             : base(metadataStorage, dataStorage)
@@ -17,9 +17,9 @@ namespace ESPlus.Storage
 
         protected override void DoFlush()
         {
-            WriteTo(_stageStorage, _dataStageCache);
-            WriteJournal(_map);
-            WriteTo(_dataStorage, _dataWriteCache);
+            WriteTo(_stageStorage, _dataStageCache, _deletes, "stage/");
+            WriteJournal(_map, _deletes);
+            WriteTo(_dataStorage, _dataWriteCache, _deletes);
         }
 
         public override void Put(string destinationPath, HasObjectId item)
@@ -29,7 +29,14 @@ namespace ESPlus.Storage
             _dataStageCache[stagePath] = item;
             _map[stagePath] = destinationPath;
             base.Put(destinationPath, item);
-        }        
+        }
+
+        public override void Delete(string path)
+        {
+            _dataStageCache.Remove(path);
+            _map.Remove(path);
+            base.Delete(path);
+        }
 
         protected override void DoClean()
         {
@@ -39,19 +46,26 @@ namespace ESPlus.Storage
 
         protected override void PlayJournal(JournalLog journal)
         {
-            if (journal.Map.Count == 0)
+            if (journal.Map.Count != 0)
             {
-                return;
-            }
+                foreach (var item in journal.Map)
+                {
+                    var source = item.Key;
+                    var destination = item.Value;
+                    var payload = _stageStorage.Get<JournalLog>(source);
 
-            foreach (var item in journal.Map)
+                    _dataStorage.Put(destination, payload);
+                }
+            }
+            
+            if (journal.Deletes.Count != 0)
             {
-                var source = item.Key;
-                var destination = item.Value;
-                var payload = _stageStorage.Get<JournalLog>(source);
-
-                _dataStorage.Put(destination, payload);
+                foreach (var item in journal.Deletes)
+                {
+                    _dataStorage.Delete(item);
+                }
             }
+            
             _dataStorage.Flush();
         }
     }

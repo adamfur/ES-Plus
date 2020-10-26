@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using ESPlus.Misc;
 using ESPlus.Wyrm;
@@ -10,40 +8,27 @@ namespace ESPlus.Subscribers
     public class SubscriptionManager : ISubscriptionManager
     {
         private readonly List<SubscriptionContext> _contexts = new List<SubscriptionContext>();
-        private object _mutex = new object();
-        private readonly WyrmConnection _wyrmConnection;
+        private readonly IWyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
-        private readonly IEventSerializer _eventSerializer;
 
-        public SubscriptionManager(WyrmConnection wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
+        public SubscriptionManager(IWyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver)
         {
             _wyrmConnection = wyrmConnection;
             _eventTypeResolver = eventTypeResolver;
-            _eventSerializer = eventSerializer;
         }
 
-        public void Start()
-        {
-        }
-
-        public ISubscriptionClient Subscribe(byte[] position, CancellationToken cancellationToken)
+        public ISubscriptionClient Subscribe(Position position)
         {
             var context = new SubscriptionContext
             {
                 Position = position,
-                RequestStatus = RequestStatus.Initialized,
                 Manager = this,
-                Future = position,
-                SynchronizedAction = a => {},
-                CancellationToken = cancellationToken
+                Future = position
             };
-
-            lock (_mutex)
-            {
-                _contexts.Add(context);
-                Monitor.Pulse(_mutex);
-            }
-            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver, _eventSerializer);
+            
+            _contexts.Add(context);
+                
+            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver);
         }
     }
 }

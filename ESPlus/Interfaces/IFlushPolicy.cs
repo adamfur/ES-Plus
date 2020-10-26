@@ -6,7 +6,6 @@ namespace ESPlus.Subscribers
     public interface IFlushPolicy
     {
         void FlushWhenAhead();
-        void FlushEndOfBatch();
         void FlushOnEvent();
         IEventHandler EventHandler { get; set; }
     }

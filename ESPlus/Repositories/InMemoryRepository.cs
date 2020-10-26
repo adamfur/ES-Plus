@@ -4,7 +4,10 @@ using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using System.Linq;
 using System;
+using System.Threading;
 using ESPlus.EventHandlers;
+using ESPlus.Exceptions;
+using ESPlus.Wyrm;
 
 namespace ESPlus.Repositories
 {
@@ -63,7 +66,7 @@ namespace ESPlus.Repositories
             return Task.WhenAll();
         }
 
-        public Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate
+        public Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = int.MaxValue) where TAggregate : IAggregate
         {
             var instance = (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
             var aggregate = (IAggregate)instance;
@@ -84,7 +87,7 @@ namespace ESPlus.Repositories
             }
             else
             {
-                throw new AggregateNotFoundException("", null);
+                throw new AggregateNotFoundException(id, null);
             }
 
             aggregate.TakeUncommittedEvents();
@@ -92,22 +95,24 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
-        public Task SaveAsync(AggregateBase aggregate, object headers)
+        public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
         {
-            return SaveImpl(aggregate, aggregate.Version);
+            await SaveImpl(aggregate, aggregate.Version);
+            return new WyrmResult(Position.Start, 0);
         }
 
-        public Task AppendAsync(AggregateBase aggregate, object headers)
+        public async Task<WyrmResult> AppendAsync(AggregateBase aggregate, object headers, CancellationToken cancellationToken = default)
         {
-            return SaveImpl(aggregate, WritePolicy.Any);
+            await SaveImpl(aggregate, WritePolicy.Any);
+            return new WyrmResult(Position.Start, 0);            
         }
 
-        public Task SaveNewAsync(IAggregate aggregate, object headers)
+        public Task<Position> SaveNewAsync(IAggregate aggregate, object headers, CancellationToken cancellationToken = default)
         {
             return SaveImpl(aggregate, WritePolicy.EmptyStream);
         }
 
-        public async Task SaveImpl(IAggregate aggregate, long policy)
+        public async Task<Position> SaveImpl(IAggregate aggregate, long policy)
         {
             var events = aggregate.TakeUncommittedEvents().ToList();
             EventStream stream;
@@ -155,20 +160,39 @@ namespace ESPlus.Repositories
                 //Console.WriteLine(@event);
                 await NotifySubscribers(@event);
             };
+            
+            return Position.Start;
         }
 
-        private async Task NotifySubscribers(object @event)
+        private Task NotifySubscribers(object @event)
         {
             foreach (var subscriber in _subscribers)
             {
-                await subscriber.DispatchEventAsync(@event);
+                // await subscriber.DispatchEventAsync(@event);
             }
+
+            return Task.CompletedTask;
         }
 
         public Task DeleteAsync(string streamName, long version)
         {
             _streams.Remove(streamName);
             return Task.FromResult(0);
+        }
+
+        public IRepositoryTransaction BeginTransaction()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<WyrmResult> Commit(CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Observe(Action<object> @event)
+        {
+            throw new NotImplementedException();
         }
     }
 }

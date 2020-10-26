@@ -2,83 +2,61 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
+using ESPlus.Exceptions;
 using ESPlus.Interfaces;
 
 namespace ESPlus.Wyrm
 {
-    public static class OperationType
-    {
-        public static byte READ_STREAM_FORWARD = 0x01;
-        public static byte READ_STREAM_BACKWARD = 0x02;
-        public static byte READ_ALL_FORWARD = 0x03;
-        public static byte READ_ALL_BACKWARD = 0x04;
-        public static byte SUBSCRIBE = 0x05;
-        public static byte PUT = 0x06;
-        public static byte DELETE = 0x07;
-        public static byte LIST_STREAMS = 0x08;
-        public static byte FLOOD = (byte)'a';
-    }
-
-    public static class ExpectedVersion
-    {
-        public const long Any = -2;          // This write should not conflict with anything and should always succeed.
-        public const long NoStream = -1;     // The stream being written to should not yet exist. If it does exist treat that as a concurrency problem.
-        public const long EmptyStream = -1;  // The stream should exist and should be empty. If it does not exist or is not empty treat that as a concurrency problem.
-        public const long StreamExists = -4; // The stream should exist. If it or a metadata stream does not exist treat that as a concurrency problem.
-    }
-
-    public class WyrmEvent
-    {
-        public WyrmEvent(Guid eventId, string eventType, byte[] body, byte[] metadata, string streamName, int version)
-        {
-            EventId = eventId;
-            EventType = eventType;
-            Body = body;
-            Metadata = metadata;
-            StreamName = streamName;
-            Version = version;
-        }
-
-        public Guid EventId { get; }
-        public string EventType { get; }
-        public byte[] Body { get; }
-        public byte[] Metadata { get; }
-        public string StreamName { get; }
-        public int Version { get; }
-    }
-
     public class WyrmRepository : IRepository
     {
         private readonly IEventSerializer _eventSerializer;
-        private readonly WyrmConnection _wyrmConnection;
+        private readonly IWyrmDriver _wyrmConnection;
         private static Dictionary<string, Type> _types = new Dictionary<string, Type>();
+        private RepositoryTransaction _transaction = null;
+        private List<Action<object>> _observers = new List<Action<object>>();
 
-        public static void Register<Type>()
+        static WyrmRepository()
         {
-            _types[typeof(Type).FullName] = typeof(Type);
+            var aggregates = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(x => typeof(IAggregate).IsAssignableFrom(x))
+                .ToList();
+
+            foreach (var aggregate in aggregates)
+            {
+                aggregate.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
+                    .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
+                    .Select(x => x.GetParameters().First().ParameterType)
+                    .ToList()
+                    .ForEach(t =>
+                    {
+                        //Console.WriteLine($"Register type: {t.FullName}");
+                        _types[t.FullName] = t;
+                    }); 
+            }
         }
 
-        public WyrmRepository(WyrmConnection wyrmConnection, IEventSerializer eventSerializer)
+        public WyrmRepository(IWyrmDriver wyrmConnection)
         {
             _wyrmConnection = wyrmConnection;
-            _eventSerializer = eventSerializer;
+            _eventSerializer = wyrmConnection.Serializer;
         }
 
-        private void Index<TAggregate>()
+        public void Observe(Action<object> @event)
         {
-            typeof(TAggregate).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
-                .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
-                .Select(x => x.GetParameters().First().ParameterType)
-                .ToList()
-                .ForEach(t =>
-                {
-                    //Console.WriteLine($"Register type: {t.FullName}");
-                    _types[t.FullName] = t;
-                });
+            _observers.Add(@event);
+        }
+
+        private void Notify(object @event)
+        {
+            foreach (var observer in _observers)
+            {
+                observer(@event);
+            }
         }
 
         private WyrmEvent ToEventData(Guid eventId, object evnt, string streamName, long version, object headers)
@@ -92,24 +70,24 @@ namespace ESPlus.Wyrm
 
         public async Task DeleteAsync(string id, long version)
         {
-            await _wyrmConnection.DeleteAsync(id);
+            await _wyrmConnection.DeleteAsync(id, version, CancellationToken.None);
         }
 
-        public Task SaveAsync(AggregateBase aggregate, object headers)
+        public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
             var expectedVersion = originalVersion == -1 ? ExpectedVersion.NoStream : originalVersion;
 
-            return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers);
+            return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers, cancellationToken);
         }
 
-        public Task AppendAsync(AggregateBase aggregate, object headers)
+        public Task<WyrmResult> AppendAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
         {
             var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
             var expectedVersion = ExpectedVersion.Any;
 
-            return SaveAggregate(aggregate, newEvents, expectedVersion, headers);
+            return SaveAggregate(aggregate, newEvents, expectedVersion, headers, cancellationToken);
         }
 
         public int Version(long first, int index)
@@ -135,34 +113,60 @@ namespace ESPlus.Wyrm
             }
         }
 
-        private async Task SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers)
+        private async Task<WyrmResult> SaveAggregate(IAggregate aggregate, IEnumerable<object> newEvents, long expectedVersion, object headers, CancellationToken cancellationToken)
         {
-            if (!newEvents.Any())
+            var copy = newEvents.ToList();
+            
+            if (!copy.Any())
             {
-                return;
+                return new WyrmResult(Position.Start, 0);
             }
 
             var streamName = aggregate.Id;
-            var eventsToSave = newEvents.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
+            var eventsToSave = copy.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 
-            await _wyrmConnection.Append(eventsToSave);
+            if (_transaction != null)
+            {
+                _transaction.Append(eventsToSave);
+                foreach (var @event in copy)
+                {
+                    Notify(@event);
+                }
+                
+                return new WyrmResult(Position.Start, 0);
+            }
+            else
+            {
+                foreach (var @event in copy)
+                {
+                    Notify(@event);
+                }
+                
+                return await _wyrmConnection.Append(eventsToSave, cancellationToken);
+            }
         }
 
-        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, int version = int.MaxValue) where TAggregate : IAggregate
+        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate
         {
             var aggregate = ConstructAggregate<TAggregate>(id);
             var applyAggregate = (IAggregate)aggregate;
             bool any = false;
 
-            if (version <= 0)
+            if (version < 0)
             {
                 throw new ArgumentException("Cannot get version < 0");
             }
 
-            Index<TAggregate>();
-
-            foreach (var evnt in _wyrmConnection.EnumerateStream(id))
+            await foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
+                if (applyAggregate.Version == -1)
+                {
+                    if (evnt.EventType != applyAggregate.InitialType().FullName)
+                    {
+                        throw new Exception("Invalid Aggregate");
+                    }
+                }
+                
                 var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
 
                 any = true;
@@ -172,13 +176,16 @@ namespace ESPlus.Wyrm
                     continue;
                 }
 
-                applyAggregate.ApplyChange((dynamic)_eventSerializer.Deserialize(type, evnt.Data));
+                var @event = _eventSerializer.Deserialize(type, evnt.Data);
+                
+                applyAggregate.ApplyChange(@event);
+                Notify(@event);
                 applyAggregate.Version = evnt.Version;
             }
 
             if (!any)
             {
-                throw new AggregateNotFoundException("", null);
+                throw new AggregateNotFoundException(id, null);
             }
 
             aggregate.TakeUncommittedEvents();
@@ -187,14 +194,127 @@ namespace ESPlus.Wyrm
             return aggregate;
         }
 
+        public async IAsyncEnumerable<TAggregate> GetAllByAggregateType<TAggregate>(params Type[] filters) where TAggregate : IAggregate
+        {
+            var aggregate = default(TAggregate);
+            var stream = default(string);
+            var applyAggregate = default(IAggregate);
+
+            await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(f => true, CancellationToken.None, filters))
+            {
+                if (evnt.StreamName != stream)
+                {
+                    if (!ReferenceEquals(aggregate, default(TAggregate)))
+                    {
+                        aggregate.TakeUncommittedEvents();
+                        yield return aggregate;
+                    }
+
+                    stream = evnt.StreamName;
+                    aggregate = ConstructAggregate<TAggregate>(evnt.StreamName);
+                    applyAggregate = aggregate;
+                }
+
+                var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
+
+                if (type != null)
+                {
+                    applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
+                }
+
+                applyAggregate.Version = evnt.Version;
+
+                if (evnt.IsAhead)
+                {
+                    aggregate.TakeUncommittedEvents();
+                    yield return aggregate;
+                }
+            }
+        }
+        
+        public async IAsyncEnumerable<TAggregate> GetAllByAggregateType2<TAggregate>(Func<string, bool> func, params Type[] filters) where TAggregate : IAggregate
+        {
+            var shard = ulong.Parse(Environment.GetEnvironmentVariable("SHARD") ?? "0");
+            var shards = ulong.Parse(Environment.GetEnvironmentVariable("SHARDS") ?? "6");
+            var aggregate = default(TAggregate);
+            var stream = default(string);
+            var applyAggregate = default(IAggregate);
+            
+            bool InBucket(string name)
+            {
+                var hash = (ulong) name.XXH64();
+
+                if (hash % shards == shard)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(f => func(f) && InBucket(f), CancellationToken.None, filters))
+            {
+                if (evnt.StreamName != stream)
+                {
+                    if (!ReferenceEquals(aggregate, default(TAggregate)))
+                    {
+                        aggregate.TakeUncommittedEvents();
+                        yield return aggregate;
+                    }
+
+                    stream = evnt.StreamName;
+                    aggregate = ConstructAggregate<TAggregate>(evnt.StreamName);
+                    applyAggregate = aggregate;
+                }
+
+                var type = _types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
+
+                if (type != null)
+                {
+                    applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
+                }
+
+                applyAggregate.Version = evnt.Version;
+
+                if (evnt.IsAhead)
+                {
+                    aggregate.TakeUncommittedEvents();
+                    yield return aggregate;
+                }
+            }
+        }
+
         private static TAggregate ConstructAggregate<TAggregate>(string id)
         {
             return (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
         }
 
-        public Task SaveNewAsync(IAggregate aggregate, object headers)
+        public Task<Position> SaveNewAsync(IAggregate aggregate, object headers, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
+        }
+
+        public IRepositoryTransaction BeginTransaction()
+        {
+            var currentTransaction = _transaction;
+            var transaction = new RepositoryTransaction(this, () => _transaction = currentTransaction);
+
+            _transaction = transaction;
+            return transaction;
+        }
+
+        public async Task<WyrmResult> Commit(CancellationToken cancellationToken = default)
+        {
+            if (_transaction != null)
+            {
+                var result = await _wyrmConnection.Append(_transaction.Events, cancellationToken);
+
+                return result;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

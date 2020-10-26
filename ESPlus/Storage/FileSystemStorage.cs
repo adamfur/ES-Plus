@@ -1,26 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace ESPlus.Storage
 {
-    class CamelCaseExceptDictionaryKeysResolver : CamelCasePropertyNamesContractResolver
-    {
-        protected override JsonDictionaryContract CreateDictionaryContract(Type objectType)
-        {
-            JsonDictionaryContract contract = base.CreateDictionaryContract(objectType);
-
-            contract.DictionaryKeyResolver = propertyName => propertyName;
-
-            return contract;
-        }
-    }
-
     public class FileSystemStorage : IStorage
     {
         private string BasePath { get; }
@@ -139,6 +125,16 @@ namespace ESPlus.Storage
                 Directory.Delete(absolutePath, true);
             }
             _pathExits.Clear();
+        }
+
+        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void Delete(string path)
+        {
+            Directory.Delete(path);
         }
     }
 }

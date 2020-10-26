@@ -3,7 +3,7 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Storage
 {
-    public class CheckpointJournal : PersistantJournal
+    public class CheckpointJournal : PersistentJournal
     {
         public CheckpointJournal(IStorage metadataStorage, IStorage dataStorage)
             : base(metadataStorage, dataStorage)
@@ -12,8 +12,8 @@ namespace ESPlus.Storage
 
         protected override void DoFlush()
         {
-            WriteTo(_dataStorage, _dataWriteCache);
-            WriteJournal(new Dictionary<string, string>());
+            WriteTo(_dataStorage, _dataWriteCache, _deletes);
+            WriteJournal(new Dictionary<string, string>(), _deletes);
         }
     }
 }

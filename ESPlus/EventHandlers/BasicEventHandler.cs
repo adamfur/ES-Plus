@@ -7,6 +7,8 @@ using ESPlus.Aggregates;
 using ESPlus.Misc;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
+using Newtonsoft.Json;
+using Wyrm;
 
 namespace ESPlus.EventHandlers
 {
@@ -36,13 +38,26 @@ namespace ESPlus.EventHandlers
 
         public override bool DispatchEvent(object @event)
         {
-            lock (Mutex)
+            lock (_mutex)
             {
                 _once.Execute();
                 _router.Dispatch(@event);
                 return true;
             }
         }
+        
+        public bool DispatchEventX(object @event)
+        {
+            Context.Checkpoint = Position.Start;
+            Context.Metadata = new MetaData();
+            
+            lock (_mutex)
+            {
+                _once.Execute();
+                _router.Dispatch(@event);
+                return true;
+            }
+        }        
 
         protected void Emit(object @event)
         {
@@ -70,28 +85,88 @@ namespace ESPlus.EventHandlers
             return result;
         }
 
+        public override Task<object> Search(long[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<object> Get(string path)
+        {
+            throw new NotImplementedException();
+        }
+
         public override bool Dispatch(Event @event)
         {
-            if (@event.Position == Position.Start)
+            if (@event.Offset == 1)
             {
                 Initialize();
             }
 
+            var status = false;
+
+            Context.TimestampUtc = @event.TimestampUtc;
             Context.Checkpoint = @event.Position;
+            Context.Offset = @event.Offset;
+            Context.TotalOffset = @event.TotalOffset;
+            Context.Metadata = new MetaData(@event.Meta, new EventMessagePackSerializer());
             _once.Execute();
-            if (_router.CanHandle(@event.EventType))
+
+//            {
+//                Console.WriteLine($"{@event.StreamName}: {@event.EventType}, Offset: {@event.Offset}, Ahead: {@event.IsAhead}");
+//
+//                if (@event.EventType != typeof(StreamDeleted).FullName)
+//                {
+//                    Console.WriteLine(JsonConvert.SerializeObject(@event.DeserializedItem(), Formatting.Indented));
+//                }
+//            }
+   
+            if (@event.EventType == typeof(StreamDeleted).FullName)
+            {
+                try
+                {
+                    var type = _eventTypeResolver.ResolveType(@event.CreateEvent);
+                
+                    if (type != null)
+                    {
+                        var instance = CreateInstance(type, @event.StreamName);
+                    
+//                        Console.WriteLine($"<@@@> Dispatch: StreamDeleted!{@event.CreateEvent}");
+                        DispatchEvent(instance);
+                    }
+                }
+                catch (ArgumentException)
+                {
+                }
+
+                status = true;
+            }
+            else if (_router.CanHandle(@event.EventType))
             {
                 DispatchEvent(@event.DeserializedItem());
-                return true;
+                status = true;
             }
-            return false;
-        }
 
-        public override Task<bool> DispatchEventAsync(object @event)
+            if (@event.IsAhead)
+            {
+                Ahead();
+            }
+
+            return status;
+        }
+        
+        private StreamDeleted CreateInstance(Type type, string createEventType)
         {
-            var result = this.DispatchEvent(@event);
+            var make = typeof(StreamDeleted<>).MakeGenericType(new[] { type });
+            var result = (StreamDeleted) Activator.CreateInstance(make, createEventType);
 
-            return Task.FromResult(result);
-        }
+            return result;
+        }        
+
+        // public override Task<bool> DispatchEventAsync(object @event)
+        // {
+        //     var result = this.DispatchEvent(@event);
+        //
+        //     return Task.FromResult(result);
+        // }
     }
 }

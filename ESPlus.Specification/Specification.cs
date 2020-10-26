@@ -1,38 +1,128 @@
-using ESPlus.Interfaces;
-using Xunit;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Collections.Generic;
-using ESPlus.Aggregates;
+using System.Text;
+using ESPlus.Interfaces;
 
 namespace ESPlus.Specification
 {
     public abstract class Specification<TAggregate> : IDisposable
         where TAggregate : IAggregate
     {
-        protected TAggregate Aggregate;
-        private Exception _exception;
-        private List<object> _emittedEvents = new List<object>();
-        private bool _muteException = false;
-        private int _offset = 0;
-        private bool _doThrow = false;
+        private readonly List<object> _emittedEvents = new List<object>();
+        protected TAggregate Aggregate = default;
+        private Action _given = null;
+        private Action _when = null;
+        private Action _then = null;
+        private Exception _exception = null;
+        private bool _faulted = false;
+        private bool _catchedException = false;
+        private bool _disposed = false;
+        private int _index = 0;
 
-        public IEnumerable<object> Events => _emittedEvents;
-
-        protected void Given(Action act)
+        protected void Mute()
         {
-            _doThrow = true;
-            act();
+            _faulted = true;
         }
 
-        protected void When(Action when)
+        public void Dispose()
         {
-            _doThrow = true;
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
+            if (_faulted)
+            {
+                return;
+            }
+
+            if (_exception != null)
+            {
+                throw _exception;
+            }
+
+            if (_given == null)
+            {
+                throw new Exception("Given was never set");
+            }
+
+            if (_then == null)
+            {
+                throw new Exception("Then was never set");
+            }
+
+            if (_index != _emittedEvents.Count)
+            {
+                var count = 0;
+                var builder = new StringBuilder();
+
+                foreach (var evt in _emittedEvents)
+                {
+                    builder.AppendLine($"{count++}. {evt.GetType().FullName}");
+                }
+
+                throw new Exception($"Did not match all events {_index} vs. {_emittedEvents.Count}\n{builder}");
+            }
+        }
+
+        protected void Given(Action action)
+        {
+            if (_given != null)
+            {
+                _faulted = true;
+                throw new Exception("Given has already been specified");
+            }
+
+            _given = action;
+
             try
             {
-                Aggregate.TakeUncommittedEvents();
-                when();
+                _given();
+                _emittedEvents.AddRange(Aggregate.TakeUncommittedEvents());
+            }
+            catch (Exception ex)
+            {
+                _exception = ex;
+            }
+
+            if (Aggregate == null)
+            {
+                _faulted = true;
+                throw new Exception("No Aggregate wasn't assigned in Given");
+            }
+        }
+
+        protected void When(Action action)
+        {
+            if (_given == null)
+            {
+                _faulted = true;
+                throw new Exception("Given has to be specified before When");
+            }
+
+            if (_then != null)
+            {
+                _faulted = true;
+                throw new Exception("When has to be specified before Then");
+            }
+
+            if (_when != null)
+            {
+                _faulted = true;
+                throw new Exception("When has already been specified");
+            }
+
+            _when = action;
+
+            try
+            {
+                _when();
+                _emittedEvents.Clear();
+                _emittedEvents.AddRange(Aggregate.TakeUncommittedEvents());
             }
             catch (Exception ex)
             {
@@ -40,28 +130,27 @@ namespace ESPlus.Specification
             }
         }
 
-        protected void Then(Action then)
-        {
-            if (_exception != null)
-            {
-                _muteException = true;
-                throw _exception;
-            }
-
-            _doThrow = false;
-            _emittedEvents.AddRange(Aggregate.TakeUncommittedEvents());
-            then();
-            _muteException = true;
-        }
-
-        public void ThenExecute()
-        {
-            _doThrow = false;
-        }
-
         protected void ThenNothing()
         {
             Then(() => { });
+        }
+
+        protected void Then(Action action)
+        {
+            if (_given == null)
+            {
+                _faulted = true;
+                throw new Exception("Given has to be specified before Then");
+            }
+
+            if (_then != null)
+            {
+                _faulted = true;
+                throw new Exception("Then has already been specified");
+            }
+
+            _then = action;
+            _then();
         }
 
         protected void ThenThrows<TException>()
@@ -73,8 +162,10 @@ namespace ESPlus.Specification
         protected void ThenThrows<TException>(Expression<Predicate<TException>> expr)
             where TException : Exception
         {
-            _muteException = true;
-            _doThrow = false;
+            if (_catchedException)
+            {
+                throw new Exception("Exception has already been catched");
+            }
 
             if (_exception == null)
             {
@@ -83,13 +174,17 @@ namespace ESPlus.Specification
 
             if (_exception.GetType() != typeof(TException))
             {
-                throw new Exception($"Exception: {_exception.GetType()} was thrown, expected: {typeof(TException)}");
+                throw new Exception($"Exception: {_exception.GetType().Name} was thrown, expected: {typeof(TException).Name}");
             }
 
             if (!expr.Compile()((TException)_exception))
             {
                 throw new Exception($"Exception: {expr}");
             }
+
+            _faulted = true;
+            _catchedException = true;
+            _then = () => { };
         }
 
         protected void Is<T>()
@@ -97,53 +192,23 @@ namespace ESPlus.Specification
             Is<T>(e => true);
         }
 
-        private object CurrentEvent
-        {
-            get
-            {
-                return _emittedEvents[_offset];
-            }
-        }
-
         protected void Is<T>(Expression<Predicate<T>> expr)
         {
+            var @event = _index < _emittedEvents.Count ? _emittedEvents[_index] : null;
             var compiled = expr.Compile();
-            var @event = CurrentEvent;
+
+            ++_index;
+
+            if (@event == null)
+            {
+                _faulted = true;
+                throw new Exception($"Expected event of type {typeof(T).FullName} got nothing");
+            }
 
             if (@event.GetType() != typeof(T) || !compiled(((T)@event)))
             {
-                _muteException = true;
+                _faulted = true;
                 throw new Exception($"Didn't find event of type {typeof(T).FullName} w/ {expr}");
-            }
-            ++_offset;
-            //_expectedEvents.Add(@event);
-        }
-
-        protected void Any<T>()
-        {
-            Any<T>(e => true);
-        }
-
-        protected void Any<T>(Expression<Predicate<T>> expr)
-        {
-            var compiled = expr.Compile();
-
-            if (!Events.OfType<T>().Any(e => compiled(e)))
-            {
-                throw new Exception($"Didn't find event of type {typeof(T).FullName} w/ {expr}");
-            }
-        }
-
-        void IDisposable.Dispose()
-        {
-            if (!_muteException && _exception != null)
-            {
-                throw _exception;
-            }
-
-            if (_doThrow)
-            {
-                throw new Exception("Then()-statement expected");
             }
         }
     }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
+using ESPlus.FlushPolicies;
 using ESPlus.Interfaces;
 using ESPlus.Misc;
 
@@ -62,24 +63,24 @@ namespace ESPlus.EventHandlers
             return _map[@event.GetType()](@event);
         }
 
-        public override async Task<bool> DispatchEventAsync(object @event)
-        {
-            if (!_map.ContainsKey(@event.GetType()))
-            {
-                //Console.WriteLine($"No mapping for {@event.GetType().FullName}");
-                return false;
-            }
-
-            var aggregate = await _repository.GetByIdAsync<TProcessManager>(Map(@event));
-
-            aggregate.Repository = _repository;
-
-            var router = new ConventionEventRouterAsync();
-            router.Register(aggregate, "TransitionAsync");
-            await router.DispatchAsync(@event);
-            await _repository.SaveAsync(aggregate);
-
-            return true;
-        }
+        // public override async Task<bool> DispatchEventAsync(object @event)
+        // {
+        //     if (!_map.ContainsKey(@event.GetType()))
+        //     {
+        //         //Console.WriteLine($"No mapping for {@event.GetType().FullName}");
+        //         return false;
+        //     }
+        //
+        //     var aggregate = await _repository.GetByIdAsync<TProcessManager>(Map(@event));
+        //
+        //     aggregate.Repository = _repository;
+        //
+        //     var router = new ConventionEventRouterAsync();
+        //     router.Register(aggregate, "TransitionAsync");
+        //     await router.DispatchAsync(@event);
+        //     await _repository.SaveAsync(aggregate);
+        //
+        //     return true;
+        // }
     }
 }

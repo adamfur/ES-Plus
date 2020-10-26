@@ -12,7 +12,7 @@ namespace ESPlus
 
         public object Deserialize(Type type, byte[] buffer)
         {
-            return MessagePackSerializer.NonGeneric.Deserialize(type, buffer);
+            return MessagePackSerializer.Deserialize(type, buffer);
         }
     }
 }

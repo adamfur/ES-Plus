@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESPlus.Interfaces;
 
 namespace ESPlus.Storage
@@ -7,6 +9,13 @@ namespace ESPlus.Storage
     {
         private readonly Dictionary<string, HasObjectId> _data = new Dictionary<string, HasObjectId>();
 
+        public Dictionary<string, HasObjectId> Internal => _data;
+
+        public void Delete(string path)
+        {
+            _data.Remove(path);
+        }
+
         public void Flush()
         {
         }
@@ -14,21 +23,30 @@ namespace ESPlus.Storage
         public T Get<T>(string path)
             where T : HasObjectId
         {
+            Console.WriteLine(string.Join(", ", _data.Values));
+            
             if (_data.ContainsKey(path))
             {
                 return (T) _data[path];
             }
-            return default (T);
+            
+            return default;
         }
 
         public void Put(string path, HasObjectId item)
         {
             _data[path] = item;
+            Console.WriteLine($" -- PUT: {path}");
         }
 
         public void Reset()
         {
             _data.Clear();
+        }
+
+        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters)
+        {
+            throw new NotImplementedException();
         }
     }
 }

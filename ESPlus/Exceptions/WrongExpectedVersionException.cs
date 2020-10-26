@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace ESPlus
+namespace ESPlus.Exceptions
 {
     public class WrongExpectedVersionException : Exception
     {

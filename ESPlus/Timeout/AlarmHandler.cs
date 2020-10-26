@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using ESPlus.Misc;
 
@@ -83,7 +82,7 @@ namespace ESPlus.Timeout
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
             }

@@ -1,6 +1,6 @@
 using System;
 
-namespace ESPlus
+namespace ESPlus.Exceptions
 {
     public class AggregateException : Exception
     {
@@ -17,10 +17,5 @@ namespace ESPlus
             : base(message)
         {
         }
-
-        // protected AggregateException(SerializationInfo info, StreamingContext context)
-        //     : base(info, context)
-        // {
-        // }
     }      
 }

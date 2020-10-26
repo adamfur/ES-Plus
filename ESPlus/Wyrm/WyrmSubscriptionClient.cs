@@ -1,6 +1,6 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using ESPlus.Misc;
 using ESPlus.Subscribers;
 
@@ -8,45 +8,35 @@ namespace ESPlus.Wyrm
 {
     public class WyrmSubscriptionClient : ISubscriptionClient
     {
-        private SubscriptionContext _subscriptionContext;
-        private readonly WyrmConnection _wyrmConnection;
+        private readonly SubscriptionContext _subscriptionContext;
+        private readonly IWyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
-        private readonly IEventSerializer _eventSerializer;
 
-        public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, WyrmConnection wyrmConnection, IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
+        public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, IWyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver)
         {
             _subscriptionContext = subscriptionContext;
             _wyrmConnection = wyrmConnection;
             _eventTypeResolver = eventTypeResolver;
-            _eventSerializer = eventSerializer;
         }
-
-        public IEnumerator<Event> GetEnumerator()
+        
+        public async IAsyncEnumerator<Event> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            foreach (var @event in _wyrmConnection.EnumerateAll(_subscriptionContext.Position))
+            await foreach (var @event in _wyrmConnection.SubscribeAsync(_subscriptionContext.Position, cancellationToken))
             {
-                yield return new Event(_eventTypeResolver, _eventSerializer)
+                yield return new Event(_eventTypeResolver, @event.Serializer)
                 {
-                    Position = @event.Position,
+                    Position = new Position(@event.Position),
                     Meta = @event.Metadata,
                     Payload = @event.Data,
                     EventType = @event.EventType,
-                    IsAhead = false
+                    IsAhead = @event.IsAhead,
+                    StreamName = @event.StreamName,
+                    Offset = @event.Offset,
+                    TotalOffset = @event.TotalOffset,
+                    CreateEvent = @event.CreateEvent,
+                    TimestampUtc = @event.TimestampUtc,
                 };
-
-                if (@event.Offset == @event.TotalOffset)
-                {
-                    yield return new Event(_eventTypeResolver, _eventSerializer)
-                    {
-                        IsAhead = true
-                    };
-                }
             }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }

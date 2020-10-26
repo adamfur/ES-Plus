@@ -4,6 +4,5 @@ namespace ESPlus
 {
     public class NoReplayAttribute : Attribute
     {
-        
     }
 }

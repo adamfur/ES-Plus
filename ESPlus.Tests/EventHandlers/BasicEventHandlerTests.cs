@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using ESPlus.EventHandlers;
+using ESPlus.FlushPolicies;
 using NSubstitute;
 using Xunit;
 
@@ -48,10 +49,10 @@ namespace ESPlus.Tests.EventHandlers
                 EmitOnSubmit("abc", "def");
             }
 
-            public override Task<bool> DispatchEventAsync(object @event)
-            {
-                throw new NotImplementedException();
-            }
+            // public override Task<bool> DispatchEventAsync(object @event)
+            // {
+            //     throw new NotImplementedException();
+            // }
         }
 
         private IEventHandlerContext _context;
@@ -98,8 +99,8 @@ namespace ESPlus.Tests.EventHandlers
             var pass1 = eventHandler.TakeEmittedEvents().ToList();
             var pass2 = eventHandler.TakeEmittedEvents().ToList();
 
-            Assert.Equal(1, pass1.Count());
-            Assert.Equal(0, pass2.Count());
+            Assert.NotEmpty(pass1);
+            Assert.Empty(pass2);
         }
 
         [Fact]
@@ -112,8 +113,8 @@ namespace ESPlus.Tests.EventHandlers
             var pass1 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
             var pass2 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
 
-            Assert.Equal(1, pass1.Count());
-            Assert.Equal(0, pass2.Count());
+            Assert.NotEmpty(pass1);
+            Assert.Empty(pass2);
         }        
     }
 }

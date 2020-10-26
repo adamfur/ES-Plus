@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ESPlus.FlushPolicies;
 using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
@@ -46,6 +47,16 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
+        public override Task<object> Search(long[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task<object> Get(string path)
+        {
+            throw new NotImplementedException();
+        }
+
         public override void Flush()
         {
             var payload = new List<object>();
@@ -66,9 +77,9 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override Task<bool> DispatchEventAsync(object @event)
-        {
-            throw new NotImplementedException();
-        }
+        // public override Task<bool> DispatchEventAsync(object @event)
+        // {
+        //     throw new NotImplementedException();
+        // }
     }
 }

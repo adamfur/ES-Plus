@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Data.HashFunction.xxHash;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace ESPlus.Aggregates
 {
@@ -45,7 +46,17 @@ namespace ESPlus.Aggregates
         {
             if (_handlers.TryGetValue(eventMessage.GetType(), out Action<object> handler))
             {
-                handler(eventMessage);
+                try
+                {
+                    handler(eventMessage);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("--- Json --------------");
+                    Console.WriteLine(eventMessage.GetType().FullName);
+                    Console.WriteLine(JsonConvert.SerializeObject(eventMessage, Formatting.Indented));
+                    throw;
+                }
             }
         }
 
