@@ -97,7 +97,7 @@ namespace ESPlus.Magic.Memory
 
         public int Length => _adjustedLength;
         
-        public bool Eof => _offset >= _length;
+        public bool IsEmpty => _offset >= _length;
         public int Offset => _offset;
 
         public ref T this[int index]
@@ -147,6 +147,21 @@ namespace ESPlus.Magic.Memory
         public bool Contains(ref int hint, T value)
         {
             var max = Length;
+
+            if (max - hint < 50)
+            {
+                for (var index = hint; index < max; ++index)
+                {
+                    if (value.CompareTo(this[index]) == 0)
+                    {
+                        hint = index;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             var left = 0;
             var right = max;
 

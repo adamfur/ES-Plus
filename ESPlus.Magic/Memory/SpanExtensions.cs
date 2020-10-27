@@ -31,7 +31,7 @@ namespace ESPlus.Magic.Memory
         public static MemorySegment<T> AsMemorySegment<T>(ref this T span)
             where T : struct, IComparable 
         {
-            return CreateMemorySegment(ref span, Marshal.SizeOf<T>());
+            return CreateMemorySegment(ref span, 1);
         }
         
         public static unsafe Span<T> AsSpan<T>(ref this T span)
