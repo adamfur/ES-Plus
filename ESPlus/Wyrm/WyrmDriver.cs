@@ -302,25 +302,35 @@ namespace ESPlus.Wyrm
             return Position.Start;
         }
 
-        public async IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             Console.WriteLine($"Subscribe: {from.AsHexString()}");
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
-            
-            writer.Write(OperationType.SUBSCRIBE);
-            writer.Write(@from.Binary);
+
+            writer.Write(OperationType.SUBSCRIBE_V2);
+            // writer.Write(OperationType.SUBSCRIBE);
+            writer.Write(from.Binary);
             writer.Flush();
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var length = await stream.ReadInt32Async(cancellationToken);
+                using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                using var shortLivedToken =
+                    CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
+                var length = await stream.ReadInt32Async(shortLivedToken.Token);
 
                 if (length == 8)
                 {
                     //Console.WriteLine("reached end!");
                     break;
+                }
+                else if (length == OperationType.HEARTBEAT)
+                {
+                    // Console.WriteLine("*** Heartbeat ***");
+                    continue;
                 }
 
                 yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
