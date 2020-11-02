@@ -375,7 +375,6 @@ namespace ESPlus.Wyrm
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             Console.WriteLine($"Subscribe: {from.AsHexString()}");
-            var heartbeat = -37;
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
@@ -397,7 +396,7 @@ namespace ESPlus.Wyrm
                     //Console.WriteLine("reached end!");
                     break;
                 }
-                else if (length == heartbeat)
+                else if (length == OperationType.HEARTBEAT)
                 {
                     // Console.WriteLine("*** Heartbeat ***");
                     continue;

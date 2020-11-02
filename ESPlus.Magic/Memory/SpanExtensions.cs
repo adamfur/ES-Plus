@@ -9,8 +9,10 @@ namespace ESPlus.Magic.Memory
     {
         private struct MDBValueStructure
         {
+#pragma warning disable 649
             public IntPtr Size;
             public unsafe byte* Data;
+#pragma warning restore 649
         }
 
         public static unsafe MemorySegment<T> AsMemorySegment<T>(this MDBValue span)

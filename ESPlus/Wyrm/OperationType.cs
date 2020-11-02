@@ -15,5 +15,6 @@ namespace ESPlus.Wyrm
         public static byte FLOOD = (byte)'a';
         public static byte LAST_CHECKPOINT = 11;
         public static byte SUBSCRIBE_V2 = 12;
+        public static int HEARTBEAT = -37;
     }
 }
