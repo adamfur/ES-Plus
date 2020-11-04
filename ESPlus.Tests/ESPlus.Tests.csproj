@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ESPlus.Magic\ESPlus.Magic.csproj" />
     <ProjectReference Include="..\ESPlus\ESPlus.csproj" />
     <ProjectReference Include="..\ESPlus.Specification\ESPlus.Specification.csproj" />
   </ItemGroup>
