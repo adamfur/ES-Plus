@@ -320,7 +320,8 @@ namespace ESPlus.Wyrm
                 using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
                 using var shortLivedToken =
                     CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
-                var length = await stream.ReadInt32Async(shortLivedToken.Token);
+                var token = shortLivedToken.Token;
+                var length = await stream.ReadInt32Async(token);
 
                 if (length == 8)
                 {
@@ -333,7 +334,7 @@ namespace ESPlus.Wyrm
                     continue;
                 }
 
-                yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
+                yield return await ReadEventAsync(stream, length - sizeof(Int32), token);
             }
         }
 
