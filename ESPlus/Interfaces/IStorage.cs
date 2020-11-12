@@ -10,6 +10,6 @@ namespace ESPlus.Interfaces
         void Delete(string path);
         T Get<T>(string path) where T : HasObjectId;        
         void Reset();
-        IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters);
+        IAsyncEnumerable<byte[]> SearchAsync(long[] parameters);
     }
 }

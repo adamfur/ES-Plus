@@ -197,9 +197,9 @@ namespace ESPlus.Storage
             throw new System.NotImplementedException();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters)
+        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters)
         {
-            return _dataStorage.SearchAsync(database, parameters);
+            return _dataStorage.SearchAsync(parameters);
         }
 
         public virtual void Delete(string path)

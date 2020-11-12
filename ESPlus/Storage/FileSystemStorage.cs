@@ -127,7 +127,7 @@ namespace ESPlus.Storage
             _pathExits.Clear();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters)
+        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters)
         {
             throw new System.NotImplementedException();
         }
