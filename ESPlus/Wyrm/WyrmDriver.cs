@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Exceptions;
+using ESPlus.Extensions;
 using ESPlus.Extentions;
 using LZ4;
 
@@ -348,6 +349,32 @@ namespace ESPlus.Wyrm
             
             writer.Write(OperationType.READ_ALL_FORWARD);
             writer.Write(@from.Binary);
+            writer.Flush();
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var length = await stream.ReadInt32Async(cancellationToken);
+
+                if (length == 8)
+                {
+                    //Console.WriteLine("reached end!");
+                    break;
+                }
+
+                yield return await ReadEventAsync(stream, length - sizeof(Int32), cancellationToken);
+            }
+        }
+
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateAll(DateTime from, DateTime to,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            using var client = await CreateAsync();
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+
+            writer.Write(OperationType.READ_ALL_FORWARD_DATE);
+            writer.Write((ulong) from.ToUnixTime());
+            writer.Write((ulong) to.ToUnixTime());
             writer.Flush();
 
             while (!cancellationToken.IsCancellationRequested)

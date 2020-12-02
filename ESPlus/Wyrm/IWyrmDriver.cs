@@ -19,6 +19,7 @@ namespace ESPlus.Wyrm
         Task PingAsync();
         IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from, CancellationToken cancellationToken = default);
         IAsyncEnumerable<WyrmEvent2> EnumerateAll(Position from, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<WyrmEvent2> EnumerateAll(DateTime from, DateTime to, CancellationToken cancellationToken = default);
         IAsyncEnumerable<byte[]> Pull(CancellationToken cancellationToken = default);
     }
 }
