@@ -7,7 +7,7 @@ namespace ESPlus.Storage
 {
     public class InMemoryStorage : IStorage
     {
-        private readonly Dictionary<string, HasObjectId> _data = new Dictionary<string, HasObjectId>();
+        public readonly Dictionary<string, HasObjectId> _data = new Dictionary<string, HasObjectId>();
 
         public Dictionary<string, HasObjectId> Internal => _data;
 
@@ -36,7 +36,7 @@ namespace ESPlus.Storage
         public void Put(string path, HasObjectId item)
         {
             _data[path] = item;
-            Console.WriteLine($" -- PUT: {path}");
+            // Console.WriteLine($" -- PUT: {path}");
         }
 
         public void Reset()

@@ -19,7 +19,7 @@ namespace ESPlus.Magic.Memory
         {
             _ptr = ptr;
             _length = length;
-            _adjustedLength = _length / Marshal.SizeOf<T>();
+            _adjustedLength = _length / SizeOf<T>();
         }
 
         public override string ToString()
@@ -67,7 +67,7 @@ namespace ESPlus.Magic.Memory
 
         public MemorySegment<T> Slice(int start)
         {
-            var offset = start * Marshal.SizeOf<T>();
+            var offset = start * SizeOf<T>();
 
             if (offset > _length)
             {
@@ -79,8 +79,8 @@ namespace ESPlus.Magic.Memory
 
         public MemorySegment<T> Slice(int start, int length)
         {
-            var begin = start * Marshal.SizeOf<T>();
-            var end = length * Marshal.SizeOf<T>();
+            var begin = start * SizeOf<T>();
+            var end = length * SizeOf<T>();
             
             if (begin + end > _length)
             {
@@ -104,7 +104,7 @@ namespace ESPlus.Magic.Memory
         {
             get
             {
-                var offset = index * Marshal.SizeOf<T>();
+                var offset = index * SizeOf<T>();
 
                 return ref Unsafe.AsRef<T>(_ptr + offset);
             }
@@ -112,21 +112,21 @@ namespace ESPlus.Magic.Memory
 
         public ref E To<E>()
         {
-            if (_length < Marshal.SizeOf<E>())
+            if (_length < SizeOf<E>())
             {
                 throw new NotImplementedException();
             }
 
             var addr = _ptr + _offset;
 
-            _offset += Marshal.SizeOf<E>();
+            _offset += SizeOf<E>();
             
             return ref Unsafe.AsRef<E>(addr);
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            for (var item = 0; item < _length / Marshal.SizeOf<T>(); ++item)
+            for (var item = 0; item < _length / SizeOf<T>(); ++item)
             {
                 yield return this[item];
             }
@@ -208,7 +208,12 @@ namespace ESPlus.Magic.Memory
 
         public Span<T> AsSpan()
         {
-            return new Span<T>(_ptr, _length/Marshal.SizeOf<T>());
+            return new Span<T>(_ptr, _length/SizeOf<T>());
+        }
+
+        private int SizeOf<E>()
+        {
+            return System.Runtime.CompilerServices.Unsafe.SizeOf<E>();
         }
     }
 }
