@@ -14,7 +14,7 @@ namespace ESPlus.Storage
         private readonly IStorage _metadataStorage;
         protected readonly IStorage _dataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
-        private readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
+        // private readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
         protected readonly Dictionary<string, HasObjectId> _dataWriteCache = new Dictionary<string, HasObjectId>();
         protected HashSet<string> _deletes { get; set; } = new HashSet<string>();
         
@@ -88,7 +88,7 @@ namespace ESPlus.Storage
 
         public virtual void Put(string destination, HasObjectId item)
         {
-            _cache.AddOrUpdate(destination, item);
+            // _cache.AddOrUpdate(destination, item);
             _dataWriteCache[destination] = item;
             _deletes.Remove(destination);
             _changed = true;
@@ -104,10 +104,10 @@ namespace ESPlus.Storage
                     return item1 as T;
                 }
 
-                if (_cache.TryGetValue(path, out HasObjectId item2))
-                {
-                    return item2 as T;
-                }
+                // if (_cache.TryGetValue(path, out HasObjectId item2))
+                // {
+                //     return item2 as T;
+                // }
 
                 if (SubscriptionMode == SubscriptionMode.Replay)
                 {
@@ -116,7 +116,7 @@ namespace ESPlus.Storage
 
                 var data = _dataStorage.Get<T>(path);
 
-                _cache.AddOrUpdate(path, data);
+                // _cache.AddOrUpdate(path, data);
                 return data;
             }
             catch (DirectoryNotFoundException)
@@ -206,7 +206,7 @@ namespace ESPlus.Storage
         {
 //            Console.WriteLine($"PersistantJournal delete: {path}");
             _changed = true;
-            _cache.Remove(path);
+            // _cache.Remove(path);
             _dataWriteCache.Remove(path);
             _deletes.Add(path);
         }

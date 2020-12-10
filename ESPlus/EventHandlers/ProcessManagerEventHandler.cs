@@ -10,7 +10,7 @@ namespace ESPlus.EventHandlers
 {
     public class ProcessManagerEventHandler<TContext, TProcessManager> : BasicEventHandler<TContext>
         where TProcessManager : ProcessManager
-        where TContext : IEventHandlerContext
+        where TContext : class, IEventHandlerContext
     {
         private readonly IRepository _repository;
         private readonly Dictionary<Type, Func<object, string>> _map = new Dictionary<Type, Func<object, string>>();

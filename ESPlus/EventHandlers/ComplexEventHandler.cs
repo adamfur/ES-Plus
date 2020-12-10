@@ -7,7 +7,7 @@ using ESPlus.Subscribers;
 namespace ESPlus.EventHandlers
 {
     public class ComplexEventHandler<TContext> : EventHandlerBase<TContext>
-        where TContext : IEventHandlerContext
+        where TContext : class, IEventHandlerContext
     {
         private LinkedList<IEventHandler> _pipeline = new LinkedList<IEventHandler>();
 

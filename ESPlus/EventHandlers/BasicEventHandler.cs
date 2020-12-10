@@ -13,13 +13,13 @@ using Wyrm;
 namespace ESPlus.EventHandlers
 {
     public class BasicEventHandler<TContext> : EventHandlerBase<TContext>
-        where TContext : IEventHandlerContext
+        where TContext : class, IEventHandlerContext 
     {
-        protected readonly ConventionEventRouter _router = new ConventionEventRouter();
-        private LinkedList<object> _emitQueue = new LinkedList<object>();
-        private Dictionary<string, object> _emitOnSubmit = new Dictionary<string, object>();
+        private readonly ConventionEventRouter _router = new ConventionEventRouter();
+        private readonly LinkedList<object> _emitQueue = new LinkedList<object>();
+        private readonly Dictionary<string, object> _emitOnSubmit = new Dictionary<string, object>();
         private readonly IEventTypeResolver _eventTypeResolver;
-        protected Once _once;
+        private readonly Once _once;
 
         public BasicEventHandler(TContext context, IEventTypeResolver eventTypeResolver, IFlushPolicy flushPolicy)
             : base(context, flushPolicy)
@@ -38,26 +38,10 @@ namespace ESPlus.EventHandlers
 
         public override bool DispatchEvent(object @event)
         {
-            lock (_mutex)
-            {
-                _once.Execute();
-                _router.Dispatch(@event);
-                return true;
-            }
+            _once.Execute();
+            _router.Dispatch(@event);
+            return true;
         }
-        
-        public bool DispatchEventX(object @event)
-        {
-            Context.Checkpoint = Position.Start;
-            Context.Metadata = new MetaData();
-            
-            lock (_mutex)
-            {
-                _once.Execute();
-                _router.Dispatch(@event);
-                return true;
-            }
-        }        
 
         protected void Emit(object @event)
         {
@@ -110,15 +94,6 @@ namespace ESPlus.EventHandlers
             Context.TotalOffset = @event.TotalOffset;
             Context.Metadata = new MetaData(@event.Meta, new EventMessagePackSerializer());
             _once.Execute();
-
-//            {
-//                Console.WriteLine($"{@event.StreamName}: {@event.EventType}, Offset: {@event.Offset}, Ahead: {@event.IsAhead}");
-//
-//                if (@event.EventType != typeof(StreamDeleted).FullName)
-//                {
-//                    Console.WriteLine(JsonConvert.SerializeObject(@event.DeserializedItem(), Formatting.Indented));
-//                }
-//            }
    
             if (@event.EventType == typeof(StreamDeleted).FullName)
             {
@@ -130,7 +105,6 @@ namespace ESPlus.EventHandlers
                     {
                         var instance = CreateInstance(type, @event.StreamName);
                     
-//                        Console.WriteLine($"<@@@> Dispatch: StreamDeleted!{@event.CreateEvent}");
                         DispatchEvent(instance);
                     }
                 }
@@ -161,12 +135,5 @@ namespace ESPlus.EventHandlers
 
             return result;
         }        
-
-        // public override Task<bool> DispatchEventAsync(object @event)
-        // {
-        //     var result = this.DispatchEvent(@event);
-        //
-        //     return Task.FromResult(result);
-        // }
     }
 }

@@ -7,13 +7,12 @@ namespace ESPlus.Subscribers
 {
     public class SubscriptionManager : ISubscriptionManager
     {
-        private readonly List<SubscriptionContext> _contexts = new List<SubscriptionContext>();
-        private readonly IWyrmDriver _wyrmConnection;
+        private readonly IWyrmDriver _driver;
         private readonly IEventTypeResolver _eventTypeResolver;
 
-        public SubscriptionManager(IWyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver)
+        public SubscriptionManager(IWyrmDriver driver, IEventTypeResolver eventTypeResolver)
         {
-            _wyrmConnection = wyrmConnection;
+            _driver = driver;
             _eventTypeResolver = eventTypeResolver;
         }
 
@@ -25,10 +24,8 @@ namespace ESPlus.Subscribers
                 Manager = this,
                 Future = position
             };
-            
-            _contexts.Add(context);
                 
-            return new WyrmSubscriptionClient(context, _wyrmConnection, _eventTypeResolver);
+            return new WyrmSubscriptionClient(context, _driver, _eventTypeResolver);
         }
     }
 }

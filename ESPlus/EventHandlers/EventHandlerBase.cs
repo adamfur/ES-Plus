@@ -5,11 +5,10 @@ using ESPlus.Subscribers;
 namespace ESPlus.EventHandlers
 {
     public abstract class EventHandlerBase<TContext> : IEventHandler
-        where TContext : IEventHandlerContext
+        where TContext : class, IEventHandlerContext
     {
         private readonly IFlushPolicy _flushPolicy;
         protected TContext Context { get; private set; }
-        protected readonly object _mutex = new object();
 
         IEventHandler IFlushPolicy.EventHandler
         {
@@ -17,7 +16,7 @@ namespace ESPlus.EventHandlers
             set => throw new System.NotImplementedException();
         }
 
-        public EventHandlerBase(TContext context, IFlushPolicy flushPolicy)
+        protected EventHandlerBase(TContext context, IFlushPolicy flushPolicy)
         {
             Context = context;
             flushPolicy.EventHandler = this;
@@ -36,10 +35,7 @@ namespace ESPlus.EventHandlers
 
         public virtual void Flush()
         {
-            lock (_mutex)
-            {
-                Context.Flush();
-            }
+            Context.Flush();
         }
 
         public abstract bool DispatchEvent(object @event);
@@ -47,9 +43,7 @@ namespace ESPlus.EventHandlers
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
         public abstract Task<object> Search(long[] parameters);
         public abstract Task<object> Get(string path);
-
         public abstract bool Dispatch(Event @event);
-        // public abstract Task<bool> DispatchEventAsync(object @event);
 
         public virtual void Ahead()
         {

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using ESPlus.Misc;
 using ESPlus.Subscribers;
@@ -19,7 +20,7 @@ namespace ESPlus.Wyrm
             _eventTypeResolver = eventTypeResolver;
         }
         
-        public async IAsyncEnumerator<Event> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public async IAsyncEnumerator<Event> GetAsyncEnumerator([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await foreach (var @event in _wyrmConnection.SubscribeAsync(_subscriptionContext.Position, cancellationToken))
             {
