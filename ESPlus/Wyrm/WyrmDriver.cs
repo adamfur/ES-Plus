@@ -365,7 +365,7 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public async IAsyncEnumerable<WyrmEvent2> EnumerateAll(DateTime from, DateTime to,
+        public async IAsyncEnumerable<WyrmEvent2> EnumerateAll(DateTime? from, DateTime? to,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             using var client = await CreateAsync();
@@ -373,8 +373,8 @@ namespace ESPlus.Wyrm
             await using var writer = new BinaryWriter(stream);
 
             writer.Write(OperationType.READ_ALL_FORWARD_DATE);
-            writer.Write((ulong) from.ToUnixTime());
-            writer.Write((ulong) to.ToUnixTime());
+            writer.Write((ulong) (from?.ToUnixTime() ?? 0L));
+            writer.Write((ulong) (to?.ToUnixTime() ?? long.MaxValue));
             writer.Flush();
 
             while (!cancellationToken.IsCancellationRequested)
