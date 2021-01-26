@@ -12,7 +12,7 @@ namespace ESPlus.Tests.Storage
         protected readonly IStorage _metadataStorage;
         protected readonly IStorage _stageStorage;
         protected readonly IStorage _dataStorage;
-        protected readonly HasObjectId _payload;
+        protected readonly object _payload;
 
         public JournalTests()
         {
@@ -20,7 +20,7 @@ namespace ESPlus.Tests.Storage
             _stageStorage = Substitute.For<IStorage>();
             _dataStorage = Substitute.For<IStorage>();
             _journal = Create();
-            _payload = new HasObjectId();
+            _payload = new object();
         }
 
         protected abstract IJournaled Create();
@@ -78,7 +78,7 @@ namespace ESPlus.Tests.Storage
             _journal.Checkpoint = Position.Start;
             _journal.Put("path", _payload);
 
-            Assert.Equal(_payload, _journal.Get<HasObjectId>("path"));
+            Assert.Equal(_payload, _journal.Get<object>("path"));
         }
         
         [Fact]
@@ -89,7 +89,7 @@ namespace ESPlus.Tests.Storage
             _journal.Put("path", _payload);
             _journal.Flush();
 
-            Assert.Equal(_payload, _journal.Get<HasObjectId>("path"));
+            Assert.Equal(_payload, _journal.Get<object>("path"));
         }         
         
         [Fact]
@@ -100,7 +100,7 @@ namespace ESPlus.Tests.Storage
             _journal.Put("path", _payload);
             _journal.Delete("path");
 
-            Assert.Null(_journal.Get<HasObjectId>("path"));
+            Assert.Null(_journal.Get<object>("path"));
         }
         
         [Fact]
@@ -113,7 +113,7 @@ namespace ESPlus.Tests.Storage
             _journal.Delete("path");
             _journal.Flush();
 
-            Assert.Null(_journal.Get<HasObjectId>("path"));
+            Assert.Null(_journal.Get<object>("path"));
         }            
     }
 }

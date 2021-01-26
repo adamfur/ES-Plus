@@ -9,6 +9,6 @@ namespace ESPlus.Storage
         Position Checkpoint { get; set; }
         SubscriptionMode SubscriptionMode { get; }
         void Initialize();
-        void Update<T>(string path, Action<T> action) where T : HasObjectId;
+        void Update<T>(string path, Action<T> action);
     }
 }

@@ -12,7 +12,7 @@ namespace ESPlus.Storage
         private string BasePath { get; }
         private readonly HashSet<string> _pathExits = new HashSet<string>();
         private string _container;
-        private Dictionary<string, HasObjectId> _writeCache = new Dictionary<string, HasObjectId>();
+        private Dictionary<string, object> _writeCache = new Dictionary<string, object>();
 
         public FileSystemStorage(string container, string basePath = "/tmp/esplus")
         {
@@ -20,7 +20,7 @@ namespace ESPlus.Storage
             _container = container;
         }
 
-        public void Put(string path, HasObjectId item)
+        public void Put<T>(string path, T item)
         {
             var relativePath = Combine(_container, path);
 
@@ -32,7 +32,6 @@ namespace ESPlus.Storage
         }
 
         public T Get<T>(string path)
-            where T : HasObjectId
         {
             try
             {

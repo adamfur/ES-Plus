@@ -15,7 +15,7 @@ namespace ESPlus.Storage
         protected readonly IStorage _dataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         // private readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
-        protected readonly Dictionary<string, HasObjectId> _dataWriteCache = new Dictionary<string, HasObjectId>();
+        protected readonly Dictionary<string, object> _dataWriteCache = new Dictionary<string, object>();
         protected HashSet<string> _deletes { get; set; } = new HashSet<string>();
         
         public Position Checkpoint
@@ -86,22 +86,21 @@ namespace ESPlus.Storage
             Clean();
         }
 
-        public virtual void Put(string destination, HasObjectId item)
+        public virtual void Put<T>(string path, T item)
         {
             // _cache.AddOrUpdate(destination, item);
-            _dataWriteCache[destination] = item;
-            _deletes.Remove(destination);
+            _dataWriteCache[path] = item;
+            _deletes.Remove(path);
             _changed = true;
         }
 
         public T Get<T>(string path)
-            where T : HasObjectId
         {
             try
             {
-                if (_dataWriteCache.TryGetValue(path, out HasObjectId item1))
+                if (_dataWriteCache.TryGetValue(path, out object item1))
                 {
-                    return item1 as T;
+                    return (T) item1;
                 }
 
                 // if (_cache.TryGetValue(path, out HasObjectId item2))
@@ -125,7 +124,7 @@ namespace ESPlus.Storage
             }
         }
 
-        public void Update<T>(string path, Action<T> action) where T : HasObjectId
+        public void Update<T>(string path, Action<T> action)
         {
             var model = Get<T>(path);
 
@@ -157,7 +156,7 @@ namespace ESPlus.Storage
             // Console.WriteLine($"Put Journal {Checkpoint}");
         }
 
-        protected void WriteTo(IStorage storage, Dictionary<string, HasObjectId> cache, HashSet<string> deletes,
+        protected void WriteTo(IStorage storage, Dictionary<string, object> cache, HashSet<string> deletes,
             string prefix = "")
         {
             foreach (var item in cache)

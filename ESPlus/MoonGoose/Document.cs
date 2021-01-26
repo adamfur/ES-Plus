@@ -2,7 +2,7 @@ using ESPlus.Storage;
 
 namespace ESPlus.MoonGoose
 {
-    public class Document : HasObjectId
+    public class Document
     {
         public string Key { get; }
         public byte[] Payload { get; }

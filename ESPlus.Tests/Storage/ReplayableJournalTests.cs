@@ -29,7 +29,7 @@ namespace ESPlus.Tests.Storage
             };
 
             _metadataStorage.Get<JournalLog>(PersistentJournal.JournalPath).Returns(replayLog);
-            _stageStorage.Get<HasObjectId>("stage/1/file1").Returns(_payload);
+            _stageStorage.Get<object>("stage/1/file1").Returns(_payload);
 
             // Act
             _journal.Initialize();
@@ -38,7 +38,7 @@ namespace ESPlus.Tests.Storage
             Received.InOrder(() =>
             {
                 //_stageStorage.Received().Get<object>(Arg.Any<string>());
-                _dataStorage.Received().Put(Arg.Any<string>(), Arg.Any<HasObjectId>());
+                _dataStorage.Received().Put(Arg.Any<string>(), Arg.Any<object>());
                 _dataStorage.Received().Flush();
             });
         }
@@ -49,9 +49,9 @@ namespace ESPlus.Tests.Storage
             // Arrange
             var source = "stage/1/file1";
             var destination = "prod/file1";
-            var payload = new HasObjectId();
+            var payload = new object();
 
-            _stageStorage.Get<HasObjectId>(source).Returns(_payload);
+            _stageStorage.Get<object>(source).Returns(_payload);
 
             // Act
             _journal.Initialize();
@@ -77,7 +77,7 @@ namespace ESPlus.Tests.Storage
         {
             // Arrange
             var destination = "prod/file1";
-            var payload = new HasObjectId();
+            var payload = new object();
 
             // Act
             _journal.Initialize();
@@ -96,36 +96,36 @@ namespace ESPlus.Tests.Storage
         public void Get_RealTimeModeNoCache_GetFromStorage()
         {
             var path = "path/1";
-            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
+            _dataStorage.Get<object>(path).Returns(_payload);
 
-            var item = _journal.Get<HasObjectId>(path);
+            var item = _journal.Get<object>(path);
 
             Assert.Equal(_payload, item);
-            _dataStorage.Received().Get<HasObjectId>(path);
+            _dataStorage.Received().Get<object>(path);
         }
 
         [Fact]
         public void Get_Twice_GetFromCacheSecondTime()
         {
             var path = "path/1";
-            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
+            _dataStorage.Get<object>(path).Returns(_payload);
 
-            _journal.Get<HasObjectId>(path);
-            _journal.Get<HasObjectId>(path);
+            _journal.Get<object>(path);
+            _journal.Get<object>(path);
 
-            _dataStorage.Received(1).Get<HasObjectId>(path);
+            _dataStorage.Received(1).Get<object>(path);
         }
 
         [Fact]
         public void Get_PutBefore_ReceiveFromCache()
         {
             var path = "path/1";
-            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
+            _dataStorage.Get<object>(path).Returns(_payload);
 
             _journal.Put(path, _payload);
-            _journal.Get<HasObjectId>(path);
+            _journal.Get<object>(path);
 
-            _dataStorage.DidNotReceive().Get<HasObjectId>(path);
+            _dataStorage.DidNotReceive().Get<object>(path);
         }
 
 //        [Fact]
@@ -133,14 +133,14 @@ namespace ESPlus.Tests.Storage
 //        {
 //            var path = "path/1";
 //
-//            _metadataStorage.Get<HasObjectId>(PersistentJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
-//            _dataStorage.Get<HasObjectId>(path).Returns(_payload);
+//            _metadataStorage.Get<object>(PersistentJournal.JournalPath).Returns(new JournalLog { Checkpoint = Position.Start });
+//            _dataStorage.Get<object>(path).Returns(_payload);
 //
 //            _journal.Initialize();
-//            _journal.Get<HasObjectId>(path);
+//            _journal.Get<object>(path);
 //
 //            Assert.Equal(SubscriptionMode.Replay, _journal.SubscriptionMode);
-//            _dataStorage.DidNotReceive().Get<HasObjectId>(path);
+//            _dataStorage.DidNotReceive().Get<object>(path);
 //        }
 
         [Fact]
@@ -173,8 +173,8 @@ namespace ESPlus.Tests.Storage
             _journal.Put(path2, _payload);
             _journal.Flush();
 
-            _dataStorage.Received(1).Put(path1, Arg.Any<HasObjectId>());
-            _dataStorage.Received(1).Put(path2, Arg.Any<HasObjectId>());
+            _dataStorage.Received(1).Put(path1, Arg.Any<object>());
+            _dataStorage.Received(1).Put(path2, Arg.Any<object>());
         }
 
         [Fact]
@@ -187,8 +187,8 @@ namespace ESPlus.Tests.Storage
             _journal.Put("path/2", _payload);
             _journal.Flush();
 
-            _stageStorage.Received(1).Put("stage/path/1", Arg.Any<HasObjectId>());
-            _stageStorage.Received(1).Put("stage/path/2", Arg.Any<HasObjectId>());
+            _stageStorage.Received(1).Put("stage/path/1", Arg.Any<object>());
+            _stageStorage.Received(1).Put("stage/path/2", Arg.Any<object>());
         } 
 
         [Fact]

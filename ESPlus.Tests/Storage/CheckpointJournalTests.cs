@@ -18,9 +18,9 @@ namespace ESPlus.Tests.Storage
             // Arrange
             var source = "stage/1/file1";
             var destination = "prod/file1";
-            var payload = new HasObjectId();
+            var payload = new object();
 
-            _stageStorage.Get<HasObjectId>(source).Returns(_payload);
+            _stageStorage.Get<object>(source).Returns(_payload);
 
             // Act
             _journal.Initialize();

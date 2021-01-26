@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace ESPlus.Storage
 {
-    public class JournalLog : HasObjectId
+    public class JournalLog
     {
         public Position Checkpoint { get; set; } = Position.Start;
         public Dictionary<string, string> Map = new Dictionary<string, string>();

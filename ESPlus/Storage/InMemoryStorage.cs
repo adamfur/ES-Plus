@@ -7,9 +7,9 @@ namespace ESPlus.Storage
 {
     public class InMemoryStorage : IStorage
     {
-        public readonly Dictionary<string, HasObjectId> _data = new Dictionary<string, HasObjectId>();
+        public readonly Dictionary<string, object> _data = new Dictionary<string, object>();
 
-        public Dictionary<string, HasObjectId> Internal => _data;
+        public Dictionary<string, object> Internal => _data;
 
         public void Delete(string path)
         {
@@ -21,7 +21,6 @@ namespace ESPlus.Storage
         }
 
         public T Get<T>(string path)
-            where T : HasObjectId
         {
             Console.WriteLine(string.Join(", ", _data.Values));
             
@@ -33,7 +32,7 @@ namespace ESPlus.Storage
             return default;
         }
 
-        public void Put(string path, HasObjectId item)
+        public void Put<T>(string path, T item)
         {
             _data[path] = item;
             // Console.WriteLine($" -- PUT: {path}");
