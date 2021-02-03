@@ -1,45 +1,45 @@
+using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace ESPlus.Interfaces
 {
     public class StorageCache : IStorage
     {
         private readonly IStorage _storage;
-        private Dictionary<string, object> _cache = new Dictionary<string, object>();
-        private readonly Dictionary<string, object> _staging = new Dictionary<string, object>();
+        private readonly ConditionalWeakTable<string, object> _cache = new ConditionalWeakTable<string, object>();
 
         public StorageCache(IStorage storage)
         {
             _storage = storage;
         }
         
-        public void Flush()
+        public async Task FlushAsync()
         {
-            _cache = new Dictionary<string, object>(_staging);
-            _staging.Clear();
-            _storage.Flush();
+            await _storage.FlushAsync();
         }
 
         public void Put<T>(string path, T item)
         {
-            _staging[path] = item;
+            _cache.AddOrUpdate(path, item);
             _storage.Put(path, item);
         }
 
         public void Delete(string path)
         {
-            _staging.Remove(path);
+            _cache.Remove(path);
             _storage.Delete(path);
         }
 
-        public T Get<T>(string path)
+        public async Task<T> GetAsync<T>(string path)
         {
             if (_cache.TryGetValue(path, out var resolved))
             {
                 return (T) resolved;
             }
 
-            return _storage.Get<T>(path);
+            return await _storage.GetAsync<T>(path);
         }
 
         public void Reset()

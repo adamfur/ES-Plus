@@ -11,7 +11,7 @@ namespace ESPlus.Wyrm
         IEventSerializer Serializer { get; }
         IAsyncEnumerable<WyrmEvent2> EnumerateStream(string streamName, CancellationToken cancellationToken = default);
         Task DeleteAsync(string streamName, long version, CancellationToken cancellationToken = default);
-        Task<WyrmResult> Append(IEnumerable<WyrmEvent> events, CancellationToken cancellationToken);
+        Task<WyrmResult> Append(List<WyrmAppendEvent> events, CancellationToken cancellationToken);
         IAsyncEnumerable<string> EnumerateStreams(CancellationToken cancellationToken, params Type[] filters);
         Task<Position> LastCheckpointAsync(CancellationToken cancellationToken = default);
         IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken = default,

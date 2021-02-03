@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ESPlus.Interfaces;
 
 namespace ESPlus.Storage
@@ -10,10 +11,10 @@ namespace ESPlus.Storage
         {
         }
 
-        protected override void DoFlush()
+        protected override async Task DoFlushAsync()
         {
-            WriteTo(_dataStorage, _dataWriteCache, _deletes);
-            WriteJournal(new Dictionary<string, string>(), _deletes);
+            await WriteToAsync(_dataStorage, _dataWriteCache, _deletes);
+            await WriteJournalAsync(new Dictionary<string, string>(), _deletes);
         }
     }
 }

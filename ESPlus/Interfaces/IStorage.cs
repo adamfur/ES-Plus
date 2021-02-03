@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ESPlus.Storage;
 
 namespace ESPlus.Interfaces
@@ -7,7 +8,7 @@ namespace ESPlus.Interfaces
     {
         void Put<T>(string path, T item);
         void Delete(string path);
-        T Get<T>(string path);
+        Task<T> GetAsync<T>(string path);
         void Reset();
         IAsyncEnumerable<byte[]> SearchAsync(long[] parameters);
     }

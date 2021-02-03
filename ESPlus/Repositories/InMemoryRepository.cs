@@ -180,16 +180,6 @@ namespace ESPlus.Repositories
             return Task.FromResult(0);
         }
 
-        public IRepositoryTransaction BeginTransaction()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<WyrmResult> Commit(CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Observe(Action<object> @event)
         {
             throw new NotImplementedException();

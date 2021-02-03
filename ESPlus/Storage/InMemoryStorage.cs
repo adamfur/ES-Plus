@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ESPlus.Interfaces;
 
 namespace ESPlus.Storage
@@ -16,17 +17,18 @@ namespace ESPlus.Storage
             _data.Remove(path);
         }
 
-        public void Flush()
+        public Task FlushAsync()
         {
+            return Task.CompletedTask;
         }
 
-        public T Get<T>(string path)
+        public Task<T> GetAsync<T>(string path)
         {
             Console.WriteLine(string.Join(", ", _data.Values));
             
-            if (_data.ContainsKey(path))
+            if (_data.TryGetValue(path, out var data))
             {
-                return (T) _data[path];
+                return Task.FromResult((T) data);
             }
             
             return default;

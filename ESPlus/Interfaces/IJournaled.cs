@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 
@@ -8,7 +9,7 @@ namespace ESPlus.Storage
     {
         Position Checkpoint { get; set; }
         SubscriptionMode SubscriptionMode { get; }
-        void Initialize();
-        void Update<T>(string path, Action<T> action);
+        Task InitializeAsync();
+        Task UpdateAsync<T>(string path, Action<T> action);
     }
 }

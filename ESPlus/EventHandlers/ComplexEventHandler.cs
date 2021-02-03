@@ -21,7 +21,7 @@ namespace ESPlus.EventHandlers
             _pipeline.AddLast(eventHandler);
         }
 
-        public override bool DispatchEvent(object @event)
+        public override async Task<bool> DispatchEventAsync(object @event)
         {
             var payload = new List<object> { @event };
             var result = false;
@@ -30,7 +30,7 @@ namespace ESPlus.EventHandlers
             {
                 foreach (var item in payload)
                 {
-                    result |= eventHandler.DispatchEvent(item);
+                    result |= await eventHandler.DispatchEventAsync(item);
                 }
                 payload.AddRange(eventHandler.TakeEmittedEvents());
             }
@@ -57,7 +57,7 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override void Flush()
+        public override async Task FlushAsync()
         {
             var payload = new List<object>();
 
@@ -65,14 +65,14 @@ namespace ESPlus.EventHandlers
             {
                 foreach (var item in payload)
                 {
-                    eventHandler.DispatchEvent(item);
+                    await eventHandler.DispatchEventAsync(item);
                 }
                 payload.AddRange(eventHandler.TakeEmittedOnSubmitEvents());
             }            
-            base.Flush();
+            await base.FlushAsync();
         }
 
-        public override bool Dispatch(Event @event)
+        public override Task<bool> DispatchAsync(Event @event)
         {
             throw new NotImplementedException();
         }

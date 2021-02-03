@@ -31,12 +31,12 @@ namespace ESPlus.Storage
             }));
         }
 
-        public T Get<T>(string path)
+        public async Task<T> GetAsync<T>(string path)
         {
             try
             {
                 var absolutePath = Combine(BasePath, _container, path);
-                var text = File.ReadAllText(absolutePath);
+                var text = await File.ReadAllTextAsync(absolutePath);
 
                 return JsonConvert.DeserializeObject<T>(text);
             }
@@ -46,11 +46,12 @@ namespace ESPlus.Storage
             }
         }
 
-        public void Flush()
+        public Task FlushAsync()
         {
             CreateFolders();
             WriteFiles();
             _writeCache.Clear();
+            return Task.CompletedTask;
         }
 
         private void WriteFiles()

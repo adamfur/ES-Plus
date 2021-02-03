@@ -67,7 +67,7 @@ namespace ESPlus.Tests.EventHandlers
         }
 
         [Fact]
-        public void DispatchEvent_AllEventHandlersReceice_ReceivedOnce()
+        public async Task DispatchEvent_AllEventHandlersReceice_ReceivedOnce()
         {
             var eventHandler1 = Substitute.For<IReceiverDummyEventHandler>();
             var eventHandler2 = Substitute.For<IReceiverDummyEventHandler>();
@@ -77,14 +77,14 @@ namespace ESPlus.Tests.EventHandlers
             complexHandler.Add(eventHandler2);
             DummyEvent dummyEvent = new DummyEvent();
 
-            complexHandler.DispatchEvent(dummyEvent);
+            await complexHandler.DispatchEventAsync(dummyEvent);
 
-            eventHandler1.Received().DispatchEvent(Arg.Is<DummyEvent>(p => p == dummyEvent));
-            eventHandler2.Received().DispatchEvent(Arg.Is<DummyEvent>(p => p == dummyEvent));
+            await eventHandler1.Received().DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent));
+            await eventHandler2.Received().DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent));
         }
 
         [Fact]
-        public void DispatchEvent_EmittedEventTriggerLaterEventHandlers_TriggeredByTheEmittedEvent()
+        public async Task DispatchEvent_EmittedEventTriggerLaterEventHandlers_TriggeredByTheEmittedEvent()
         {
             var eventHandler1 = new DummyEventHandler(_context);
             var eventHandler2 = Substitute.For<IReceiverDummyEventHandler>();
@@ -94,10 +94,10 @@ namespace ESPlus.Tests.EventHandlers
             complexHandler.Add(eventHandler2);
             var dummyEvent = new DummyEvent();
 
-            complexHandler.DispatchEvent(dummyEvent);
+            await complexHandler.DispatchEventAsync(dummyEvent);
 
-            eventHandler2.Received(1).DispatchEvent(Arg.Is<DummyEvent>(p => p == dummyEvent));
-            eventHandler2.Received(1).DispatchEvent(Arg.Any<DummyEmitEvent>());
+            await eventHandler2.Received(1).DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent));
+            await eventHandler2.Received(1).DispatchEventAsync(Arg.Any<DummyEmitEvent>());
         }     
 
         [Fact]
@@ -105,13 +105,13 @@ namespace ESPlus.Tests.EventHandlers
         {
             var complexHandler = new ComplexEventHandler<IEventHandlerContext>(_context);
 
-            complexHandler.Flush();
+            complexHandler.FlushAsync();
 
-            _context.Received(1).Flush();
+            _context.Received(1).FlushAsync();
         }           
 
         [Fact]
-        public void Flush_EmitOnSubmitEventsAreRaised_PassOnToSubsequentEventHandlers()
+        public async Task Flush_EmitOnSubmitEventsAreRaised_PassOnToSubsequentEventHandlers()
         {
             var eventHandler1 = new DummyEventHandler(_context);
             var eventHandler2 = Substitute.For<IReceiverDummyEventHandler>();
@@ -124,14 +124,14 @@ namespace ESPlus.Tests.EventHandlers
             var payload2 = new object();
             var payload3 = new object();
 
-            complexHandler.DispatchEvent(new DummyEmitOnSubmit() { Key = "1", Payload = payload1 });
-            complexHandler.DispatchEvent(new DummyEmitOnSubmit() { Key = "2", Payload = payload2 });
-            complexHandler.DispatchEvent(new DummyEmitOnSubmit() { Key = "2", Payload = payload3 });
-            complexHandler.Flush(); 
+            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "1", Payload = payload1 });
+            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "2", Payload = payload2 });
+            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "2", Payload = payload3 });
+            await complexHandler.FlushAsync(); 
 
-            eventHandler2.Received().DispatchEvent(Arg.Is<object>(p => p == payload1));
-            eventHandler2.DidNotReceive().DispatchEvent(Arg.Is<object>(p => p == payload2));
-            eventHandler2.Received(1).DispatchEvent(Arg.Is<object>(p => p == payload3));
+            await eventHandler2.Received().DispatchEventAsync(Arg.Is<object>(p => p == payload1));
+            await eventHandler2.DidNotReceive().DispatchEventAsync(Arg.Is<object>(p => p == payload2));
+            await eventHandler2.Received(1).DispatchEventAsync(Arg.Is<object>(p => p == payload3));
         }          
     }
 }

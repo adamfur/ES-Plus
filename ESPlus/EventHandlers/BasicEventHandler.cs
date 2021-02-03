@@ -15,7 +15,7 @@ namespace ESPlus.EventHandlers
     public class BasicEventHandler<TContext> : EventHandlerBase<TContext>
         where TContext : class, IEventHandlerContext 
     {
-        private readonly ConventionEventRouter _router = new ConventionEventRouter();
+        private readonly ConventionEventRouterAsync _router = new ConventionEventRouterAsync();
         private readonly LinkedList<object> _emitQueue = new LinkedList<object>();
         private readonly Dictionary<string, object> _emitOnSubmit = new Dictionary<string, object>();
         private readonly IEventTypeResolver _eventTypeResolver;
@@ -31,15 +31,15 @@ namespace ESPlus.EventHandlers
             _eventTypeResolver = eventTypeResolver;
         }
 
-        protected virtual void RegisterRouter(ConventionEventRouter router)
+        protected virtual void RegisterRouter(ConventionEventRouterAsync router)
         {
             router.Register(this);
         }
 
-        public override bool DispatchEvent(object @event)
+        public override async Task<bool> DispatchEventAsync(object @event)
         {
             _once.Execute();
-            _router.Dispatch(@event);
+            await _router.DispatchAsync(@event);
             return true;
         }
 
@@ -79,7 +79,7 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override bool Dispatch(Event @event)
+        public override async Task<bool> DispatchAsync(Event @event)
         {
             if (@event.Offset == 1)
             {
@@ -105,21 +105,21 @@ namespace ESPlus.EventHandlers
                     {
                         var instance = CreateInstance(type, @event.StreamName);
                     
-                        DispatchEvent(instance);
+                        await DispatchEventAsync(instance);
                     }
                 }
                 catch (ArgumentException)
                 {
                 }
-
+            
                 status = true;
             }
             else if (_router.CanHandle(@event.EventType))
             {
-                DispatchEvent(@event.DeserializedItem());
+                await DispatchEventAsync(@event.DeserializedItem());
                 status = true;
             }
-
+            
             if (@event.IsAhead)
             {
                 Ahead();
@@ -130,7 +130,7 @@ namespace ESPlus.EventHandlers
         
         private StreamDeleted CreateInstance(Type type, string createEventType)
         {
-            var make = typeof(StreamDeleted<>).MakeGenericType(new[] { type });
+            var make = typeof(StreamDeleted<>).MakeGenericType(type);
             var result = (StreamDeleted) Activator.CreateInstance(make, createEventType);
 
             return result;

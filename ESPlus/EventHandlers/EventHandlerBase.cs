@@ -33,30 +33,30 @@ namespace ESPlus.EventHandlers
         {
         }
 
-        public virtual void Flush()
+        public virtual async Task FlushAsync()
         {
-            Context.Flush();
+            await Context.FlushAsync();
         }
 
-        public abstract bool DispatchEvent(object @event);
+        public abstract Task<bool> DispatchEventAsync(object @event);
         public abstract IEnumerable<object> TakeEmittedEvents();
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
         public abstract Task<object> Search(long[] parameters);
         public abstract Task<object> Get(string path);
-        public abstract bool Dispatch(Event @event);
+        public abstract Task<bool> DispatchAsync(Event @event);
 
         public virtual void Ahead()
         {
         }
 
-        public void FlushWhenAhead()
+        public async Task FlushWhenAheadAsync()
         {
-            _flushPolicy.FlushWhenAhead();
+            await _flushPolicy.FlushWhenAheadAsync();
         }
 
-        public void FlushOnEvent()
+        public async Task FlushOnEventAsync()
         {
-            _flushPolicy.FlushOnEvent();
+            await _flushPolicy.FlushOnEventAsync();
         }
     }
 }

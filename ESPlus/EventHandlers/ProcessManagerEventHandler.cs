@@ -21,12 +21,12 @@ namespace ESPlus.EventHandlers
             _repository = repository;
         }
 
-        protected override void RegisterRouter(ConventionEventRouter router) //Routes
+        protected override void RegisterRouter(ConventionEventRouterAsync router) //Routes
         {
             //router.Register(_processManager, "Transition");
         }
 
-        public override bool DispatchEvent(object @event)
+        public override Task<bool> DispatchEventAsync(object @event)
         {
             throw new NotImplementedException();
             // System.Console.WriteLine($"ProcessManagerEventHandler {@event.GetType().Name}");
@@ -44,14 +44,6 @@ namespace ESPlus.EventHandlers
             // }).Wait();
 
             // return true;
-        }
-
-        public void AddMap<T>(Func<T, string> map)
-        {
-            Func<T, string> func = map;
-            Func<object, string> func2 = x => func((T) x);
-
-            _map[typeof(T)] = func2;
         }
 
         private string Map(object @event)

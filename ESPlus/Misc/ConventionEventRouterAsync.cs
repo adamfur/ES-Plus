@@ -1,91 +1,71 @@
 using System;
 using System.Collections.Generic;
+using System.Data.HashFunction.xxHash;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
-namespace ESPlus.Aggregates
+namespace ESPlus.Misc
 {
     public class ConventionEventRouterAsync
     {
-        readonly bool throwOnApplyNotFound;
-        private readonly IDictionary<Type, Func<object, Task>> handlers = new Dictionary<Type, Func<object, Task>>();
+        private readonly IDictionary<Type, Func<object, Task>> _handlers = new Dictionary<Type, Func<object, Task>>();
         private readonly ISet<string> _handle = new HashSet<string>();
-        private object registered;
 
-        public ConventionEventRouterAsync() : this(true)
-        {
-        }
-
-        public ConventionEventRouterAsync(bool throwOnApplyNotFound)
-        {
-            this.throwOnApplyNotFound = throwOnApplyNotFound;
-        }
-
-        public ConventionEventRouterAsync(bool throwOnApplyNotFound, object aggregate) : this(throwOnApplyNotFound)
-        {
-            Register(aggregate);
-        }
-
-        public virtual void Register(object aggregate, string route = "Apply")
+        public void Register(object aggregate, string route = "Apply")
         {
             if (aggregate == null)
-                throw new ArgumentNullException("aggregate");
-
-            this.registered = aggregate;
+            {
+                throw new ArgumentNullException(nameof(aggregate));
+            }
 
             // Get instance methods named Apply with one parameter returning void
             var applyMethods = aggregate.GetType()
-                .GetRuntimeMethods()// (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(m => m.Name == route && m.GetParameters().Length == 1 && m.ReturnParameter.ParameterType == typeof(Task))
-                .Select(x =>
-                {
-                    _handle.Add(x.GetParameters().Single().ParameterType.FullName);
-                    return x;
-                })
                 .Select(m => new
                 {
                     Method = m,
                     MessageType = m.GetParameters().Single().ParameterType
                 });
 
-
             foreach (var apply in applyMethods)
             {
+                // Console.WriteLine($"foreach (var apply in applyMethods) {apply.MessageType.Name}");
                 _handle.Add(apply.MessageType.FullName);
-
-                //MethodInfo applyMethod = apply.Method;
-                //this.handlers.Add(apply.MessageType, m => applyMethod.Invoke(aggregate, new[] { m as object }));
-                this.handlers.Add(apply.MessageType, Build((dynamic)Activator.CreateInstance(apply.MessageType), aggregate, apply.Method));
+                _handlers[apply.MessageType] = payload => (Task) apply.Method.Invoke(aggregate, new[] { payload });
+                // _handlers[apply.MessageType] = payload => { Console.WriteLine(payload); };
             }
         }
-        
-        private Func<object, Task> Build<T>(T typeInstance, object instance, MethodInfo applyMethod)
+
+        public Task DispatchAsync(object eventMessage)
         {
-            var specificDelegate = ((Func<T, Task>)Delegate.CreateDelegate(typeof(Func<T, Task>), instance, applyMethod));
-            var genericDelegate = (Func<object, Task>)(x => specificDelegate((T)x));
-
-            return genericDelegate;
-        }
-
-        public async Task DispatchAsync(object eventMessage)
-        {
-            //if (eventMessage == null)
-            //throw new ArgumentNullException("eventMessage");
-
-            Func<object, Task> handler;
-
-            if (this.handlers.TryGetValue(eventMessage.GetType(), out handler))
+            if (_handlers.TryGetValue(eventMessage.GetType(), out var handler))
             {
-                await handler(eventMessage);
+                try
+                {
+                    return handler(eventMessage);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("--- Json --------------");
+                    Console.WriteLine(eventMessage.GetType().FullName);
+                    Console.WriteLine(JsonConvert.SerializeObject(eventMessage, Formatting.Indented));
+                    throw;
+                }
             }
-            //else if (this.throwOnApplyNotFound)
-            //this.registered.ThrowHandlerNotFound(eventMessage);
+
+            return Task.CompletedTask;
         }
 
-        private void Register(Type messageType, Func<object, Task> handler)
+        public IEnumerable<long> Filter()
         {
-            this.handlers[messageType] = handler;
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
+
+            return _handle.Select(x => BitConverter.ToInt64(algorithm.ComputeHash(Encoding.UTF8.GetBytes(x)).Hash, 0))
+                .OrderBy(x => x);
         }
 
         public bool CanHandle(string type)
@@ -94,4 +74,3 @@ namespace ESPlus.Aggregates
         }
     }
 }
-

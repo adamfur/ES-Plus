@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
+
 namespace ESPlus.Storage
 {
     public interface IFlushable
     {
-        void Flush();
+        Task FlushAsync();
     }
 }

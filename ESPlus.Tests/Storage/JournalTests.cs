@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using ESPlus.Storage;
@@ -26,94 +27,94 @@ namespace ESPlus.Tests.Storage
         protected abstract IJournaled Create();
 
         [Fact]
-        public void Create_NoJournal_InitializeJournalToZero()
+        public async Task Create_NoJournal_InitializeJournalToZero()
         {
-            _journal.Initialize();
+            await _journal.InitializeAsync();
             Assert.Equal(Position.Start, _journal.Checkpoint);
         }
 
         [Fact]
-        public void Create_HasJournalWithCheckpoint_RealTimeMode()
+        public async Task Create_HasJournalWithCheckpoint_RealTimeMode()
         {
-            _metadataStorage.Get<JournalLog>(PersistentJournal.JournalPath)
+            _metadataStorage.GetAsync<JournalLog>(PersistentJournal.JournalPath)
                 .Returns(new JournalLog {Checkpoint = Position.Gen(57)});
 
-            _journal.Initialize();
+            await _journal.InitializeAsync();
 
             Assert.Equal(Position.Gen(57), _journal.Checkpoint);
             Assert.Equal(SubscriptionMode.RealTime, _journal.SubscriptionMode);
         }
 
         [Fact]
-        public void Create_HasJournalWithCheckpoint_ReplayMode()
+        public async Task Create_HasJournalWithCheckpoint_ReplayMode()
         {
-            _metadataStorage.Get<JournalLog>(PersistentJournal.JournalPath)
+            _metadataStorage.GetAsync<JournalLog>(PersistentJournal.JournalPath)
                 .Returns(new JournalLog {Checkpoint = Position.Start});
 
-            _journal.Initialize();
+            await _journal.InitializeAsync();
 
             Assert.Equal(Position.Start, _journal.Checkpoint);
             Assert.Equal(SubscriptionMode.Replay, _journal.SubscriptionMode);
         }
 
         [Fact]
-        public void Flush_WriteJournal_JournalSaved()
+        public async Task Flush_WriteJournal_JournalSaved()
         {
-            _journal.Initialize();
+            await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Gen(13);
-            _journal.Flush();
+            await _journal.FlushAsync();
 
             Received.InOrder(() =>
             {
                 _metadataStorage.Received().Put(PersistentJournal.JournalPath,
                     Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(13))));
-                _metadataStorage.Received().Flush();
+                _metadataStorage.Received().FlushAsync();
             });
         }
         
         [Fact]
-        public void Get_AfterPut_Accessable()
+        public async Task Get_AfterPut_Accessable()
         {
-            _journal.Initialize();
+            await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Start;
             _journal.Put("path", _payload);
 
-            Assert.Equal(_payload, _journal.Get<object>("path"));
+            Assert.Equal(_payload, _journal.GetAsync<object>("path"));
         }
         
         [Fact]
-        public void Get_AfterPutAndFlush_Accessable()
+        public async Task Get_AfterPutAndFlush_Accessable()
         {
-            _journal.Initialize();
+            await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Start;
             _journal.Put("path", _payload);
-            _journal.Flush();
+            await _journal.FlushAsync();
 
-            Assert.Equal(_payload, _journal.Get<object>("path"));
+            Assert.Equal(_payload, _journal.GetAsync<object>("path"));
         }         
         
         [Fact]
-        public void Get_AfterDelete_NotAccessable()
+        public async Task Get_AfterDelete_NotAccessable()
         {
-            _journal.Initialize();
+            await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Start;
             _journal.Put("path", _payload);
             _journal.Delete("path");
 
-            Assert.Null(_journal.Get<object>("path"));
+            Assert.Null(_journal.GetAsync<object>("path"));
         }
         
         [Fact]
-        public void Get_AfterDeleteAndFlush_NotAccessable()
+        public async Task Get_AfterDeleteAndFlush_NotAccessable()
         {
-            _journal.Initialize();
+            await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Start;
             _journal.Put("path", _payload);
-            _journal.Flush();
+            await _journal.FlushAsync();
             _journal.Delete("path");
-            _journal.Flush();
+            await _journal.FlushAsync();
 
-            Assert.Null(_journal.Get<object>("path"));
+            Assert.Null(_journal.GetAsync<object>("path"));
         }            
     }
 }

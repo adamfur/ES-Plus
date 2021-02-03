@@ -67,35 +67,35 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new BasicEventHandler<IEventHandlerContext>(_context, null, new NullFlushPolicy());
 
-            eventHandler.Flush();
+            eventHandler.FlushAsync();
 
-            _context.Received(1).Flush();
+            _context.Received(1).FlushAsync();
         }
 
         [Fact]
-        public void DispatchEvent_EventIsRouterTotheCorrectFunction_Once()
+        public async Task DispatchEvent_EventIsRouterTotheCorrectFunction_Once()
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            eventHandler.DispatchEvent(new DummyEvent());
+            await eventHandler.DispatchEventAsync(new DummyEvent());
 
             Assert.True(eventHandler.Called);
         }
 
         [Fact]
-        public void DispatchEvent_NoRoute_Ignore()
+        public async Task DispatchEvent_NoRoute_Ignore()
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            eventHandler.DispatchEvent(new DummyEvent());
+            await eventHandler.DispatchEventAsync(new DummyEvent());
         }
 
         [Fact]
-        public void TakeEmittedEvents_EmptyAfterUse_Empty()
+        public async Task TakeEmittedEvents_EmptyAfterUse_Empty()
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            eventHandler.DispatchEvent(new DummyEmitEvent());
+            await eventHandler.DispatchEventAsync(new DummyEmitEvent());
             var pass1 = eventHandler.TakeEmittedEvents().ToList();
             var pass2 = eventHandler.TakeEmittedEvents().ToList();
 
@@ -104,11 +104,11 @@ namespace ESPlus.Tests.EventHandlers
         }
 
         [Fact]
-        public void TakeEmittedOnSubmitEvents_EmptyAfterUse_Empty()
+        public async Task TakeEmittedOnSubmitEvents_EmptyAfterUse_Empty()
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            eventHandler.DispatchEvent(new DummyEmitSubmitEvent());
+            await eventHandler.DispatchEventAsync(new DummyEmitSubmitEvent());
 
             var pass1 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
             var pass2 = eventHandler.TakeEmittedOnSubmitEvents().ToList();

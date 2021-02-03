@@ -16,11 +16,11 @@ namespace ESPlus.Storage
             _stageStorage = stageStorage;
         }
 
-        protected override void DoFlush()
+        protected override async Task DoFlushAsync()
         {
-            WriteTo(_stageStorage, _dataStageCache, _deletes, "stage/");
-            WriteJournal(_map, _deletes);
-            WriteTo(_dataStorage, _dataWriteCache, _deletes);
+            await WriteToAsync(_stageStorage, _dataStageCache, _deletes, "stage/");
+            await WriteJournalAsync(_map, _deletes);
+            await WriteToAsync(_dataStorage, _dataWriteCache, _deletes);
         }
 
         public override void Put<T>(string path, T item)
@@ -45,7 +45,7 @@ namespace ESPlus.Storage
             _dataStageCache.Clear();
         }        
 
-        protected override void PlayJournal(JournalLog journal)
+        protected override async Task PlayJournal(JournalLog journal)
         {
             if (journal.Map.Count != 0)
             {
@@ -53,7 +53,7 @@ namespace ESPlus.Storage
                 {
                     var source = item.Key;
                     var destination = item.Value;
-                    var payload = _stageStorage.Get<JournalLog>(source);
+                    var payload = await _stageStorage.GetAsync<JournalLog>(source);
 
                     _dataStorage.Put(destination, payload);
                 }
@@ -67,7 +67,7 @@ namespace ESPlus.Storage
                 }
             }
 
-            _dataStorage.Flush();
+            await _dataStorage.FlushAsync();
         }
     }
 }

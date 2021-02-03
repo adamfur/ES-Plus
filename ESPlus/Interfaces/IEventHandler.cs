@@ -6,11 +6,10 @@ namespace ESPlus.EventHandlers
 {
     public interface IEventHandler : IFlushPolicy
     {
-        bool DispatchEvent(object @event);
-        // Task<bool> DispatchEventAsync(object @event);
-        bool Dispatch(Event @event);
+        Task<bool> DispatchEventAsync(object @event);
+        Task<bool> DispatchAsync(Event @event);
         void Initialize();
-        void Flush();
+        Task FlushAsync();
         Position Checkpoint { get; set; }
         IEnumerable<object> TakeEmittedEvents();
         IEnumerable<object> TakeEmittedOnSubmitEvents();

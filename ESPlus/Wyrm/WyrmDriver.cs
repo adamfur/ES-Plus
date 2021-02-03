@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Exceptions;
 using ESPlus.Extensions;
-using ESPlus.Extentions;
 using LZ4;
 
 namespace ESPlus.Wyrm
@@ -181,11 +180,18 @@ namespace ESPlus.Wyrm
 
             if (len != 8)
             {
-                throw new Exception("if (len != 8)");
+                throw new Exception($"Delete (invalid length): {streamName}:{version}");
             }
+            
+            var status = await stream.ReadInt32Async(cancellationToken);
+
+            // if (status != 0)
+            // {
+            //     throw new Exception($"Delete (bad status): {streamName}:{version}");
+            // }
         }
 
-        public async Task<WyrmResult> Append(IEnumerable<WyrmEvent> events, CancellationToken cancellationToken)
+        public async Task<WyrmResult> Append(List<WyrmAppendEvent> events, CancellationToken cancellationToken)
         {
             if (!events.Any())
             {
@@ -194,9 +200,8 @@ namespace ESPlus.Wyrm
 
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
-            
             await using var writer = new BinaryWriter(stream);
-            var concat = Combine(events.Select(x => Assemble(x)).ToArray());
+            var concat = Combine(events.Select(Assemble).ToArray());
             int length = concat.Length;
 
             writer.Write(OperationType.PUT);
@@ -206,7 +211,7 @@ namespace ESPlus.Wyrm
 
             var len = await stream.ReadInt32Async(cancellationToken);
 
-            if (len == 8 + 32)
+            if (len == 40)
             {
                 var status = await stream.ReadInt32Async(cancellationToken);
                 var hash = await stream.ReadBytesAsync(32, cancellationToken);
@@ -219,7 +224,7 @@ namespace ESPlus.Wyrm
 
                 return new WyrmResult(new Position(hash), offset);
             }
-            else if (len == 8 + 32 + 8)
+            else if (len == 48)
             {
                 var status = await stream.ReadInt32Async(cancellationToken);
                 var hash = await stream.ReadBytesAsync(32, cancellationToken);
@@ -234,7 +239,7 @@ namespace ESPlus.Wyrm
             }
             else
             {
-                throw new Exception("if (len != 8 + 32 + 8?)");
+                throw new Exception($"if (len != 48?): -> ({len})");
             }
         }
 
@@ -341,7 +346,7 @@ namespace ESPlus.Wyrm
 
         public async IAsyncEnumerable<WyrmEvent2> EnumerateAll(Position from, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
+            // Console.WriteLine($"EnumerateAll: {from.AsHexString()}");
             using var client = await CreateAsync();
             await using var stream = client.GetStream();
             
@@ -405,7 +410,7 @@ namespace ESPlus.Wyrm
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var buffer = await stream.ReadBinaryAsyncXYZ(size, cancellationToken);
+                var buffer = await stream.ReadBinaryAsync(size, cancellationToken);
 
                 if (buffer.Length == 0)
                 {
@@ -440,7 +445,6 @@ namespace ESPlus.Wyrm
 
                     if (length == 8)
                     {
-                        //Console.WriteLine("reached end!");
                         break;
                     }
 
@@ -449,33 +453,29 @@ namespace ESPlus.Wyrm
             }
         }
 
-        private byte[] Assemble(WyrmEvent @event)
+        private byte[] Assemble(WyrmAppendEvent appendEvent)
         {
             using var target = new MemoryStream();
             using var writer = new BinaryWriter(target);
-            var streamName = Encoding.UTF8.GetBytes(@event.StreamName);
-            var eventType = Encoding.UTF8.GetBytes(@event.EventType);
-            var metadata = @event.Metadata;
-            var body = @event.Body;
+            var streamName = Encoding.UTF8.GetBytes(appendEvent.StreamName);
+            var eventType = Encoding.UTF8.GetBytes(appendEvent.EventType);
+            var metadata = appendEvent.Metadata;
+            var body = appendEvent.Body;
             var uncompressed = BuildPayload(metadata, body);
             var uncompressedLength = uncompressed.Length;
             var compressed = new byte[LZ4Codec.MaximumOutputLength(uncompressedLength)];
             var compressedLength = LZ4Codec.Encode(uncompressed, 0, uncompressedLength, compressed, 0, compressed.Length);
-            var length = compressedLength + streamName.Length + eventType.Length + Marshal.SizeOf(typeof(Apa));
-            var apa = new Apa
-            {
-                Length = length,
-                StreamNameLength = streamName.Length,
-                EventTypeLength = eventType.Length,
-                Version = @event.Version,
-                CompressedLength = compressedLength,
-                UncompressedLength = uncompressedLength,
-                EventId = @event.EventId,
-                MetaDataLength = metadata.Length,
-                BodyLength = body.Length
-            };
-
-            writer.WriteStruct(apa);
+            var length = compressedLength + streamName.Length + eventType.Length + 52;
+            
+            writer.Write((int)length);
+            writer.Write((int)streamName.Length);
+            writer.Write((int)eventType.Length);
+            writer.Write((long)appendEvent.Version);
+            writer.Write((int)compressedLength);
+            writer.Write((int)uncompressedLength);
+            writer.Write(appendEvent.EventId.ToByteArray());
+            writer.Write((int)metadata.Length);
+            writer.Write((int)body.Length);         
             writer.Write(streamName);
             writer.Write(eventType);
             writer.Write(compressed, 0, compressedLength);

@@ -6,65 +6,28 @@ namespace ESPlus.Misc
 {
     public class EventTypeResolver : IEventTypeResolver
     {
-        private Dictionary<string, Type> _typesByEventId = new Dictionary<string, Type>();
-        private Dictionary<string, Type> _typesByFullName = new Dictionary<string, Type>();
-        private Dictionary<string, Type> _typesByNameName = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _types = new Dictionary<string, Type>();
 
         public void RegisterTypes(Type[] types)
         {
             foreach (var type in types)
             {
-                var eventId = ExtractEventId(type);
-
-                if (eventId != null)
-                {
-                    _typesByEventId[eventId] = type;
-                }
-
-                _typesByFullName[type.FullName] = type;
-                _typesByNameName[type.Name] = type;
+                _types[type.FullName] = type;
             }
         }
 
-        private string ExtractEventId(Type type)
+        public Type ResolveType(string fullName)
         {
-            var attribute = type.GetCustomAttributes(typeof(EventIdentifierAttribute), true).FirstOrDefault() as EventIdentifierAttribute;
-
-            return attribute?.EventId;
-        }
-
-        public Type ResolveType(string fullName, string name = "", string eventId = "")
-        {
-            return FindByEventId(eventId) ?? FindByFullName(fullName) ?? FindByName(name) ?? throw new ArgumentException($"Unabel to resolve type '{fullName}'!");
-        }
-
-        private Type FindByName(string type)
-        {
-            if (_typesByNameName.ContainsKey(type))
-            {
-                return _typesByNameName[type];
-            }
-
-            return null;
+            return FindByFullName(fullName) ?? throw new ArgumentException($"Unabel to resolve type '{fullName}'!");
         }
 
         private Type FindByFullName(string type)
         {
-            if (_typesByFullName.ContainsKey(type))
+            if (_types.TryGetValue(type, out var resolved))
             {
-                return _typesByFullName[type];
+                return resolved;
             }
-
-            return null;
-        }
-
-        private Type FindByEventId(string eventId)
-        {
-            if (_typesByEventId.ContainsKey(eventId))
-            {
-                return _typesByEventId[eventId];
-            }
-
+            
             return null;
         }
     }

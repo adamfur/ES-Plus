@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
 using NSubstitute;
@@ -13,28 +14,28 @@ namespace ESPlus.Tests.Storage
         }
 
         [Fact]
-        public void Flush_PutFile_WriteFirstToStageThenJournalThenStorage()
+        public async Task Flush_PutFile_WriteFirstToStageThenJournalThenStorage()
         {
             // Arrange
             var source = "stage/1/file1";
             var destination = "prod/file1";
             var payload = new object();
 
-            _stageStorage.Get<object>(source).Returns(_payload);
+            _stageStorage.GetAsync<object>(source).Returns(_payload);
 
             // Act
-            _journal.Initialize();
+            await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Gen(12);
             _journal.Put(destination, payload);
-            _journal.Flush();
+            await _journal.FlushAsync();
 
             // Assert
             Received.InOrder(() =>
             {
                 _dataStorage.Received().Put(destination, payload);
-                _dataStorage.Received().Flush();
+                _dataStorage.Received().FlushAsync();
                 _metadataStorage.Received().Put(PersistentJournal.JournalPath, Arg.Any<JournalLog>());
-                _metadataStorage.Received().Flush();
+                _metadataStorage.Received().FlushAsync();
             });
         }
     }

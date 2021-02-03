@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace ESPlus.EventHandlers
 {
@@ -9,6 +10,6 @@ namespace ESPlus.EventHandlers
         long Offset { get; set; }
         long TotalOffset { get; set; }
         MetaData Metadata { get; set; }
-        void Flush();
+        Task FlushAsync();
     }
 }

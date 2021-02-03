@@ -22,7 +22,7 @@ namespace ESPlus
 
             foreach (byte x in hashValue)
             {
-                result.Append(string.Format("{0:x2}", x));
+                result.Append($"{x:x2}");
             }
 
             return result.ToString();
@@ -30,8 +30,9 @@ namespace ESPlus
 
         public static Int64 XXH64(this string data)
         {
-            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig() { HashSizeInBits = 64 });
-            var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(data));
+            var algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
+            var bytes = Encoding.UTF8.GetBytes(data);
+            var hash = algorithm.ComputeHash(bytes);
 
             return BitConverter.ToInt64(hash.Hash, 0);
         }

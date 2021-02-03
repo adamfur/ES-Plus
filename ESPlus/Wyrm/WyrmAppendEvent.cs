@@ -2,9 +2,9 @@ using System;
 
 namespace ESPlus.Wyrm
 {
-    public class WyrmEvent
+    public class WyrmAppendEvent
     {
-        public WyrmEvent(Guid eventId, string eventType, byte[] body, byte[] metadata, string streamName, int version)
+        public WyrmAppendEvent(Guid eventId, string eventType, byte[] body, byte[] metadata, string streamName, long version)
         {
             EventId = eventId;
             EventType = eventType;
@@ -19,6 +19,6 @@ namespace ESPlus.Wyrm
         public byte[] Body { get; }
         public byte[] Metadata { get; }
         public string StreamName { get; }
-        public int Version { get; }
+        public long Version { get; }
     }
 }

@@ -1,10 +1,12 @@
+using System.Threading.Tasks;
+
 namespace ESPlus.FlushPolicies
 {
     public class FlushWhenAheadPolicy : FlushOnThresholdPolicy
     {
-        public override void FlushWhenAhead()
+        public override async Task FlushWhenAheadAsync()
         {
-            Flush();
+            await FlushAsync();
         }
     }
 }

@@ -4,12 +4,12 @@ namespace ESPlus.Storage
 {
     public class Once
     {
-        private readonly Action action;
+        private readonly Action _action;
         private bool _executed = false;
 
         public Once(Action action)
         {
-            this.action = action;
+            this._action = action;
         }
 
         public void Execute()
@@ -18,8 +18,9 @@ namespace ESPlus.Storage
             {
                 return;
             }
+            
             _executed = true;
-            action();
+            _action();
         }
     }
 }

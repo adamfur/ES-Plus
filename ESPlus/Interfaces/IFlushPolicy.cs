@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using ESPlus.EventHandlers;
 
 namespace ESPlus.Subscribers
@@ -5,8 +6,8 @@ namespace ESPlus.Subscribers
     // Event, Batch, IncompleteBatch, Time
     public interface IFlushPolicy
     {
-        void FlushWhenAhead();
-        void FlushOnEvent();
+        Task FlushWhenAheadAsync();
+        Task FlushOnEventAsync();
         IEventHandler EventHandler { get; set; }
     }
 }

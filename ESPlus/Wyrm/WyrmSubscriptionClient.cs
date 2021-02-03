@@ -20,7 +20,7 @@ namespace ESPlus.Wyrm
             _eventTypeResolver = eventTypeResolver;
         }
         
-        public async IAsyncEnumerator<Event> GetAsyncEnumerator([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<Event> Events([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             await foreach (var @event in _wyrmConnection.SubscribeAsync(_subscriptionContext.Position, cancellationToken))
             {

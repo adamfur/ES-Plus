@@ -4,7 +4,7 @@ using System.IO;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using System.Runtime.CompilerServices;
-using ESPlus.Extentions;
+using System.Threading.Tasks;
 
 namespace ESPlus.Storage
 {
@@ -37,19 +37,19 @@ namespace ESPlus.Storage
             _dataStorage = dataStorage;
         }
 
-        public void Initialize()
+        public async Task InitializeAsync()
         {
-            LoadJournal();
+            await LoadJournal();
         }
 
-        private void LoadJournal()
+        private async Task LoadJournal()
         {
             JournalLog journal;
 
             Console.WriteLine("LoadJournal()");
             try
             {
-                journal = _metadataStorage.Get<JournalLog>(JournalPath);
+                journal = await _metadataStorage.GetAsync<JournalLog>(JournalPath);
                 Console.WriteLine($"IsNull {journal == null}");
                 journal = journal ?? new JournalLog();
                 Console.WriteLine($"Journal Read Success: {journal.Checkpoint.AsHexString()}");
@@ -67,14 +67,15 @@ namespace ESPlus.Storage
                 SubscriptionMode = SubscriptionMode.Replay;
             }
             
-            PlayJournal(journal);
+            await PlayJournal(journal);
         }
 
-        protected virtual void PlayJournal(JournalLog journal)
+        protected virtual Task PlayJournal(JournalLog journal)
         {
+            return Task.CompletedTask;
         }
 
-        public void Flush()
+        public async Task FlushAsync()
         {
             // Console.WriteLine(" -- Journal flush");
             if (_changed == false)
@@ -82,7 +83,7 @@ namespace ESPlus.Storage
                 return;
             }
 
-            DoFlush();
+            await DoFlushAsync();
             Clean();
         }
 
@@ -94,7 +95,7 @@ namespace ESPlus.Storage
             _changed = true;
         }
 
-        public T Get<T>(string path)
+        public async Task<T> GetAsync<T>(string path)
         {
             try
             {
@@ -113,7 +114,7 @@ namespace ESPlus.Storage
 //                    return default;
                 }
 
-                var data = _dataStorage.Get<T>(path);
+                var data = await _dataStorage.GetAsync<T>(path);
 
                 // _cache.AddOrUpdate(path, data);
                 return data;
@@ -124,9 +125,9 @@ namespace ESPlus.Storage
             }
         }
 
-        public void Update<T>(string path, Action<T> action)
+        public async Task UpdateAsync<T>(string path, Action<T> action)
         {
-            var model = Get<T>(path);
+            var model = await GetAsync<T>(path);
 
             if (model is null)
             {
@@ -137,7 +138,7 @@ namespace ESPlus.Storage
             Put(path, model);
         }
 
-        protected void WriteJournal(Dictionary<string, string> map, HashSet<string> deletes)
+        protected async Task WriteJournalAsync(Dictionary<string, string> map, HashSet<string> deletes)
         {
             var journal = new JournalLog
             {
@@ -150,13 +151,13 @@ namespace ESPlus.Storage
 
             if (_metadataStorage != _dataStorage)
             {
-                _metadataStorage.Flush();
+                await _metadataStorage.FlushAsync();
             }
 
             // Console.WriteLine($"Put Journal {Checkpoint}");
         }
 
-        protected void WriteTo(IStorage storage, Dictionary<string, object> cache, HashSet<string> deletes,
+        protected async Task WriteToAsync(IStorage storage, Dictionary<string, object> cache, HashSet<string> deletes,
             string prefix = "")
         {
             foreach (var item in cache)
@@ -172,7 +173,7 @@ namespace ESPlus.Storage
                 storage.Delete(item);
             }
             
-            storage.Flush();
+            await storage.FlushAsync();
         }
 
         private void Clean()
@@ -187,13 +188,14 @@ namespace ESPlus.Storage
         {
         }
 
-        protected virtual void DoFlush()
+        protected virtual Task DoFlushAsync()
         {
+            return Task.CompletedTask;
         }
 
         public void Reset()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters)
