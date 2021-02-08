@@ -14,7 +14,6 @@ namespace ESPlus.Wyrm
     {
         private readonly IEventSerializer _eventSerializer;
         private readonly IWyrmDriver _wyrmConnection;
-        private readonly IWyrmAggregateRenamer _aggregateRenamer;
         private static readonly Dictionary<string, Type> Types = new Dictionary<string, Type>();
         private readonly List<Action<object>> _observers = new List<Action<object>>();
 
@@ -40,10 +39,9 @@ namespace ESPlus.Wyrm
             }
         }
 
-        public WyrmRepository(IWyrmDriver wyrmConnection, IWyrmAggregateRenamer aggregateRenamer)
+        public WyrmRepository(IWyrmDriver wyrmConnection)
         {
             _wyrmConnection = wyrmConnection;
-            _aggregateRenamer = aggregateRenamer;
             _eventSerializer = wyrmConnection.Serializer;
         }
 
@@ -71,9 +69,7 @@ namespace ESPlus.Wyrm
 
         public async Task DeleteAsync(string id, long version)
         {
-            var streamName = _aggregateRenamer.Name(id);
-            
-            await _wyrmConnection.DeleteAsync(streamName, version, CancellationToken.None);
+            await _wyrmConnection.DeleteAsync(id, version, CancellationToken.None);
         }
 
         public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
@@ -125,7 +121,7 @@ namespace ESPlus.Wyrm
                 return new WyrmResult(Position.Start, 0);
             }
 
-            var streamName = _aggregateRenamer.Name(aggregate.Id);
+            var streamName = (aggregate.Id);
             var eventsToSave = copy.Select((e, ix) => ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 
             foreach (var @event in copy)
@@ -138,8 +134,7 @@ namespace ESPlus.Wyrm
 
         public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate
         {
-            var streamName = _aggregateRenamer.Name(id);
-            var aggregate = ConstructAggregate<TAggregate>(streamName);
+            var aggregate = ConstructAggregate<TAggregate>(id);
             var applyAggregate = (IAggregate)aggregate;
             bool any = false;
 
@@ -148,7 +143,7 @@ namespace ESPlus.Wyrm
                 throw new ArgumentException("Cannot get version < 0");
             }
 
-            await foreach (var evnt in _wyrmConnection.EnumerateStream(streamName))
+            await foreach (var evnt in _wyrmConnection.EnumerateStream(id))
             {
                 if (applyAggregate.Version == -1)
                 {
@@ -176,7 +171,7 @@ namespace ESPlus.Wyrm
 
             if (!any)
             {
-                throw new AggregateNotFoundException(streamName, null);
+                throw new AggregateNotFoundException(id, null);
             }
 
             aggregate.TakeUncommittedEvents();

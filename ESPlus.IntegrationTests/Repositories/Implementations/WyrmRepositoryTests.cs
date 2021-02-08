@@ -14,7 +14,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
         {
             var connection = CreateDriver();
 
-            return new WyrmRepository(connection, new WyrmAggregateZeroRenamer());            
+            return new WyrmRepository(connection);            
         }
 
         private static WyrmDriver CreateDriver()
