@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Extensions;
-using ESPlus.Wyrm;
 
 namespace ESPlus.MoonGoose
 {
@@ -35,131 +34,56 @@ namespace ESPlus.MoonGoose
 
             return client;
         }
-        
-        public async Task<byte[]> GetAsync(string database, string key, CancellationToken cancellationToken = default)
+
+        public async Task PutAsync(string database, List<Document> documents,
+            CancellationToken cancellationToken = default)
         {
-            using var client = await Create();
-            await using var stream = client.GetStream();
-            await using var writer = new BinaryWriter(stream);
-            
-            writer.Write((int) 12 + database.Length);
-            writer.Write((int) Commands.Database);
-            writer.Write((int) database.Length);
-            writer.Write(Encoding.UTF8.GetBytes(database));
-
-            var keyBuffer = Encoding.UTF8.GetBytes(key);
-            writer.Write((int) 12 + keyBuffer.Length);
-            writer.Write((int) Commands.Get);
-            writer.Write((int)keyBuffer.Length);
-            writer.Write(keyBuffer);
-            writer.Flush();
-            await stream.FlushAsync(cancellationToken);
-                
-            var payload = new byte[0];
-
-            while (true)
+            if (documents.Count == 0)
             {
-                var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
-
-                if (query == Queries.Payload)
-                {
-                    var length = tokenizer.ReadI32();
-                        
-                    payload = tokenizer.ReadBinary(length).ToArray();
-                }
-                else if (query == Queries.Success)
-                {
-                    return payload;
-                }
-                else if (query == Queries.Exception)
-                {
-                    ParseException(tokenizer);
-                }
-                else
-                {
-                    throw new NotImplementedException($"query: {query}");
-                }
+                return;
             }
-        }
-        
-        public async Task PutAsync(string database, IEnumerable<Document> documents, CancellationToken cancellationToken = default)
-        {
+            
             using var client = await Create();
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
-            
-            writer.Write((int) 12 + database.Length);
-            writer.Write((int) Commands.Database);
-            writer.Write((int) database.Length);
-            writer.Write(Encoding.UTF8.GetBytes(database));
+            var memoryStream = new MemoryStream();
+            var binaryWriter = new BinaryWriter(memoryStream);
 
+            SelectDatabase(writer, database);
             foreach (var document in documents)
             {
-                writer.Write((int) 20 + document.Payload.Length + document.Keywords.Length * sizeof(long) + document.Key.Length);
-                writer.Write((int) Commands.Put);
-                var key = Encoding.UTF8.GetBytes(document.Key);
-                writer.Write((int) key.Length);
-                writer.Write(key);
-                writer.Write((int) document.Payload.Length);
-                writer.Write(document.Payload);
-                writer.Write((int) document.Keywords.Length);
-                writer.Write(LongArrayToByteArray(document.Keywords));
-            }
+                // Console.WriteLine($"Append: {database}, Filename: {document.Filename}, Tenant: {document.Tenant ?? "@"}");
+                var encodedTenant = Encoding.UTF8.GetBytes(document.Tenant ?? "");
+                var encodedPath = Encoding.UTF8.GetBytes(document.Filename ?? "");
+                
+                binaryWriter.Write((int) document.Operation);
+                binaryWriter.Write((int) document.Flags);
+                binaryWriter.Write((int) encodedTenant.Length);
+                binaryWriter.Write(encodedTenant);
+                binaryWriter.Write((int) encodedPath.Length);
+                binaryWriter.Write(encodedPath);      
+                binaryWriter.Write((int) document.Payload.Length);
+                binaryWriter.Write(document.Payload);
+                binaryWriter.Write((int) document.Keywords.Length);
 
-            writer.Write((int) 8);
-            writer.Write((int) Commands.Commit);
-            writer.Flush();
-            await stream.FlushAsync(cancellationToken);
-
-            while (true)
-            {
-                var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
-
-                if (query == Queries.Success)
+                foreach (var item in document.Keywords)
                 {
-                    return;
-                }
-                else if (query == Queries.Exception)
-                {
-                    ParseException(tokenizer);
-                }
-                else
-                {
-                    throw new NotImplementedException($"query: {query}");
+                    binaryWriter.Write((long) item);
                 }
             }
-        }
 
-        private void ParseException(Tokenizer tokenizer)
-        {
-            var code = tokenizer.ReadI32();
-            var message = tokenizer.ReadString();
-
-            throw new MoonGooseExceptions(message);
-        }
-
-        public async IAsyncEnumerable<byte[]> SearchAsync(string database, long[] parameters, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            using var client = await Create();
-            await using var stream = client.GetStream();
-            await using var writer = new BinaryWriter(stream);
-            
-            writer.Write((int) 12 + database.Length);
-            writer.Write((int) Commands.Database);
-            writer.Write((int) database.Length);
-            writer.Write(Encoding.UTF8.GetBytes(database));
-
-            writer.Write((int) 12 + parameters.Length * sizeof(long));
-            writer.Write((int) Commands.Search);
-            writer.Write((int) parameters.Length);
-            writer.Write(LongArrayToByteArray(parameters));
-            writer.Flush();
+            var payload = memoryStream.ToArray();
+            writer.Write((int) 76 + payload.Length);
+            writer.Write((int) Commands.Put);
+            writer.Write(Position.Start.Binary); // previousChecksum
+            writer.Write(Position.Start.Binary); // checksum
+            writer.Write((int) documents.Count);
+            writer.Write(payload);
             await stream.FlushAsync(cancellationToken);
-
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
-
+                var (query, tokenizer) = await stream.QueryAsync(cancellationToken); 
+                
                 if (query == Queries.Success)
                 {
                     break;
@@ -168,34 +92,201 @@ namespace ESPlus.MoonGoose
                 {
                     ParseException(tokenizer);
                 }
-                else if (query == Queries.SearchItem)
+                else
                 {
-                    yield return ParseSearchItem(tokenizer);
+                    throw new NotImplementedException();
+                }
+            }
+        }
+
+        private void SelectDatabase(BinaryWriter writer, string database)
+        {
+            var encoded = Encoding.UTF8.GetBytes(database ?? ".");
+
+            writer.Write((int) 12 + encoded.Length);
+            writer.Write((int) Commands.Database);
+            writer.Write((int) encoded.Length);
+            writer.Write(encoded);
+        }
+
+        public async Task<byte[]> GetAsync(string database, string tenant, string path, CancellationToken cancellationToken = default)
+        {
+            byte[] payload = null;
+            var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "");
+            var encodedKey = Encoding.UTF8.GetBytes(path ?? "");
+            using var client = await Create();
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+
+            SelectDatabase(writer, database);
+            writer.Write((int) 16 + encodedTenant.Length + encodedKey.Length);
+            writer.Write((int) Commands.Get);
+            writer.Write((int) encodedTenant.Length);
+            writer.Write(encodedTenant);
+            writer.Write((int) encodedKey.Length);
+            writer.Write(encodedKey);
+            await stream.FlushAsync(cancellationToken);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
+
+                if (query == Queries.Item)
+                {
+                    payload = tokenizer.ReadBinary().ToArray();
+                }
+                else if (query == Queries.Success)
+                {
+                    break;
+                }
+                else if (query == Queries.Exception)
+                {
+                    ParseException(tokenizer);
                 }
                 else
                 {
-                    throw new NotImplementedException($"query: {query}");
+                    throw new NotImplementedException();
+                }
+            }
+
+            return payload;
+        }
+
+        public async Task<byte[]> ChecksumAsync(string database, CancellationToken cancellationToken = default)
+        {
+            var payload = Position.Start.Binary;
+            using var client = await Create();
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+
+            SelectDatabase(writer, database);
+            writer.Write((int) 8);
+            writer.Write((int) Commands.Checksum);
+            await stream.FlushAsync(cancellationToken);
+            
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
+
+
+                if (query == Queries.Checksum)
+                {
+                    payload = tokenizer.ReadBinary(32).ToArray();
+                }
+                else if (query == Queries.Success)
+                {
+                    break;
+                }
+                else if (query == Queries.Exception)
+                {
+                    ParseException(tokenizer);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            return payload;
+        }
+
+        public async Task<byte[]> SimulateExceptionThrow(CancellationToken cancellationToken = default)
+        {
+            var payload = Position.Start.Binary;
+            using var client = await Create();
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+
+            writer.Write((int) 8);
+            writer.Write((int) Commands.ThrowException);
+            await stream.FlushAsync(cancellationToken);
+            
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
+
+                if (query == Queries.Exception)
+                {
+                    ParseException(tokenizer);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            return payload;
+        }
+
+        public async IAsyncEnumerable<byte[]> SearchAsync(string database, string tenant, long[] parameters,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "");
+            using var client = await Create();
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+
+            SelectDatabase(writer, database);
+            Skip(writer, 0);
+            Take(writer, 100);
+            writer.Write((int) 16 + encodedTenant.Length + parameters.Length * sizeof(long));
+            writer.Write((int) Commands.Search);
+            writer.Write((int) encodedTenant.Length);
+            writer.Write(encodedTenant);
+            writer.Write((int) parameters.Length);
+
+            foreach (var item in parameters)
+            {
+                writer.Write((long) item);
+            }
+            
+            await stream.FlushAsync(cancellationToken);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
+
+                if (query == Queries.SearchResult)
+                {
+                    var payload = tokenizer.ReadBinary().ToArray();
+
+                    yield return payload;
+                }
+                else if (query == Queries.Success)
+                {
+                    break;
+                }
+                else if (query == Queries.Exception)
+                {
+                    ParseException(tokenizer);
+                }
+                else
+                {
+                    throw new NotImplementedException();
                 }
             }
         }
 
-        private byte[] ParseSearchItem(Tokenizer tokenizer)
+        private void Take(BinaryWriter writer, int amount)
         {
-            var length = tokenizer.ReadI32();
-            
-            return tokenizer.ReadBinary(length).ToArray();
+            writer.Write((int) 12);
+            writer.Write((int) Commands.Take);
+            writer.Write((int) amount);
         }
 
-        private static byte[] LongArrayToByteArray(long[] integers)
+        private void Skip(BinaryWriter writer, int amount)
         {
-            var bytes = new List<byte>(integers.Length * sizeof(long));
+            writer.Write((int) 12);
+            writer.Write((int) Commands.Skip);
+            writer.Write((int) amount);
+        }
 
-            foreach (var integer in integers)
-            {
-                bytes.AddRange(BitConverter.GetBytes(integer));
-            }
+        private void ParseException(Tokenizer tokenizer)
+        {
+            var code = tokenizer.ReadI32();
+            var message = tokenizer.ReadString();
 
-            return bytes.ToArray();
+            throw new MoonGooseException(message);
         }
     }
 }

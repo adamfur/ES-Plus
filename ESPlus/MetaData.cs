@@ -24,11 +24,16 @@ namespace ESPlus
         public string GivenName { get; set; }
         [Key("TimestampUtc")]
         public DateTime TimestampUtc { get; set; }
+        [Key("Tenant")]
+        public string Tenant { get; set; }
+        [Key("CorrelationId")]
+        public string CorrelationId { get; set; }
+        [Key("RequestId")]
+        public string RequestId { get; set; }
     }
     
     public class MetaData : IMetaObject
     {
-        private readonly IEventSerializer _serializer;
         private readonly Lazy<MetaObject> _lazyMetaObject;
 
         public MetaData()
@@ -38,12 +43,11 @@ namespace ESPlus
 
         public MetaData(byte[] eventMeta, IEventSerializer serializer)
         {
-            _serializer = serializer;
             _lazyMetaObject = new Lazy<MetaObject>(() =>
             {
                 try
                 {
-                    var obj = (MetaObject) _serializer.Deserialize(typeof(MetaObject), eventMeta);
+                    var obj = (MetaObject) serializer.Deserialize(typeof(MetaObject), eventMeta);
 
                     return obj;
                 }
@@ -58,5 +62,6 @@ namespace ESPlus
         public string IP => _lazyMetaObject.Value?.IP;
         public string GivenName => _lazyMetaObject.Value?.GivenName;
         public DateTime TimestampUtc => _lazyMetaObject.Value?.TimestampUtc ?? DateTime.MinValue;
+        public string Tenant => _lazyMetaObject.Value?.Tenant;
     }
 }

@@ -37,14 +37,16 @@ namespace ESPlus.Tests.EventHandlers
             {
             }
 
-            public void Apply(DummyEvent @event)
+            public Task Apply(DummyEvent @event)
             {
                 Emit(new DummyEmitEvent());
+                return Task.CompletedTask;
             }
 
-            public void Apply(DummyEmitOnSubmit @event)
+            public Task Apply(DummyEmitOnSubmit @event)
             {
                 EmitOnSubmit(@event.Key, @event.Payload);
+                return Task.CompletedTask;
             }
 
             // public override Task<bool> DispatchEventAsync(object @event)

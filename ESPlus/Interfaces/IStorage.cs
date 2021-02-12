@@ -6,10 +6,10 @@ namespace ESPlus.Interfaces
 {
     public interface IStorage : IFlushable
     {
-        void Put<T>(string path, T item);
-        void Delete(string path);
-        Task<T> GetAsync<T>(string path);
+        void Put<T>(string path, string tenant, T item);
+        void Delete(string path, string tenant);
+        Task<T> GetAsync<T>(string path, string tenant);
         void Reset();
-        IAsyncEnumerable<byte[]> SearchAsync(long[] parameters);
+        IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant);
     }
 }

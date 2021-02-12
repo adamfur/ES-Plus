@@ -14,7 +14,7 @@ namespace ESPlus.Extensions
             var query = (Queries) await reader.ReadInt32Async(cancellationToken);
             var payload = await reader.ReadBinaryAsync(length - sizeof(Int32) * 2, cancellationToken);
             var tokenizer = new Tokenizer(payload);
-         
+ 
             return (query, tokenizer);
         }
 
@@ -31,6 +31,15 @@ namespace ESPlus.Extensions
             
             return BitConverter.ToInt64(data);
         }
+
+        public static async Task<byte[]> ReadBinaryAsync(this NetworkStream reader, 
+            CancellationToken cancellationToken)
+        {
+            var length = await ReadInt32Async(reader, cancellationToken);
+
+            return await reader.ReadBinaryAsync(length, cancellationToken);
+        }
+        
 
         public static async Task<byte[]> ReadBinaryAsync(this NetworkStream reader, int count,
             CancellationToken cancellationToken)

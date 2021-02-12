@@ -10,6 +10,6 @@ namespace ESPlus.Storage
         Position Checkpoint { get; set; }
         SubscriptionMode SubscriptionMode { get; }
         Task InitializeAsync();
-        Task UpdateAsync<T>(string path, Action<T> action);
+        Task UpdateAsync<T>(string path, string tenant, Action<T> action);
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -8,7 +7,7 @@ namespace ESPlus.Interfaces
     public class StorageCache : IStorage
     {
         private readonly IStorage _storage;
-        private readonly ConditionalWeakTable<string, object> _cache = new ConditionalWeakTable<string, object>();
+        private readonly ConditionalWeakTable<StringPair, object> _cache = new ConditionalWeakTable<StringPair, object>();
 
         public StorageCache(IStorage storage)
         {
@@ -20,26 +19,26 @@ namespace ESPlus.Interfaces
             await _storage.FlushAsync();
         }
 
-        public void Put<T>(string path, T item)
+        public void Put<T>(string path, string tenant, T item)
         {
-            _cache.AddOrUpdate(path, item);
-            _storage.Put(path, item);
+            _cache.AddOrUpdate(new StringPair(path, tenant), item);
+            _storage.Put(path, tenant, item);
         }
 
-        public void Delete(string path)
+        public void Delete(string path, string tenant)
         {
-            _cache.Remove(path);
-            _storage.Delete(path);
+            _cache.Remove(new StringPair(path, tenant));
+            _storage.Delete(path, tenant);
         }
 
-        public async Task<T> GetAsync<T>(string path)
+        public async Task<T> GetAsync<T>(string path, string tenant)
         {
-            if (_cache.TryGetValue(path, out var resolved))
+            if (_cache.TryGetValue(new StringPair(path, tenant), out var resolved))
             {
                 return (T) resolved;
             }
 
-            return await _storage.GetAsync<T>(path);
+            return await _storage.GetAsync<T>(path, tenant);
         }
 
         public void Reset()
@@ -47,9 +46,9 @@ namespace ESPlus.Interfaces
             _storage.Reset();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters)
+        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant)
         {
-            return _storage.SearchAsync(parameters);
+            return _storage.SearchAsync(parameters, tenant);
         }
     }
 }

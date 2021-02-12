@@ -47,12 +47,12 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override Task<object> Search(long[] parameters)
+        public override Task<object> Search(long[] parameters, string tenant)
         {
             throw new NotImplementedException();
         }
 
-        public override Task<object> Get(string path)
+        public override Task<object> Get(string path, string tenant)
         {
             throw new NotImplementedException();
         }

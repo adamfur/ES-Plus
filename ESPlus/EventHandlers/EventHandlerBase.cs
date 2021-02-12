@@ -41,8 +41,8 @@ namespace ESPlus.EventHandlers
         public abstract Task<bool> DispatchEventAsync(object @event);
         public abstract IEnumerable<object> TakeEmittedEvents();
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
-        public abstract Task<object> Search(long[] parameters);
-        public abstract Task<object> Get(string path);
+        public abstract Task<object> Search(long[] parameters, string tenant);
+        public abstract Task<object> Get(string path, string tenant);
         public abstract Task<bool> DispatchAsync(Event @event);
 
         public virtual void Ahead()

@@ -8,13 +8,13 @@ namespace ESPlus.Storage
 {
     public class InMemoryStorage : IStorage
     {
-        public readonly Dictionary<string, object> _data = new Dictionary<string, object>();
+        private readonly Dictionary<StringPair, object> _data = new Dictionary<StringPair, object>();
 
-        public Dictionary<string, object> Internal => _data;
-
-        public void Delete(string path)
+        public void Delete(string path, string tenant)
         {
-            _data.Remove(path);
+            var key = new StringPair(path, tenant);
+            
+            _data.Remove(key);
         }
 
         public Task FlushAsync()
@@ -22,11 +22,11 @@ namespace ESPlus.Storage
             return Task.CompletedTask;
         }
 
-        public Task<T> GetAsync<T>(string path)
+        public Task<T> GetAsync<T>(string path, string tenant)
         {
-            Console.WriteLine(string.Join(", ", _data.Values));
+            var key = new StringPair(path, tenant);
             
-            if (_data.TryGetValue(path, out var data))
+            if (_data.TryGetValue(key , out var data))
             {
                 return Task.FromResult((T) data);
             }
@@ -34,10 +34,10 @@ namespace ESPlus.Storage
             return default;
         }
 
-        public void Put<T>(string path, T item)
+        public void Put<T>(string path, string tenant, T item)
         {
-            _data[path] = item;
-            // Console.WriteLine($" -- PUT: {path}");
+            var key = new StringPair(path, tenant);
+            _data[key] = item;
         }
 
         public void Reset()
@@ -45,9 +45,9 @@ namespace ESPlus.Storage
             _data.Clear();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters)
+        public async IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant)
         {
-            throw new NotImplementedException();
+            yield break;
         }
     }
 }

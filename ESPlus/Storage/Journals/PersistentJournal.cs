@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using System.IO;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace ESPlus.Storage
 {
     public abstract class PersistentJournal : IJournaled
     {
+        private bool _changed = false;
+        private Position _checkpoint;        
         public const string JournalPath = "000Journal/000Journal.json";
         private readonly IStorage _metadataStorage;
         protected readonly IStorage _dataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         // private readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
-        protected readonly Dictionary<string, object> _dataWriteCache = new Dictionary<string, object>();
-        protected HashSet<string> _deletes { get; set; } = new HashSet<string>();
+        protected readonly Dictionary<StringPair, object> _dataWriteCache = new Dictionary<StringPair, object>();
+        protected HashSet<StringPair> _deletes { get; set; } = new HashSet<StringPair>();
         
         public Position Checkpoint
         {
@@ -27,9 +28,6 @@ namespace ESPlus.Storage
                 _checkpoint = value;
             }
         }
-
-        private bool _changed = false;
-        private Position _checkpoint;
 
         protected PersistentJournal(IStorage metadataStorage, IStorage dataStorage)
         {
@@ -44,22 +42,19 @@ namespace ESPlus.Storage
 
         private async Task LoadJournal()
         {
-            JournalLog journal;
+            var journal = new JournalLog();
 
-            Console.WriteLine("LoadJournal()");
             try
             {
-                journal = await _metadataStorage.GetAsync<JournalLog>(JournalPath);
-                Console.WriteLine($"IsNull {journal == null}");
-                journal = journal ?? new JournalLog();
-                Console.WriteLine($"Journal Read Success: {journal.Checkpoint.AsHexString()}");
+                journal = await _metadataStorage.GetAsync<JournalLog>(JournalPath, "master") ?? new JournalLog();
             }
             catch (Exception)
             {
-                journal = new JournalLog();
-                Console.WriteLine($"Journal Read Failed: {journal.Checkpoint}");
+                // ignored
             }
-            
+
+            Console.WriteLine($"Journal Checkpoint: {journal.Checkpoint.AsHexString()}");
+
             Checkpoint = journal.Checkpoint;
 
             if (journal.Checkpoint.Equals(Position.Start))
@@ -77,7 +72,6 @@ namespace ESPlus.Storage
 
         public async Task FlushAsync()
         {
-            // Console.WriteLine(" -- Journal flush");
             if (_changed == false)
             {
                 return;
@@ -87,37 +81,32 @@ namespace ESPlus.Storage
             Clean();
         }
 
-        public virtual void Put<T>(string path, T item)
+        public virtual void Put<T>(string path, string tenant, T item)
         {
-            // _cache.AddOrUpdate(destination, item);
-            _dataWriteCache[path] = item;
-            _deletes.Remove(path);
+            var key = new StringPair(path, tenant);
+
+            _dataWriteCache[key] = item;
+            _deletes.Remove(key);
             _changed = true;
         }
 
-        public async Task<T> GetAsync<T>(string path)
+        public async Task<T> GetAsync<T>(string path, string tenant)
         {
+            var key = new StringPair(path, tenant);
+            
             try
             {
-                if (_dataWriteCache.TryGetValue(path, out object item1))
+                if (_dataWriteCache.TryGetValue(key, out object item1))
                 {
                     return (T) item1;
                 }
-
-                // if (_cache.TryGetValue(path, out HasObjectId item2))
-                // {
-                //     return item2 as T;
-                // }
 
                 if (SubscriptionMode == SubscriptionMode.Replay)
                 {
 //                    return default;
                 }
 
-                var data = await _dataStorage.GetAsync<T>(path);
-
-                // _cache.AddOrUpdate(path, data);
-                return data;
+                return await _dataStorage.GetAsync<T>(path, tenant);
             }
             catch (DirectoryNotFoundException)
             {
@@ -125,52 +114,49 @@ namespace ESPlus.Storage
             }
         }
 
-        public async Task UpdateAsync<T>(string path, Action<T> action)
+        public async Task UpdateAsync<T>(string path, string tenant, Action<T> action)
         {
-            var model = await GetAsync<T>(path);
+            var model = await GetAsync<T>(path, tenant);
 
             if (model is null)
             {
-                throw new Exception($"{nameof(PersistentJournal)}::Update, Path: {path}. model is null");
+                throw new Exception($"{nameof(PersistentJournal)}::Update, Path: {path}. model is null, tenant: {tenant ?? "@"}");
             }
 
             action(model);
-            Put(path, model);
+            Put(path, tenant, model);
         }
 
-        protected async Task WriteJournalAsync(Dictionary<string, string> map, HashSet<string> deletes)
+        protected async Task WriteJournalAsync(Dictionary<StringPair, string> map, HashSet<StringPair> deletes)
         {
             var journal = new JournalLog
             {
                 Checkpoint = Checkpoint,
-                Map = new Dictionary<string, string>(map),
-                Deletes = new HashSet<string>(deletes),
+                Map = new Dictionary<StringPair, string>(map),
+                Deletes = new HashSet<StringPair>(deletes),
             };
             
-            _metadataStorage.Put(JournalPath, journal);
+            _metadataStorage.Put(JournalPath, "master", journal);
 
             if (_metadataStorage != _dataStorage)
             {
                 await _metadataStorage.FlushAsync();
             }
-
-            // Console.WriteLine($"Put Journal {Checkpoint}");
         }
 
-        protected async Task WriteToAsync(IStorage storage, Dictionary<string, object> cache, HashSet<string> deletes,
+        protected async Task WriteToAsync(IStorage storage, Dictionary<StringPair, object> cache, HashSet<StringPair> deletes,
             string prefix = "")
         {
             foreach (var item in cache)
             {
-                var destination = $"{prefix}{item.Key}";
-                var payload = item.Value;
+                var destination = $"{prefix}{item.Key.Path}";
 
-                storage.Put(destination, payload);
+                storage.Put(destination, item.Key.Tenant, item.Value);
             }
 
             foreach (var item in deletes)
             {
-                storage.Delete(item);
+                storage.Delete(item.Path, item.Tenant);
             }
             
             await storage.FlushAsync();
@@ -195,21 +181,21 @@ namespace ESPlus.Storage
 
         public void Reset()
         {
-            throw new NotImplementedException();
+            _dataStorage.Reset();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters)
+        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant)
         {
-            return _dataStorage.SearchAsync(parameters);
+            return _dataStorage.SearchAsync(parameters, tenant);
         }
 
-        public virtual void Delete(string path)
+        public virtual void Delete(string path, string tenant)
         {
-//            Console.WriteLine($"PersistantJournal delete: {path}");
+            var key = new StringPair(path, tenant);
+
             _changed = true;
-            // _cache.Remove(path);
-            _dataWriteCache.Remove(path);
-            _deletes.Add(path);
+            _dataWriteCache.Remove(key);
+            _deletes.Add(key);
         }
     }
 }

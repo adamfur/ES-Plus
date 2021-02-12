@@ -14,7 +14,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
         {
             var connection = CreateDriver();
 
-            return new WyrmRepository(connection);            
+            return new WyrmRepository(connection, new WyrmAggregateZeroRenamer());            
         }
 
         private static WyrmDriver CreateDriver()
@@ -26,7 +26,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
         public async Task SaveAsync_ReadFromTo_OutOfRange()
         {
             var driver = CreateDriver();
-            var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString());
 
             await Repository.SaveAsync(aggregate);
             var result = await AsyncAny(driver.EnumerateAll(DateTime.Now.AddDays(1), DateTime.Now.AddDays(2),
@@ -39,7 +39,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
         public async Task SaveAsync_ReadFromTo_InRange()
         {
             var driver = CreateDriver();
-            var aggregate = new DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString());
 
             await Repository.SaveAsync(aggregate);
             var result = await AsyncAny(driver.EnumerateAll(DateTime.Now.AddDays(-1), DateTime.Now,

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ESPlus.Interfaces;
 using ESPlus.Storage;
 using ExpectedObjects;
 using Newtonsoft.Json;
@@ -15,13 +16,14 @@ namespace ESPlus.Tests
             _log = new JournalLog
             {
                 Checkpoint = Position.Gen(42),
-                Deletes = new HashSet<string>
+                Deletes = new HashSet<StringPair>
                 {
-                    "adam", "jesper"
+                    new StringPair("adam", "tenet"),
+                    new StringPair("jesper", "tenet"),
                 },
-                Map = new Dictionary<string, string>
+                Map = new Dictionary<StringPair, string>
                 {
-                    ["adam"] = "jesper"
+                    [new StringPair("adam", null)] = "jesper"
                 }
             };
         }

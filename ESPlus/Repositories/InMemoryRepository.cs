@@ -95,6 +95,12 @@ namespace ESPlus.Repositories
             return Task.FromResult(instance);
         }
 
+        public Task DeleteAsync(string streamName, long version = -1, CancellationToken cancellationToken = default)
+        {
+            _streams.Remove(streamName);
+            return Task.CompletedTask;
+        }
+
         public async Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
         {
             await SaveImpl(aggregate, aggregate.Version);
