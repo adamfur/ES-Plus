@@ -15,5 +15,6 @@ namespace ESPlus.EventHandlers
         IEnumerable<object> TakeEmittedOnSubmitEvents();
         Task<object> Search(long[] parameters, string tenant);
         Task<object> Get(string path, string tenant);
+        Task StartupAsync();
     }
 }
