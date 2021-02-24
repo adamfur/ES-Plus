@@ -6,6 +6,11 @@ namespace ESPlus.Storage
     {
         public static List<T> AsList<T>(this T item)
         {
+            if (item is null)
+            {
+                return new List<T>();
+            }
+            
             return new List<T> {item};
         }
     }

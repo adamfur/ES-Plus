@@ -33,12 +33,18 @@ namespace ESPlus.Interfaces
 
         public async Task<T> GetAsync<T>(string path, string tenant)
         {
-            if (_cache.TryGetValue(new StringPair(path, tenant), out var resolved))
+            var key = new StringPair(path, tenant);
+            
+            if (_cache.TryGetValue(key, out var resolved))
             {
                 return (T) resolved;
             }
 
-            return await _storage.GetAsync<T>(path, tenant);
+            var item = await _storage.GetAsync<T>(path, tenant);
+            
+            _cache.AddOrUpdate(key, item);
+            
+            return item;
         }
 
         public void Reset()
