@@ -45,9 +45,9 @@ namespace ESPlus.Storage
             _data.Clear();
         }
 
-        public async IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant)
+        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant)
         {
-            yield break;
+            return null;
         }
     }
 }
