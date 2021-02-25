@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -283,10 +284,14 @@ namespace ESPlus.MoonGoose
 
         private void ParseException(Tokenizer tokenizer)
         {
-            var code = tokenizer.ReadI32();
+            var code = (ErrorCode) tokenizer.ReadI32();
             var message = tokenizer.ReadString();
 
-            throw new MoonGooseException(message);
+            switch (code)
+            {
+                case ErrorCode.NotFound: throw new MoonGooseNotFoundException(message);
+                default: throw new MoonGooseException(message);
+            }
         }
     }
 }
