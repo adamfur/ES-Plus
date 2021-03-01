@@ -79,8 +79,8 @@ namespace ESPlus.Tests.Storage
             _journal.Checkpoint = Position.Start;
             _journal.Put("path", null, _payload);
 
-            var stringPair1 = new StringPair("path", null).GetHashCode();
-            var stringPair2 = new StringPair("path", null).GetHashCode();
+            var stringPair1 = new StringPair(null, "path").GetHashCode();
+            var stringPair2 = new StringPair(null, "path").GetHashCode();
 
             Assert.Equal(_payload, await _journal.GetAsync<object>("path", null));
         }

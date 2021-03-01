@@ -54,7 +54,7 @@ namespace ESPlus.MoonGoose
             foreach (var document in documents)
             {
                 // Console.WriteLine($"Append: {database}, Filename: {document.Filename}, Tenant: {document.Tenant ?? "@"}");
-                var encodedTenant = Encoding.UTF8.GetBytes(document.Tenant ?? "@");
+                var encodedTenant = Encoding.UTF8.GetBytes(document.Tenant);
                 var encodedPath = Encoding.UTF8.GetBytes(document.Path);
                 
                 binaryWriter.Write((int) document.Operation);

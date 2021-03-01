@@ -27,7 +27,7 @@ namespace ESPlus.Tests.Storage
                 Checkpoint = Position.Start,
                 Map = new Dictionary<StringPair, string>
                 {
-                    [new StringPair("stage/1/file1", null)] = "prod/file1"
+                    [new StringPair(null, "stage/1/file1")] = "prod/file1"
                 }
             };
 
@@ -92,7 +92,7 @@ namespace ESPlus.Tests.Storage
             _metadataStorage.Received().Put(PersistentJournal.JournalPath, "master", Arg.Is<JournalLog>(p =>
                 p.Checkpoint.Equals(Position.Gen(12))
                 && p.Map.Count == 1
-                && p.Map.First().Key.Equals(new StringPair("prod/file1", null))
+                && p.Map.First().Key.Equals(new StringPair(null, "prod/file1"))
                 && p.Map.First().Value == destination
                 ));
         }

@@ -25,7 +25,7 @@ namespace ESPlus.Storage
 
         public override void Put<T>(string path, string tenant, T item)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             
             _dataStageCache[key] = item;
             _map[key] = path;
@@ -34,7 +34,7 @@ namespace ESPlus.Storage
 
         public override void Delete(string path, string tenant)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             
             _dataStageCache.Remove(key);
             _map.Remove(key);

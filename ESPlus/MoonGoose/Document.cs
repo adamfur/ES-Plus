@@ -24,10 +24,15 @@ namespace ESPlus.MoonGoose
         public Flags Flags { get; set; } = Flags.None;
         public Operation Operation { get; }
 
-        public Document(string path, string tenant, object item, Operation operation)
+        public Document(string tenant, string path, object item, Operation operation)
         {
+            if (operation == Operation.Delete)
+            {
+                Flags = Flags.Indexed;
+            }
+            
             Path = path;
-            Item = item;
+            Item = item ?? "";
             Tenant = tenant ?? "@";
             Operation = operation;
         }

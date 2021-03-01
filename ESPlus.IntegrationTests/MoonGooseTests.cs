@@ -60,7 +60,7 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant", null, Operation.Save),
+                new("Tenant", "file", null, Operation.Save),
             });
             var file = await _driver.GetAsync(_database, "Tenant", "file");
             
@@ -72,7 +72,7 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant", null, Operation.Save),
+                new("Tenant", "file", null, Operation.Save),
             });
             
             await Assert.ThrowsAsync<MoonGooseException>(() => _driver.GetAsync(_database, "Tenant-2", "file"));
@@ -83,7 +83,7 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant", null, Operation.Save),
+                new("Tenant", "file", null, Operation.Save),
             });
             var file = await _driver.GetAsync(Guid.NewGuid().ToString(), "Tenant-2", "file");
             
@@ -103,7 +103,7 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant", null, Operation.Delete),
+                new("Tenant", "file", null, Operation.Delete),
             });
             
             await Assert.ThrowsAsync<MoonGooseException>(() => _driver.GetAsync(_database, "Tenant", "file"));
@@ -114,11 +114,11 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant", null, Operation.Save),
+                new("Tenant", "file", null, Operation.Save),
             });            
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant", null, Operation.Delete),
+                new("Tenant", "file", null, Operation.Delete),
             });
         
             await Assert.ThrowsAsync<MoonGooseException>(() => _driver.GetAsync(_database, "Tenant", "file"));
@@ -129,10 +129,10 @@ namespace ESPlus.IntegrationTests
         {
             var map = new Dictionary<StringPair, bool>();
         
-            map[new StringPair("adam", "jesper")] = true;
+            map[new StringPair("jesper", "adam")] = true;
             
-            Assert.True(map.ContainsKey(new StringPair("adam", "jesper")));
-            Assert.False(map.ContainsKey(new StringPair("adam-2", "jesper")));
+            Assert.True(map.ContainsKey(new StringPair("jesper", "adam")));
+            Assert.False(map.ContainsKey(new StringPair("jesper", "adam-2")));
         }
         
         [Fact]
@@ -140,8 +140,8 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant",
-                    null, Operation.Save),
+                new("Tenant",
+                    "file", null, Operation.Save),
             });
             var any = false;
             
@@ -158,13 +158,13 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant",
-                    null, Operation.Save),
+                new("Tenant",
+                    "file", null, Operation.Save),
             });
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("file", "Tenant",
-                    null, Operation.Delete),
+                new("Tenant",
+                    "file", null, Operation.Delete),
             });            
             var any = false;
             

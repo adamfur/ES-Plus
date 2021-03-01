@@ -8,10 +8,10 @@ namespace ESPlus.Interfaces
         public string Path { get; }
         public string Tenant { get; }
 
-        public StringPair(string path, string tenant)
+        public StringPair(string tenant, string path)
         {
-            Path = path;
-            Tenant = tenant;
+            Path = path ?? "";
+            Tenant = tenant ?? "@";
         }
 
         public bool Equals(StringPair other)

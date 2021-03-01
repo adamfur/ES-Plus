@@ -84,7 +84,7 @@ namespace ESPlus.Storage
 
         public virtual void Put<T>(string path, string tenant, T item)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
 
             _dataWriteCache[key] = item;
             _deletes.Remove(key);
@@ -93,7 +93,7 @@ namespace ESPlus.Storage
 
         public async Task<T> GetAsync<T>(string path, string tenant)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             
             try
             {
@@ -187,7 +187,7 @@ namespace ESPlus.Storage
 
         public virtual void Delete(string path, string tenant)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
 
             _changed = true;
             _dataWriteCache.Remove(key);

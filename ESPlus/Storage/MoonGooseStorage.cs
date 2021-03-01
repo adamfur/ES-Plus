@@ -23,7 +23,7 @@ namespace ESPlus.Storage
         {
             var bulk = new List<Document>();
 
-            bulk.AddRange(Assemble());
+            bulk.AddRange(Writes.Values);
 
             if (!bulk.Any())
             {
@@ -35,14 +35,9 @@ namespace ESPlus.Storage
             Writes.Clear();
         }
 
-        private IEnumerable<Document> Assemble()
-        {
-            return Writes.Values;
-        }
-
         public async Task<T> GetAsync<T>(string path, string tenant)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             
             if (Writes.TryGetValue(key, out var resolved))
             {
@@ -50,15 +45,13 @@ namespace ESPlus.Storage
                 {
                     return (T) resolved.Item;
                 }
-                else
-                {
-                    return default;
-                }
+
+                return default;
             }
 
             try
             {
-                var payload = await _driver.GetAsync(_collection, tenant, path);
+                var payload = await _driver.GetAsync(_collection, key.Tenant, key.Path);
 
                 return JsonSerializer.Deserialize<T>(payload);
             }
@@ -70,16 +63,16 @@ namespace ESPlus.Storage
 
         public virtual void Put<T>(string path, string tenant, T item)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             
-            Writes[key] = new Document(path, tenant, item, Operation.Save);
+            Writes[key] = new Document(key.Tenant, key.Path, item, Operation.Save);
         }
 
         public void Delete(string path, string tenant)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             
-            Writes[key] = new Document(path, tenant, null, Operation.Delete);
+            Writes[key] = new Document(key.Tenant, key.Path, null, Operation.Delete);
         }
 
         public void Reset()

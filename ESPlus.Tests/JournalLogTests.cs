@@ -18,12 +18,12 @@ namespace ESPlus.Tests
                 Checkpoint = Position.Gen(42),
                 Deletes = new HashSet<StringPair>
                 {
-                    new StringPair("adam", "tenet"),
-                    new StringPair("jesper", "tenet"),
+                    new StringPair("tenet", "adam"),
+                    new StringPair("tenet", "jesper"),
                 },
                 Map = new Dictionary<StringPair, string>
                 {
-                    [new StringPair("adam", null)] = "jesper"
+                    [new StringPair(null, "adam")] = "jesper"
                 }
             };
         }

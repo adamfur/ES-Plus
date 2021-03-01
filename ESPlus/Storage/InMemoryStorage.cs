@@ -12,7 +12,7 @@ namespace ESPlus.Storage
 
         public void Delete(string path, string tenant)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             
             _data.Remove(key);
         }
@@ -24,7 +24,7 @@ namespace ESPlus.Storage
 
         public Task<T> GetAsync<T>(string path, string tenant)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             
             if (_data.TryGetValue(key , out var data))
             {
@@ -36,7 +36,7 @@ namespace ESPlus.Storage
 
         public void Put<T>(string path, string tenant, T item)
         {
-            var key = new StringPair(path, tenant);
+            var key = new StringPair(tenant, path);
             _data[key] = item;
         }
 
