@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Data.HashFunction.xxHash;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
@@ -14,14 +11,12 @@ namespace ESPlus.Storage
     {
         private readonly IMoonGooseDriver _driver;
         private readonly string _collection;
-        protected readonly Dictionary<string, Document> _writes = new Dictionary<string, Document>();
-        protected readonly IxxHash _algorithm;
+        protected readonly Dictionary<StringPair, Document> Writes = new Dictionary<StringPair, Document>();
 
         public MoonGooseStorage(IMoonGooseDriver driver, string collection)
         {
             _driver = driver;
             _collection = collection;
-            _algorithm = xxHashFactory.Instance.Create(new xxHashConfig { HashSizeInBits = 64 });
         }
 
         public async Task FlushAsync()
@@ -37,19 +32,19 @@ namespace ESPlus.Storage
 
             await Task.Run(() => Retry.RetryAsync(() => _driver.PutAsync(_collection, bulk)));
 
-            _writes.Clear();
+            Writes.Clear();
         }
 
         private IEnumerable<Document> Assemble()
         {
-            return _writes.Values;
+            return Writes.Values;
         }
 
         public async Task<T> GetAsync<T>(string path, string tenant)
         {
-            var key = path ?? "@";
+            var key = new StringPair(path, tenant);
             
-            if (_writes.TryGetValue(key, out var resolved))
+            if (Writes.TryGetValue(key, out var resolved))
             {
                 if (resolved.Operation == Operation.Save)
                 {
@@ -61,27 +56,30 @@ namespace ESPlus.Storage
                 }
             }
 
-            var payload = await _driver.GetAsync(_collection, tenant, key);
+            try
+            {
+                var payload = await _driver.GetAsync(_collection, tenant, path);
 
-            return JsonSerializer.Deserialize<T>(payload);
+                return JsonSerializer.Deserialize<T>(payload);
+            }
+            catch (MoonGooseNotFoundException ex)
+            {
+                throw new StorageNotFoundException(ex.Message, ex);
+            }
         }
 
         public virtual void Put<T>(string path, string tenant, T item)
         {
-            var key = path ?? "@";
-            var keywords = new long[0];
-            Flags flags = Flags.None;
-            var json = JsonSerializer.Serialize(item);
-            var encoded = Encoding.UTF8.GetBytes(json);
-
-            _writes[key] = new Document(key, keywords, encoded, item, tenant, flags, Operation.Save);
+            var key = new StringPair(path, tenant);
+            
+            Writes[key] = new Document(path, tenant, item, Operation.Save);
         }
 
         public void Delete(string path, string tenant)
         {
-            var key = path ?? "@";
+            var key = new StringPair(path, tenant);
             
-            _writes[key] = new Document(key, new long[0], new byte[0], null, tenant, Flags.Indexed, Operation.Delete);
+            Writes[key] = new Document(path, tenant, null, Operation.Delete);
         }
 
         public void Reset()

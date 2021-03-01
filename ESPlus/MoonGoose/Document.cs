@@ -1,36 +1,46 @@
-using ESPlus.Storage;
+using System;
+using System.Text;
+using System.Text.Json;
 
 namespace ESPlus.MoonGoose
 {
     public class Document
     {
-        public string Filename { get; }
-        public byte[] Payload { get; }
+        public string Path { get; }
+
+        public byte[] Payload
+        {
+            get
+            {
+                var json = JsonSerializer.Serialize(Item);
+                var encoded = Encoding.UTF8.GetBytes(json);
+
+                return encoded;
+            }
+        }
         public object Item { get; }
-        public long[] Keywords { get; }
-        public string Tenant { get; set; }
-        public Flags Flags { get; }
+        public virtual long[] Keywords => new long[0];
+        public string Tenant { get; private set; }
+        public Flags Flags { get; set; } = Flags.None;
         public Operation Operation { get; }
 
-        public Document(string filename, long[] keywords, byte[] payload, object item, string tenant, Flags flags, Operation operation)
+        public Document(string path, string tenant, object item, Operation operation)
         {
-            Filename = filename;
-            Payload = payload;
+            Path = path;
             Item = item;
-            Tenant = tenant ?? "";
-            Flags = flags;
+            Tenant = tenant ?? "@";
             Operation = operation;
-            Keywords = keywords;
         }
     }
 
-    public enum Flags : int
+    [Flags]
+    public enum Flags
     {
-        None,
+        None = 0,
         Indexed = (1 << 0),
     }
 
-    public enum Operation : int
+    public enum Operation
     {
         Save,
         Delete,

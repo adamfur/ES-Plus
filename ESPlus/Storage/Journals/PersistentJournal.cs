@@ -4,6 +4,7 @@ using System.IO;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using System.Threading.Tasks;
+using ESPlus.MoonGoose;
 
 namespace ESPlus.Storage
 {
@@ -46,9 +47,9 @@ namespace ESPlus.Storage
 
             try
             {
-                journal = await _metadataStorage.GetAsync<JournalLog>(JournalPath, "master") ?? new JournalLog();
+                journal = await _metadataStorage.GetAsync<JournalLog>(JournalPath, "master");
             }
-            catch (Exception)
+            catch (StorageNotFoundException)
             {
                 // ignored
             }
@@ -117,11 +118,6 @@ namespace ESPlus.Storage
         public async Task UpdateAsync<T>(string path, string tenant, Action<T> action)
         {
             var model = await GetAsync<T>(path, tenant);
-
-            if (model is null)
-            {
-                throw new Exception($"{nameof(PersistentJournal)}::Update, Path: {path}. model is null, tenant: {tenant ?? "@"}");
-            }
 
             action(model);
             Put(path, tenant, model);

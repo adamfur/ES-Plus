@@ -54,8 +54,8 @@ namespace ESPlus.MoonGoose
             foreach (var document in documents)
             {
                 // Console.WriteLine($"Append: {database}, Filename: {document.Filename}, Tenant: {document.Tenant ?? "@"}");
-                var encodedTenant = Encoding.UTF8.GetBytes(document.Tenant ?? "");
-                var encodedPath = Encoding.UTF8.GetBytes(document.Filename ?? "");
+                var encodedTenant = Encoding.UTF8.GetBytes(document.Tenant ?? "@");
+                var encodedPath = Encoding.UTF8.GetBytes(document.Path);
                 
                 binaryWriter.Write((int) document.Operation);
                 binaryWriter.Write((int) document.Flags);
@@ -113,8 +113,8 @@ namespace ESPlus.MoonGoose
         public async Task<byte[]> GetAsync(string database, string tenant, string path, CancellationToken cancellationToken = default)
         {
             byte[] payload = null;
-            var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "");
-            var encodedKey = Encoding.UTF8.GetBytes(path ?? "");
+            var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "@");
+            var encodedKey = Encoding.UTF8.GetBytes(path);
             using var client = await Create();
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
@@ -142,7 +142,7 @@ namespace ESPlus.MoonGoose
                 }
                 else if (query == Queries.Exception)
                 {
-                    ParseException(tokenizer);
+                    ParseException(tokenizer, tenant, path);
                 }
                 else
                 {
@@ -222,7 +222,7 @@ namespace ESPlus.MoonGoose
         public async IAsyncEnumerable<byte[]> SearchAsync(string database, string tenant, long[] parameters,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "");
+            var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "@");
             using var client = await Create();
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
@@ -282,14 +282,14 @@ namespace ESPlus.MoonGoose
             writer.Write((int) amount);
         }
 
-        private void ParseException(Tokenizer tokenizer)
+        private void ParseException(Tokenizer tokenizer, string tenant = "<@@@>", string path = "<@@@>")
         {
             var code = (ErrorCode) tokenizer.ReadI32();
             var message = tokenizer.ReadString();
 
             switch (code)
             {
-                case ErrorCode.NotFound: throw new MoonGooseNotFoundException(message);
+                case ErrorCode.NotFound: throw new MoonGooseNotFoundException($"Not found: {tenant}/{path}");
                 default: throw new MoonGooseException(message);
             }
         }
