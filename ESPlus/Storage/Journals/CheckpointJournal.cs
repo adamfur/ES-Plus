@@ -13,8 +13,8 @@ namespace ESPlus.Storage
 
         protected override async Task DoFlushAsync()
         {
-            await WriteToAsync(_dataStorage, _dataWriteCache, _deletes);
-            await WriteJournalAsync(new Dictionary<StringPair, string>(), _deletes);
+            await WriteToAsync(DataStorage, DataWriteCache, Deletes);
+            await WriteJournalAsync(new Dictionary<StringPair, string>(), Deletes);
         }
     }
 }

@@ -31,8 +31,8 @@ namespace ESPlus.Tests.Storage
                 }
             };
 
-            _metadataStorage.GetAsync<JournalLog>(PersistentJournal.JournalPath, "master").Returns(replayLog);
-            _stageStorage.GetAsync<object>("stage/1/file1", null).Returns(_payload);
+            _metadataStorage.GetAsync<JournalLog>("master", PersistentJournal.JournalPath).Returns(replayLog);
+            _stageStorage.GetAsync<object>(null, "stage/1/file1").Returns(_payload);
 
             // Act
             await _journal.InitializeAsync();
@@ -54,23 +54,23 @@ namespace ESPlus.Tests.Storage
             var destination = "prod/file1";
             var payload = new object();
 
-            _stageStorage.GetAsync<object>(source, null).Returns(_payload);
+            _stageStorage.GetAsync<object>(null, source).Returns(_payload);
 
             // Act
             await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Gen(12);
-            _journal.Put(destination, null, payload);
+            _journal.Put(null, destination, payload);
             await _journal.FlushAsync();
 
             // Assert
             Received.InOrder(() =>
             {
                 _dataStorage.Received().FlushAsync();
-                _stageStorage.Received().Put(Arg.Is<string>(p => p == "stage/prod/file1"), Arg.Any<string>(), payload);
+                _stageStorage.Received().Put(Arg.Any<string>(), Arg.Is<string>(p => p == "stage/prod/file1"), payload);
                 _stageStorage.Received().FlushAsync();
-                _metadataStorage.Received().Put(PersistentJournal.JournalPath, "master", Arg.Is<JournalLog>(p => true));
+                _metadataStorage.Received().Put("master", PersistentJournal.JournalPath, Arg.Is<JournalLog>(p => true));
                 _metadataStorage.Received().FlushAsync();
-                _dataStorage.Received().Put(Arg.Is<string>(p => p == "prod/file1"), Arg.Any<string>(), payload);
+                _dataStorage.Received().Put(Arg.Any<string>(), Arg.Is<string>(p => p == "prod/file1"), payload);
                 _dataStorage.Received().FlushAsync();
             });
         }
@@ -85,28 +85,28 @@ namespace ESPlus.Tests.Storage
             // Act
             await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Gen(12);
-            _journal.Put(destination, null, payload);
+            _journal.Put(null, destination, payload);
             await _journal.FlushAsync();
 
             // Assert
-            _metadataStorage.Received().Put(PersistentJournal.JournalPath, "master", Arg.Is<JournalLog>(p =>
+            _metadataStorage.Received().Put("master", PersistentJournal.JournalPath, Arg.Is<JournalLog>(p =>
                 p.Checkpoint.Equals(Position.Gen(12))
                 && p.Map.Count == 1
                 && p.Map.First().Key.Equals(new StringPair(null, "prod/file1"))
                 && p.Map.First().Value == destination
-                ));
+            ));
         }
 
         [Fact]
         public async Task Get_RealTimeModeNoCache_GetFromStorage()
         {
             var path = "path/1";
-            _dataStorage.GetAsync<object>(path, null).Returns(_payload);
+            _dataStorage.GetAsync<object>(null, path).Returns(_payload);
 
-            var item = await _journal.GetAsync<object>(path, null);
+            var item = await _journal.GetAsync<object>(null, path);
 
             Assert.Equal(_payload, item);
-            await _dataStorage.Received().GetAsync<object>(path, null);
+            await _dataStorage.Received().GetAsync<object>(null, path);
         }
 
         // [Fact]
@@ -125,12 +125,12 @@ namespace ESPlus.Tests.Storage
         public void Get_PutBefore_ReceiveFromCache()
         {
             var path = "path/1";
-            _dataStorage.GetAsync<object>(path, null).Returns(_payload);
+            _dataStorage.GetAsync<object>(null, path).Returns(_payload);
 
-            _journal.Put(path, null, _payload);
-            _journal.GetAsync<object>(path, null);
+            _journal.Put(null, path, _payload);
+            _journal.GetAsync<object>(null, path);
 
-            _dataStorage.DidNotReceive().GetAsync<object>(path, null);
+            _dataStorage.DidNotReceive().GetAsync<object>(null, path);
         }
 
 //        [Fact]
@@ -155,14 +155,14 @@ namespace ESPlus.Tests.Storage
             var path2 = "path/2";
             
             _journal.Checkpoint = Position.Gen(12);
-            _journal.Put(path1, null, _payload);
+            _journal.Put(null, path1, _payload);
             await _journal.FlushAsync();
             _journal.Checkpoint = Position.Gen(13);
-            _journal.Put(path2, null, _payload);
+            _journal.Put(null, path2, _payload);
             await _journal.FlushAsync();
 
-            _metadataStorage.Received().Put(PersistentJournal.JournalPath, "master", Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(12)) && p.Map.Count == 1));
-            _metadataStorage.Received().Put(PersistentJournal.JournalPath, "master", Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(13)) && p.Map.Count == 1));
+            _metadataStorage.Received().Put("master", PersistentJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(12)) && p.Map.Count == 1));
+            _metadataStorage.Received().Put("master", PersistentJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(13)) && p.Map.Count == 1));
         }
 
         [Fact]
@@ -172,28 +172,28 @@ namespace ESPlus.Tests.Storage
             var path2 = "path/2";
             
             _journal.Checkpoint = Position.Gen(12);
-            _journal.Put(path1, null, _payload);
+            _journal.Put(null, path1, _payload);
             await _journal.FlushAsync();
             _journal.Checkpoint = Position.Gen(13);
-            _journal.Put(path2, null, _payload);
+            _journal.Put(null, path2, _payload);
             await _journal.FlushAsync();
 
-            _dataStorage.Received(1).Put(path1, null, Arg.Any<object>());
-            _dataStorage.Received(1).Put(path2, null, Arg.Any<object>());
+            _dataStorage.Received(1).Put(null, path1, Arg.Any<object>());
+            _dataStorage.Received(1).Put(null, path2, Arg.Any<object>());
         }
 
         [Fact]
         public async Task Flush_WipeStageCacheBetweenWrites_CleanSlate2()
         {
             _journal.Checkpoint = Position.Gen(12);
-            _journal.Put("path/1", null, _payload);
+            _journal.Put(null, "path/1", _payload);
             await _journal.FlushAsync();
             _journal.Checkpoint = Position.Gen(13);
-            _journal.Put("path/2", null, _payload);
+            _journal.Put(null, "path/2", _payload);
             await _journal.FlushAsync();
 
-            _stageStorage.Received(1).Put("stage/path/1", null, Arg.Any<object>());
-            _stageStorage.Received(1).Put("stage/path/2", null, Arg.Any<object>());
+            _stageStorage.Received(1).Put(null, "stage/path/1", Arg.Any<object>());
+            _stageStorage.Received(1).Put(null, "stage/path/2", Arg.Any<object>());
         } 
 
         [Fact]
@@ -210,7 +210,7 @@ namespace ESPlus.Tests.Storage
             var path = "path/1";
             
             _journal.Checkpoint = Position.Gen(12);
-            _journal.Put(path, null, _payload);            
+            _journal.Put(null, path, _payload);            
             await _journal.FlushAsync();
             await _journal.FlushAsync();
 

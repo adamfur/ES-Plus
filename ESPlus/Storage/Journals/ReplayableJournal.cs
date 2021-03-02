@@ -18,27 +18,27 @@ namespace ESPlus.Storage
 
         protected override async Task DoFlushAsync()
         {
-            await WriteToAsync(_stageStorage, _dataStageCache, _deletes, "stage/");
-            await WriteJournalAsync(_map, _deletes);
-            await WriteToAsync(_dataStorage, _dataWriteCache, _deletes);
+            await WriteToAsync(_stageStorage, _dataStageCache, Deletes, "stage/");
+            await WriteJournalAsync(_map, Deletes);
+            await WriteToAsync(DataStorage, DataWriteCache, Deletes);
         }
 
-        public override void Put<T>(string path, string tenant, T item)
+        public override void Put<T>(string tenant, string path, T item)
         {
             var key = new StringPair(tenant, path);
             
             _dataStageCache[key] = item;
             _map[key] = path;
-            base.Put(path, tenant, item);
+            base.Put(tenant, path, item);
         }
 
-        public override void Delete(string path, string tenant)
+        public override void Delete(string tenant, string path)
         {
             var key = new StringPair(tenant, path);
             
             _dataStageCache.Remove(key);
             _map.Remove(key);
-            base.Delete(path, tenant);
+            base.Delete(tenant, path);
         }
 
         protected override void DoClean()
@@ -55,9 +55,9 @@ namespace ESPlus.Storage
                 {
                     var source = item.Key;
                     var destination = item.Value;
-                    var payload = await _stageStorage.GetAsync<JournalLog>(source.Path, source.Tenant);
+                    var payload = await _stageStorage.GetAsync<JournalLog>(source.Tenant, source.Path);
 
-                    _dataStorage.Put(destination, source.Tenant, payload);
+                    DataStorage.Put(source.Tenant, destination, payload);
                 }
             }
             
@@ -65,11 +65,11 @@ namespace ESPlus.Storage
             {
                 foreach (var item in journal.Deletes)
                 {
-                    _dataStorage.Delete(item.Path, item.Tenant);
+                    DataStorage.Delete(item.Tenant, item.Path);
                 }
             }
 
-            await _dataStorage.FlushAsync();
+            await DataStorage.FlushAsync();
         }
     }
 }

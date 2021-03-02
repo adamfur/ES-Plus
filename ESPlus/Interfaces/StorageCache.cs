@@ -19,19 +19,19 @@ namespace ESPlus.Interfaces
             await _storage.FlushAsync();
         }
 
-        public void Put<T>(string path, string tenant, T item)
+        public void Put<T>(string tenant, string path, T item)
         {
             _cache.AddOrUpdate(new StringPair(tenant, path), item);
-            _storage.Put(path, tenant, item);
+            _storage.Put(tenant, path, item);
         }
 
-        public void Delete(string path, string tenant)
+        public void Delete(string tenant, string path)
         {
             _cache.Remove(new StringPair(tenant, path));
-            _storage.Delete(path, tenant);
+            _storage.Delete(tenant, path);
         }
 
-        public async Task<T> GetAsync<T>(string path, string tenant)
+        public async Task<T> GetAsync<T>(string tenant, string path)
         {
             var key = new StringPair(tenant, path);
             
@@ -40,7 +40,7 @@ namespace ESPlus.Interfaces
                 return (T) resolved;
             }
 
-            var item = await _storage.GetAsync<T>(path, tenant);
+            var item = await _storage.GetAsync<T>(tenant, path);
             
             _cache.AddOrUpdate(key, item);
             
@@ -52,9 +52,9 @@ namespace ESPlus.Interfaces
             _storage.Reset();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant)
+        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters)
         {
-            return _storage.SearchAsync(parameters, tenant);
+            return _storage.SearchAsync(tenant, parameters);
         }
     }
 }

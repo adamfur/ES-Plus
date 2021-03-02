@@ -9,6 +9,7 @@ namespace ESPlus.EventHandlers
         Position Checkpoint { get; set; }
         long Offset { get; set; }
         long TotalOffset { get; set; }
+        string StreamName { get; set; }
         MetaData Metadata { get; set; }
         Task FlushAsync();
     }

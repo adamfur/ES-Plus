@@ -21,20 +21,20 @@ namespace ESPlus.Tests.Storage
             var destination = "prod/file1";
             var payload = new object();
 
-            _stageStorage.GetAsync<object>(source, null).Returns(_payload);
+            _stageStorage.GetAsync<object>(null, source).Returns(_payload);
 
             // Act
             await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Gen(12);
-            _journal.Put(destination, null, payload);
+            _journal.Put(null, destination, payload);
             await _journal.FlushAsync();
 
             // Assert
             Received.InOrder(() =>
             {
-                _dataStorage.Received().Put(destination, null, payload);
+                _dataStorage.Received().Put(null, destination, payload);
                 _dataStorage.Received().FlushAsync();
-                _metadataStorage.Received().Put(PersistentJournal.JournalPath, "master", Arg.Any<JournalLog>());
+                _metadataStorage.Received().Put("master", PersistentJournal.JournalPath, Arg.Any<JournalLog>());
                 _metadataStorage.Received().FlushAsync();
             });
         }

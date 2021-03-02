@@ -14,11 +14,11 @@ namespace ESPlus.Storage
         private Position _checkpoint;        
         public const string JournalPath = "000Journal/000Journal.json";
         private readonly IStorage _metadataStorage;
-        protected readonly IStorage _dataStorage;
+        protected readonly IStorage DataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
         // private readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
-        protected readonly Dictionary<StringPair, object> _dataWriteCache = new Dictionary<StringPair, object>();
-        protected HashSet<StringPair> _deletes { get; set; } = new HashSet<StringPair>();
+        protected readonly Dictionary<StringPair, object> DataWriteCache = new Dictionary<StringPair, object>();
+        protected HashSet<StringPair> Deletes { get; set; } = new HashSet<StringPair>();
         
         public Position Checkpoint
         {
@@ -33,7 +33,7 @@ namespace ESPlus.Storage
         protected PersistentJournal(IStorage metadataStorage, IStorage dataStorage)
         {
             _metadataStorage = metadataStorage;
-            _dataStorage = dataStorage;
+            DataStorage = dataStorage;
         }
 
         public async Task InitializeAsync()
@@ -47,7 +47,7 @@ namespace ESPlus.Storage
 
             try
             {
-                journal = await _metadataStorage.GetAsync<JournalLog>(JournalPath, "master");
+                journal = await _metadataStorage.GetAsync<JournalLog>("master", JournalPath);
             }
             catch (StorageNotFoundException)
             {
@@ -82,22 +82,22 @@ namespace ESPlus.Storage
             Clean();
         }
 
-        public virtual void Put<T>(string path, string tenant, T item)
+        public virtual void Put<T>(string tenant, string path, T item)
         {
             var key = new StringPair(tenant, path);
 
-            _dataWriteCache[key] = item;
-            _deletes.Remove(key);
+            DataWriteCache[key] = item;
+            Deletes.Remove(key);
             _changed = true;
         }
 
-        public async Task<T> GetAsync<T>(string path, string tenant)
+        public async Task<T> GetAsync<T>(string tenant, string path)
         {
             var key = new StringPair(tenant, path);
             
             try
             {
-                if (_dataWriteCache.TryGetValue(key, out object item1))
+                if (DataWriteCache.TryGetValue(key, out object item1))
                 {
                     return (T) item1;
                 }
@@ -107,7 +107,7 @@ namespace ESPlus.Storage
 //                    return default;
                 }
 
-                return await _dataStorage.GetAsync<T>(path, tenant);
+                return await DataStorage.GetAsync<T>(tenant, path);
             }
             catch (DirectoryNotFoundException)
             {
@@ -117,10 +117,10 @@ namespace ESPlus.Storage
 
         public async Task UpdateAsync<T>(string path, string tenant, Action<T> action)
         {
-            var model = await GetAsync<T>(path, tenant);
+            var model = await GetAsync<T>(tenant, path);
 
             action(model);
-            Put(path, tenant, model);
+            Put(tenant, path, model);
         }
 
         protected async Task WriteJournalAsync(Dictionary<StringPair, string> map, HashSet<StringPair> deletes)
@@ -132,9 +132,9 @@ namespace ESPlus.Storage
                 Deletes = new HashSet<StringPair>(deletes),
             };
             
-            _metadataStorage.Put(JournalPath, "master", journal);
+            _metadataStorage.Put("master", JournalPath, journal);
 
-            if (_metadataStorage != _dataStorage)
+            if (_metadataStorage != DataStorage)
             {
                 await _metadataStorage.FlushAsync();
             }
@@ -147,12 +147,12 @@ namespace ESPlus.Storage
             {
                 var destination = $"{prefix}{item.Key.Path}";
 
-                storage.Put(destination, item.Key.Tenant, item.Value);
+                storage.Put(item.Key.Tenant, destination, item.Value);
             }
 
             foreach (var item in deletes)
             {
-                storage.Delete(item.Path, item.Tenant);
+                storage.Delete(item.Tenant, item.Path);
             }
             
             await storage.FlushAsync();
@@ -160,8 +160,8 @@ namespace ESPlus.Storage
 
         private void Clean()
         {
-            _dataWriteCache.Clear();
-            _deletes.Clear();
+            DataWriteCache.Clear();
+            Deletes.Clear();
             _changed = false;
             DoClean();
         }
@@ -177,21 +177,21 @@ namespace ESPlus.Storage
 
         public void Reset()
         {
-            _dataStorage.Reset();
+            DataStorage.Reset();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant)
+        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters)
         {
-            return _dataStorage.SearchAsync(parameters, tenant);
+            return DataStorage.SearchAsync(tenant, parameters);
         }
 
-        public virtual void Delete(string path, string tenant)
+        public virtual void Delete(string tenant, string path)
         {
             var key = new StringPair(tenant, path);
 
             _changed = true;
-            _dataWriteCache.Remove(key);
-            _deletes.Add(key);
+            DataWriteCache.Remove(key);
+            Deletes.Add(key);
         }
     }
 }

@@ -12,6 +12,11 @@ namespace ESPlus.Wyrm
 {
     public class WyrmRepository : IRepository
     {
+        // public string Name(string name)
+        // {
+        //     return _aggregateRenamer.Name(name);
+        // }
+
         private readonly IEventSerializer _eventSerializer;
         private readonly IWyrmDriver _wyrmConnection;
         private readonly IWyrmAggregateRenamer _aggregateRenamer;

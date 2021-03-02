@@ -10,7 +10,7 @@ namespace ESPlus.Storage
     {
         private readonly Dictionary<StringPair, object> _data = new Dictionary<StringPair, object>();
 
-        public void Delete(string path, string tenant)
+        public void Delete(string tenant, string path)
         {
             var key = new StringPair(tenant, path);
             
@@ -22,7 +22,7 @@ namespace ESPlus.Storage
             return Task.CompletedTask;
         }
 
-        public Task<T> GetAsync<T>(string path, string tenant)
+        public Task<T> GetAsync<T>(string tenant, string path)
         {
             var key = new StringPair(tenant, path);
             
@@ -34,7 +34,7 @@ namespace ESPlus.Storage
             return default;
         }
 
-        public void Put<T>(string path, string tenant, T item)
+        public void Put<T>(string tenant, string path, T item)
         {
             var key = new StringPair(tenant, path);
             _data[key] = item;
@@ -45,7 +45,7 @@ namespace ESPlus.Storage
             _data.Clear();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(long[] parameters, string tenant)
+        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters)
         {
             return null;
         }
