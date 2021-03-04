@@ -47,7 +47,7 @@ namespace ESPlus.Storage
 
             try
             {
-                journal = await _metadataStorage.GetAsync<JournalLog>("master", JournalPath);
+                journal = await _metadataStorage.GetAsync<JournalLog>("master", JournalPath) ?? new JournalLog();
             }
             catch (StorageNotFoundException)
             {

@@ -1,6 +1,6 @@
 using System;
 
-namespace ESPlus.IntegrationTests.Repositories.Aggregates.Events
+namespace ESPlus.Tests.Repositories.Aggregates.Events
 {
     public class GuidAddedEvent
     {

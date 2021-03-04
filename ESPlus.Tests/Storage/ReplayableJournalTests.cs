@@ -178,8 +178,8 @@ namespace ESPlus.Tests.Storage
             _journal.Put(null, path2, _payload);
             await _journal.FlushAsync();
 
-            _dataStorage.Received(1).Put(null, path1, Arg.Any<object>());
-            _dataStorage.Received(1).Put(null, path2, Arg.Any<object>());
+            _dataStorage.Received(1).Put("@", path1, Arg.Any<object>());
+            _dataStorage.Received(1).Put("@", path2, Arg.Any<object>());
         }
 
         [Fact]
@@ -192,8 +192,8 @@ namespace ESPlus.Tests.Storage
             _journal.Put(null, "path/2", _payload);
             await _journal.FlushAsync();
 
-            _stageStorage.Received(1).Put(null, "stage/path/1", Arg.Any<object>());
-            _stageStorage.Received(1).Put(null, "stage/path/2", Arg.Any<object>());
+            _stageStorage.Received(1).Put("@", "stage/path/1", Arg.Any<object>());
+            _stageStorage.Received(1).Put("@", "stage/path/2", Arg.Any<object>());
         } 
 
         [Fact]

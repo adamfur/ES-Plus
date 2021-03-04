@@ -4,6 +4,7 @@ using ESPlus.Aggregates;
 using ESPlus.Interfaces;
 using System.Linq;
 using System;
+using System.Reflection;
 using System.Threading;
 using ESPlus.EventHandlers;
 using ESPlus.Exceptions;
@@ -37,6 +38,14 @@ namespace ESPlus.Repositories
         private readonly Dictionary<string, EventStream> _streams = new Dictionary<string, EventStream>();
         private readonly List<IEventHandler> _subscribers = new List<IEventHandler>();
         private EventStream _all = new EventStream();
+        
+        static InMemoryRepository()
+        {
+            var aggregates = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(x => typeof(IAggregate).IsAssignableFrom(x))
+                .ToList();
+        }
 
         public InMemoryRepository()
         {
@@ -75,14 +84,23 @@ namespace ESPlus.Repositories
             if (_streams.ContainsKey(id))
             {
                 var stream = _streams[id];
-                var enumrator = stream.First;
-
-                while (enumrator != null && ++currentVersion <= version)
+                
+                for (var enumerator = stream.First; enumerator != null && ++currentVersion <= version; enumerator = enumerator.NextInStream)
                 {
-                    //Console.WriteLine($"{enumrator.Event.GetType()} {++count}");
-                    aggregate.ApplyChange(enumrator.Event);
-                    aggregate.Version = enumrator.Version;
-                    enumrator = enumrator.NextInStream;
+                    var found = instance.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
+                        .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
+                        .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
+                        .Any(x => x.GetParameters().First().ParameterType == enumerator.Event.GetType());
+                    
+                    
+                    if (!found)
+                    {
+                        aggregate.Version = enumerator.Version;
+                        continue;
+                    }
+                        
+                    aggregate.ApplyChange(enumerator.Event);
+                    aggregate.Version = enumerator.Version;
                 }
             }
             else

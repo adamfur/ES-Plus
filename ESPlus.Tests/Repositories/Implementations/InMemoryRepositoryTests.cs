@@ -1,7 +1,7 @@
 using ESPlus.Interfaces;
 using ESPlus.Repositories;
 
-namespace ESPlus.IntegrationTests.Repositories.Implementations
+namespace ESPlus.Tests.Repositories.Implementations
 {
     public class InMemoryRepositoryTests : RepositoryTests
     {

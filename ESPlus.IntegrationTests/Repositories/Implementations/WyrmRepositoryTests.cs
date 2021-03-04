@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
+using ESPlus.Tests.Repositories;
 using ESPlus.Wyrm;
 using Xunit;
 
@@ -26,36 +28,22 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
         public async Task SaveAsync_ReadFromTo_OutOfRange()
         {
             var driver = CreateDriver();
-            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new ESPlus.Tests.Repositories.Aggregates.DummyAggregate(Guid.NewGuid().ToString(), 0);
 
             await Repository.SaveAsync(aggregate);
-            var result = await AsyncAny(driver.EnumerateAll(DateTime.Now.AddDays(1), DateTime.Now.AddDays(2),
-                CancellationToken.None));
 
-            Assert.False(result);
+            Assert.Empty(await driver.EnumerateAll(DateTime.Now.AddDays(1), DateTime.Now.AddDays(2), CancellationToken.None).ToListAsync());
         }
         
         [Fact]
         public async Task SaveAsync_ReadFromTo_InRange()
         {
             var driver = CreateDriver();
-            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new ESPlus.Tests.Repositories.Aggregates.DummyAggregate(Guid.NewGuid().ToString(), 0);
 
             await Repository.SaveAsync(aggregate);
-            var result = await AsyncAny(driver.EnumerateAll(DateTime.Now.AddDays(-1), DateTime.Now,
-                CancellationToken.None));
 
-            Assert.True(result);
-        }
-
-        private async Task<bool> AsyncAny(IAsyncEnumerable<WyrmEvent2> enumerateAll)
-        {
-            await foreach (var item in enumerateAll)
-            {
-                return true;
-            }
-            
-            return false;
+            Assert.NotEmpty(await driver.EnumerateAll(DateTime.Now.AddDays(-1), DateTime.Now, CancellationToken.None).ToListAsync());
         }
     }        
 }

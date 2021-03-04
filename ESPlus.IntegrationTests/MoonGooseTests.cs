@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
@@ -11,6 +12,18 @@ namespace ESPlus.IntegrationTests
 {
     public class MoonGooseTests
     {
+        private class IndexDocument : Document
+        {
+            public IndexDocument(string tenant, string path, object item, Operation operation, long[] keywords)
+                : base(tenant, path, item, operation)
+            {
+                Keywords = keywords;
+                Flags = Flags.Indexed;
+            }
+
+            public override long[] Keywords { get; }
+        }
+        
         private readonly ITestOutputHelper _testOutputHelper;
         private MoonGooseDriver _driver;
         private string _database;
@@ -31,9 +44,7 @@ namespace ESPlus.IntegrationTests
         [Fact]
         public async Task Get_NonExistantFile_Empty() // Should throw
         {
-            var file = await _driver.GetAsync(_database, "Tenant", "file");
-            
-            Assert.Empty(file);
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file"));
         }
         
         [Fact]
@@ -75,7 +86,7 @@ namespace ESPlus.IntegrationTests
                 new("Tenant", "file", null, Operation.Save),
             });
             
-            await Assert.ThrowsAsync<MoonGooseException>(() => _driver.GetAsync(_database, "Tenant-2", "file"));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant-2", "file"));
         } 
         
         [Fact]
@@ -85,9 +96,8 @@ namespace ESPlus.IntegrationTests
             {
                 new("Tenant", "file", null, Operation.Save),
             });
-            var file = await _driver.GetAsync(Guid.NewGuid().ToString(), "Tenant-2", "file");
-            
-            Assert.Empty(file);
+
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(Guid.NewGuid().ToString(), "Tenant-2", "file"));
         }     
         
         [Fact]
@@ -106,7 +116,7 @@ namespace ESPlus.IntegrationTests
                 new("Tenant", "file", null, Operation.Delete),
             });
             
-            await Assert.ThrowsAsync<MoonGooseException>(() => _driver.GetAsync(_database, "Tenant", "file"));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file"));
         }    
         
         [Fact]
@@ -121,7 +131,7 @@ namespace ESPlus.IntegrationTests
                 new("Tenant", "file", null, Operation.Delete),
             });
         
-            await Assert.ThrowsAsync<MoonGooseException>(() => _driver.GetAsync(_database, "Tenant", "file"));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file"));
         }
         
         [Fact]
@@ -140,17 +150,10 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("Tenant",
-                    "file", null, Operation.Save),
+                new IndexDocument("Tenant", "file", new {}, Operation.Save, new[] {1337L}),
             });
-            var any = false;
-            
-            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {1337L}))
-            {
-                any = true;
-            }
-        
-            Assert.True(any);
+
+            Assert.NotEmpty(await _driver.SearchAsync(_database, "Tenant", new[] {1337L}).ToListAsync());
         }    
         
         [Fact]

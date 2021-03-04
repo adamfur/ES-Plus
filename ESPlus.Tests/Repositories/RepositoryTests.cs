@@ -4,15 +4,15 @@ using ESPlus.Exceptions;
 using ESPlus.Interfaces;
 using Xunit;
 
-namespace ESPlus.IntegrationTests.Repositories
+namespace ESPlus.Tests.Repositories
 {
     public abstract class RepositoryTests
     {
-        protected IRepository Repository;
+        protected readonly IRepository Repository;
 
         protected abstract IRepository Create();
 
-        public RepositoryTests()
+        protected RepositoryTests()
         {
             Repository = Create();
         }
@@ -20,54 +20,61 @@ namespace ESPlus.IntegrationTests.Repositories
         [Fact]
         public async Task SaveAsync_InsertNewStream_Save()
         {
-            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString(), 0);
 
             await Repository.SaveAsync(aggregate);
+            Assert.Equal(1, aggregate.Count);
+            
         }
 
         [Fact]
         public async Task SaveAsync_AppendToExistingStream_Save()
         {
-            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString(), 0);
 
             await Repository.SaveAsync(aggregate);
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
+            Assert.Equal(2, aggregate.Count);
         }
 
         [Fact]
         public async Task SaveAsync_ReadExistingAndSave_Save()
         {
             var id = Guid.NewGuid().ToString();
-            var aggregate = new Aggregates.DummyAggregate(id);
+            var aggregate = new Aggregates.DummyAggregate(id, 0);
 
             await Repository.SaveAsync(aggregate);
 
-            aggregate = await this.Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
+            aggregate = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
+            Assert.Equal(2, aggregate.Count);
         }        
 
         [Fact]
         public async Task SaveAsync_AppendToExistingStreamV2_Save()
         {
-            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString());
+            var aggregate = new Aggregates.DummyAggregate(Guid.NewGuid().ToString(), 0);
 
             await Repository.SaveAsync(aggregate);
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
+            Assert.Equal(3, aggregate.Count);
         }
 
         [Fact]
         public async Task SaveAsync_SameStream_Throw()
         {
             var id = Guid.NewGuid().ToString();
-            var aggregate1 = new Aggregates.DummyAggregate(id);
-            var aggregate2 = new Aggregates.DummyAggregate(id);
+            var aggregate1 = new Aggregates.DummyAggregate(id, 0);
+            var aggregate2 = new Aggregates.DummyAggregate(id, 0);
 
             await Repository.SaveAsync(aggregate1);
+            Assert.Equal(1, aggregate1.Count);
+            Assert.Equal(1, aggregate2.Count);
             await Assert.ThrowsAsync<WrongExpectedVersionException>(() => Repository.SaveAsync(aggregate2));
         }
 
@@ -75,9 +82,10 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task DeleteAsync_DeleteExistingStream_Pass()
         {
             var id = Guid.NewGuid().ToString();
-            var aggregate = new Aggregates.DummyAggregate(id);
+            var aggregate = new Aggregates.DummyAggregate(id, 0);
 
             await Repository.SaveAsync(aggregate);
+            Assert.Equal(1, aggregate.Count);
             await Repository.DeleteAsync(id, aggregate.Version);
         }
 
@@ -93,11 +101,13 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task GetAsync_ReadOneEventFromExistingStream_Pass()
         {
             var id = Guid.NewGuid().ToString();
-            var aggregate = new Aggregates.DummyAggregate(id);
+            var aggregate = new Aggregates.DummyAggregate(id, 0);
 
+            Assert.Equal(1, aggregate.Count);
             await Repository.SaveAsync(aggregate);
             var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
 
+            Assert.Equal(1, copy.Count);
             Assert.Equal(aggregate.Version, copy.Version);
         }
 
@@ -105,12 +115,14 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task GetAsync_ReadTwoEventsFromExistingStream_Pass()
         {
             var id = Guid.NewGuid().ToString();
-            var aggregate = new Aggregates.DummyAggregate(id);
+            var aggregate = new Aggregates.DummyAggregate(id, 0);
 
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
+            Assert.Equal(2, aggregate.Count);
             var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
 
+            Assert.Equal(2, copy.Count);
             Assert.Equal(aggregate.Version, copy.Version);
         }
 
@@ -118,12 +130,14 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task GetAsync_WithNoReplayAttribute_Pass()
         {
             var id = Guid.NewGuid().ToString();
-            var aggregate = new Aggregates.DummyAggregate(id);
+            var aggregate = new Aggregates.DummyAggregate(id, 0);
 
             aggregate.AttachFile();
             await Repository.SaveAsync(aggregate);
+            // Assert.Equal(3, aggregate.Count);
             var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
 
+            // Assert.Equal(2, copy.Count);
             Assert.Equal(aggregate.Version, copy.Version);
         }
 
@@ -132,12 +146,14 @@ namespace ESPlus.IntegrationTests.Repositories
         {
             var data = Guid.NewGuid();
             var id = Guid.NewGuid().ToString();
-            var aggregate = new Aggregates.DummyAggregate(id);
+            var aggregate = new Aggregates.DummyAggregate(id, 0);
 
             aggregate.AddGuid(data);
             await Repository.SaveAsync(aggregate);
+            Assert.Equal(2, aggregate.Count);
             var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
 
+            Assert.Equal(2, copy.Count);
             Assert.Equal(data, copy.Guid);
         }        
 
@@ -145,9 +161,10 @@ namespace ESPlus.IntegrationTests.Repositories
         public async Task DeleteAsync_DeleteExistingStream_Gone()
         {
             var id = Guid.NewGuid().ToString();
-            var aggregate = new Aggregates.DummyAggregate(id);
+            var aggregate = new Aggregates.DummyAggregate(id, 0);
 
             aggregate.AttachFile();
+            Assert.Equal(3, aggregate.Count);
             await Repository.SaveAsync(aggregate);
             await Repository.DeleteAsync(id, aggregate.Version);
             await Assert.ThrowsAsync<AggregateNotFoundException>(async () => await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id));
