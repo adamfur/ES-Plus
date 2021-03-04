@@ -10,29 +10,40 @@ namespace ESPlus.Interfaces
 
         public StringPair(string tenant, string path)
         {
-            Path = path ?? "";
-            Tenant = tenant ?? "@";
+            Path = path;
+            Tenant = tenant;
         }
 
         public bool Equals(StringPair other)
         {
-            if (Path == null || other.Path == null)
+            bool Compare(string first, string second)
             {
-                return (Path == other.Path);
+                if (first != second)
+                {
+                    return false;
+                }
+
+                if (first is null)
+                {
+                    return true;
+                }
+
+                return first.Equals(second);
             }
-            else if (Tenant == null || other.Tenant == null)
+
+
+            if (!Compare(Tenant, other.Tenant))
             {
-                return (Tenant == other.Tenant);
+                return false;
             }
-                
-            return Path.Equals(other.Path)
-                   && Tenant.Equals(other.Tenant);
+
+            return Compare(Path, other.Path);
         }
 
         public override int GetHashCode()
         {
-            var tenant = Tenant ?? "";
-            var empty = Path ?? "";
+            var tenant = Tenant ?? "<@>";
+            var empty = Path ?? "<@>";
             
             return new {tenant, empty}.GetHashCode();
         }

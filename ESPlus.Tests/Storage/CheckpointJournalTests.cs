@@ -32,7 +32,7 @@ namespace ESPlus.Tests.Storage
             // Assert
             Received.InOrder(() =>
             {
-                _dataStorage.Received().Put("@", destination, payload);
+                _dataStorage.Received().Put(null, destination, payload);
                 _dataStorage.Received().FlushAsync();
                 _metadataStorage.Received().Put("master", PersistentJournal.JournalPath, Arg.Any<JournalLog>());
                 _metadataStorage.Received().FlushAsync();
