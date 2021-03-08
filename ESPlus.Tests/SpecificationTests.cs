@@ -1,143 +1,383 @@
 using System;
+using System.Collections.Generic;
 using ESPlus.Aggregates;
+using ESPlus.Specification;
 using Xunit;
 
 namespace ESPlus.Tests
 {
-    // public class DummyAggregate : AggregateBase
-    // {
-    //     public DummyAggregate(bool emit)
-    //         : base("N/A")
-    //     {
-    //         ApplyChange(new DummyEvent
-    //         {
-    //             Explanation = "Created"
-    //         });
-    //     }
+    public class SpecificationTests : Specification<SpecificationTests.DummyAggregate>
+    {
+        public class DummyAggregate : AggregateBase
+        {
+            public DummyAggregate(string id)
+                : base(id)
+            {
+                ApplyChange(new DummyCreated(id));
+            }
 
-    //     public void Emit()
-    //     {
-    //         ApplyChange(new DummyEvent
-    //         {
-    //             Explanation = "Emit"
-    //         });
-    //     }
-    // }
+            public void Touch(int no)
+            {
+                ApplyChange(new DummyTouch(no));
+            }
 
-    // public class DummyEvent
-    // {
-    //     public string Explanation { get; set; }
-    // }
+            protected void Apply(DummyCreated @event)
+            {
+            }        
 
-    // public class SpecificationTests : ESPlus.Specification.Specification<DummyAggregate>
-    // {
-    //     private Exception _exception;
+            protected void Apply(DummyTouch @event)
+            {
+            }
+        }
 
-    //     protected override DummyAggregate Create()
-    //     {
-    //         if (_exception != null)
-    //         {
-    //             throw _exception;
-    //         }
+        public class DummyCreated
+        {
+            public string Id { get; }
 
-    //         return new DummyAggregate(false);
-    //     }
+            public DummyCreated(string id)
+            {
+                Id = id;
+            }
+        }
 
-    //     [Fact]
-    //     public void Constructor_Create_Emit()
-    //     {
-    //         Then(() =>
-    //         {
-    //             Is<DummyEvent>(p => p.Explanation == "Created");
-    //         });
-    //     }
+        public class DummyTouch
+        {
+            public int No { get; }
 
-    //     [Fact]
-    //     public void Constructor_CreateBadMatch_Throws()
-    //     {
-    //         Assert.Throws<Exception>(() =>
-    //         {
-    //             Then(() =>
-    //             {
-    //                 Is<DummyEvent>(p => p.Explanation == "NOT Created");
-    //             });
-    //         });
-    //     }
+            public DummyTouch(int no)
+            {
+                No = no;
+            }
+        }
+        
+        [Theory]
+        [InlineData("Given", null)]
+        [InlineData("Given When", null)]
+        [InlineData("Given When Then", null)]
+        [InlineData("Given Then", null)]
+        [InlineData("Given Given", "Given has already been specified")]
+        [InlineData("Given Then Then", "Then has already been specified")]
+        [InlineData("Given When When", "When has already been specified")]
+        [InlineData("Given Then When", "When has to be specified before Then")]
+        [InlineData("When", "Given has to be specified before When")]
+        [InlineData("Then", "Given has to be specified before Then")]
+        public void Theory_MixGivenWhenThenOrder_Expected(string operations, string expectedExceptionMessage)
+        {
+            Exception exception = null;
 
-    //     [Fact]
-    //     public void Constructor_EmptyWhen_Nothing()
-    //     {
-    //         When(() => { });
+            try
+            {
+                var map = new Dictionary<string, Action>
+                {
+                    ["Given"] = () => Given(() => Aggregate = new DummyAggregate("id")),
+                    ["When"] = () => When(() => { }),
+                    ["Then"] = () => Then(() => { }),
+                };
 
-    //         ThenNothing();
-    //     }
+                foreach (var operation in operations.Split())
+                {
+                    map[operation]();
+                }
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
 
-    //     [Fact]
-    //     public void Constructor_Throws_Propagate()
-    //     {
-    //         _exception = new Exception();
+            Mute();
+            Assert.Equal(expectedExceptionMessage, exception?.Message);
+        }
 
-    //         Assert.Throws<Exception>(() =>
-    //         {
-    //             When(() =>
-    //             {
+        [Fact]
+        public void No_aggregate_was_specified_in_Given()
+        {
+            var exception = Assert.Throws<Exception>(() => Given(() => { }));
 
-    //             });
+            Assert.Equal("No Aggregate wasn't assigned in Given", exception.Message);
+        }
 
-    //             //ThenNothing();
-    //         });
-    //     }
+        [Fact]
+        public void Dispose_without_ever_calling_Given()
+        {
+            var exception = Assert.Throws<Exception>(() => Dispose());
 
-    //     [Fact]
-    //     public void When_Throws_Propagate()
-    //     {
-    //         Assert.Throws<Exception>(() =>
-    //         {
-    //             When(() =>
-    //             {
-    //                 throw new Exception();
-    //             });
+            Mute();
+            Assert.Equal("Given was never set", exception.Message);
+        }
 
-    //             ThenNothing();
-    //         });
-    //     }
+        [Fact]
+        public void Dispose_without_ever_calling_Then()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+            });
 
-    //     [Fact]
-    //     public void Constructor_Throws_Capture()
-    //     {
-    //         _exception = new Exception();
+            var exception = Assert.Throws<Exception>(() => Dispose());
 
-    //         ThenThrows<Exception>();
-    //     }
+            Mute();
+            Assert.Equal("Then was never set", exception.Message);
+        }
 
-    //     [Fact]
-    //     public void When_Throws_Capture()
-    //     {
-    //         When(() =>
-    //         {
-    //             throw new Exception();
-    //         });
+        [Fact]
+        public void Throws_within_Given()
+        {
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                Given(() =>
+                {
+                    Aggregate = new DummyAggregate("id");
+                    throw new Exception("Throws in given");
+                });
 
-    //         ThenThrows<Exception>();
-    //     }
+                Dispose();
+            });
 
-    //     [Fact]
-    //     public void Then_MoreEmittedThanCapturedEvents_Throws()
-    //     {
-    //         var exception = Assert.Throws<Exception>(() =>
-    //         {
-    //             When(() =>
-    //             {
-    //                 Aggregate.Emit();
-    //             });
+            Mute();
+            Assert.Equal("Throws in given", exception.Message);
+        }
 
-    //             Then(() =>
-    //             {
-    //                 Is<object>();
-    //             });
-    //         });
+        [Fact]
+        public void Throws_within_When()
+        {
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                Given(() =>
+                {
+                    Aggregate = new DummyAggregate("id");
+                });
 
-    //         //Assert.Equal("No more events!", exception.Message);
-    //     }
-    // }
+                When(() =>
+                {
+                    throw new Exception("Throws in given");
+                });
+
+                Dispose();
+            });
+
+            Mute();
+            Assert.Equal("Throws in given", exception.Message);
+        }
+
+        [Fact]
+        public void ThenThrows_capures_exception_from_When()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+            });
+
+            When(() =>
+            {
+                throw new Exception("Throws in given");
+            });
+
+            ThenThrows<Exception>();
+        }
+
+        [Fact]
+        public void ThenThrows_captures_exception_from_Given()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+                throw new Exception("Throws in given");
+            });
+
+            ThenThrows<Exception>();
+        }
+
+        [Fact]
+        public void ThenThrows_with_message_captures_exception_from_Given()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+                throw new Exception("Throws in given");
+            });
+
+            ThenThrows<Exception>(ex => ex.Message == "Throws in given");
+        }
+
+        [Fact]
+        public void ThenThrows_cant_be_used_multiple_times()
+        {
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                Given(() =>
+                {
+                    Aggregate = new DummyAggregate("id");
+                    throw new Exception("Throws in given");
+                });
+
+                ThenThrows<Exception>();
+                ThenThrows<Exception>();
+            });
+
+            Assert.Equal("Exception has already been catched", exception.Message);
+        }
+
+        [Fact]
+        public void Cant_mix_ThenThrows_with_Then()
+        {
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                Given(() =>
+                {
+                    Aggregate = new DummyAggregate("id");
+                    throw new Exception("Throws in given");
+                });
+
+                ThenThrows<Exception>();
+                ThenNothing();
+                Dispose();
+            });
+
+            Assert.Equal("Then has already been specified", exception.Message);
+        }
+
+        [Fact]
+        public void Match_with_is_from_Given()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+            });
+
+            Then(() =>
+            {
+                Is<DummyCreated>();
+            });
+        }
+
+        [Fact]
+        public void Match_with_is_from_When()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+            });
+
+            When(() =>
+            {
+                Aggregate.Touch(1);
+            });
+
+            Then(() =>
+            {
+                Is<DummyTouch>();
+            });
+        }
+
+        [Fact]
+        public void Match_with_is_from_Given_with_param()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+            });
+
+            Then(() =>
+            {
+                Is<DummyCreated>(p => p.Id == "id");
+            });
+        }
+
+        [Fact]
+        public void Match_with_is_from_When_with_param()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+            });
+
+            When(() =>
+            {
+                Aggregate.Touch(1);
+            });
+
+            Then(() =>
+            {
+                Is<DummyTouch>(p => p.No == 1);
+            });
+        }
+
+        [Fact]
+        public void Invalid_match_with_is_from_Given()
+        {
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                Given(() =>
+                {
+                    Aggregate = new DummyAggregate("id");
+                });
+
+                Then(() =>
+                {
+                    Is<DummyCreated>(p => p.Id == "idX");
+                });
+
+                Dispose();
+            });
+        }
+
+        [Fact]
+        public void Invalid_match_with_is_from_When()
+        {
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                Given(() =>
+                {
+                    Aggregate = new DummyAggregate("id");
+                });
+
+                When(() =>
+                {
+                    Aggregate.Touch(1);
+                });
+
+                Then(() =>
+                {
+                    Is<DummyTouch>(p => p.No == 2);
+                });
+
+                Dispose();
+            });
+        }
+
+        [Fact]
+        public void ThenNothing_cant_match_emitted_events()
+        {
+            var exception = Assert.Throws<Exception>(() =>
+            {
+                Given(() =>
+                {
+                    Aggregate = new DummyAggregate("id");
+                });
+
+                ThenNothing();
+
+                Dispose();
+            });
+
+			Assert.StartsWith("Did not match all events 0 vs. 1", exception.Message);
+        }
+
+        [Fact]
+        public void ThenNothing_matches_no_events()
+        {
+            Given(() =>
+            {
+                Aggregate = new DummyAggregate("id");
+            });
+
+            When(() =>
+            {
+            });
+
+            ThenNothing();
+
+            Dispose();
+        }
+    }
 }

@@ -14,12 +14,17 @@ namespace ESPlus.Magic.Memory
         private readonly int _length;
         private readonly int _adjustedLength;
         private int _offset;
-
+        
         public MemorySegment(byte *ptr, int length)
         {
             _ptr = ptr;
             _length = length;
             _adjustedLength = _length / SizeOf<T>();
+        }
+
+        public Type Type()
+        {
+            return typeof(T);
         }
 
         public override string ToString()

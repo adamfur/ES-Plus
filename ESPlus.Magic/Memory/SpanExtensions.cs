@@ -16,7 +16,7 @@ namespace ESPlus.Magic.Memory
         }
 
         public static unsafe MemorySegment<T> AsMemorySegment<T>(this MDBValue span)
-            where T : IComparable
+            where T : struct, IComparable
         {
             var ptr = (byte*) Unsafe.AsPointer(ref span);
             var crap = Unsafe.AsRef<MDBValueStructure>(ptr);
@@ -25,7 +25,7 @@ namespace ESPlus.Magic.Memory
         }
 
         public static MemorySegment<T> AsMemorySegment<T>(this T[] span)
-            where T : IComparable
+            where T : struct, IComparable
         {
             return CreateMemorySegment(ref span[0], span.Length);
         }
@@ -35,31 +35,15 @@ namespace ESPlus.Magic.Memory
         {
             return CreateMemorySegment(ref span, 1);
         }
-        
-        public static unsafe Span<T> AsSpan<T>(ref this T span)
-            where T : struct, IComparable 
-        {
-            var ptr = (byte*) Unsafe.AsPointer(ref span);
-
-            return new Span<T>(ptr, Marshal.SizeOf<T>());
-        }
-        
-        // public static unsafe Span<E> AsSpan<E, T>(ref this T span)
-        //     where T : struct, IComparable 
-        // {
-        //     var ptr = (byte*) System.Runtime.CompilerServices.Unsafe.AsPointer(ref span);
-        //
-        //     return new Span<E>(ptr, Marshal.SizeOf<T>());
-        // }
 
         public static MemorySegment<T> AsMemorySegment<T>(this Span<T> span)
-            where T : IComparable
+            where T : struct, IComparable
         {
             return CreateMemorySegment(ref span[0], span.Length);
         }
 
         private static unsafe MemorySegment<T> CreateMemorySegment<T>(ref T value, int length)
-            where T : IComparable
+            where T : struct, IComparable
         {
             var ptr = (byte*) Unsafe.AsPointer(ref value);
 
