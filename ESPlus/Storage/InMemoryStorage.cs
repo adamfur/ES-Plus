@@ -31,7 +31,7 @@ namespace ESPlus.Storage
                 return Task.FromResult((T) data);
             }
             
-            return default;
+            throw new StorageNotFoundException();
         }
 
         public void Put<T>(string tenant, string path, T item)
