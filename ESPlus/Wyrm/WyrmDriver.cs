@@ -323,7 +323,7 @@ namespace ESPlus.Wyrm
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                 using var shortLivedToken =
                     CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
                 var token = shortLivedToken.Token;
