@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.Misc;
@@ -79,7 +80,7 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override async Task<bool> DispatchAsync(Event @event)
+        public override async Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
         {
             if (@event.Offset == 1)
             {

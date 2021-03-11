@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.FlushPolicies;
 using ESPlus.Subscribers;
@@ -72,7 +73,7 @@ namespace ESPlus.EventHandlers
             await base.FlushAsync();
         }
 
-        public override Task<bool> DispatchAsync(Event @event)
+        public override Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

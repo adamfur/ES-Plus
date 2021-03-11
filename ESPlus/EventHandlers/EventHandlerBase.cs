@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Subscribers;
 
@@ -49,7 +50,7 @@ namespace ESPlus.EventHandlers
             return Task.CompletedTask;
         }
 
-        public abstract Task<bool> DispatchAsync(Event @event);
+        public abstract Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken);
 
         public virtual void Ahead()
         {
