@@ -4,7 +4,6 @@ using System.IO;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using System.Threading.Tasks;
-using ESPlus.MoonGoose;
 
 namespace ESPlus.Storage
 {
@@ -16,7 +15,6 @@ namespace ESPlus.Storage
         private readonly IStorage _metadataStorage;
         protected readonly IStorage DataStorage;
         public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
-        // private readonly ConditionalWeakTable<string, HasObjectId> _cache = new ConditionalWeakTable<string, HasObjectId>();
         protected readonly Dictionary<StringPair, object> DataWriteCache = new Dictionary<StringPair, object>();
         protected HashSet<StringPair> Deletes { get; set; } = new HashSet<StringPair>();
         
@@ -94,25 +92,23 @@ namespace ESPlus.Storage
         public async Task<T> GetAsync<T>(string tenant, string path)
         {
             var key = new StringPair(tenant, path);
-            
-            try
-            {
-                if (DataWriteCache.TryGetValue(key, out object item1))
-                {
-                    return (T) item1;
-                }
 
-                if (SubscriptionMode == SubscriptionMode.Replay)
-                {
-//                    return default;
-                }
-
-                return await DataStorage.GetAsync<T>(tenant, path);
-            }
-            catch (DirectoryNotFoundException)
+            if (Deletes.Contains(key))
             {
-                return default;
+                throw new StorageNotFoundException();
             }
+
+            if (DataWriteCache.TryGetValue(key, out object item1))
+            {
+                return (T) item1;
+            }
+
+            if (SubscriptionMode == SubscriptionMode.Replay)
+            {
+                // return default;
+            }
+
+            return await DataStorage.GetAsync<T>(tenant, path);
         }
 
         public async Task UpdateAsync<T>(string path, string tenant, Action<T> action)

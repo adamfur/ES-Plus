@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -31,6 +32,7 @@ namespace ESPlus.Storage
             }
 
             await Task.Run(() => Retry.RetryAsync(() => _driver.PutAsync(_collection, bulk)));
+            // await Retry.RetryAsync(() => _driver.PutAsync(_collection, bulk));
 
             Writes.Clear();
         }
@@ -45,8 +47,8 @@ namespace ESPlus.Storage
                 {
                     return (T) resolved.Item;
                 }
-
-                return default;
+                
+                throw new StorageNotFoundException(key.ToString());
             }
 
             try

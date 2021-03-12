@@ -53,7 +53,7 @@ namespace ESPlus.MoonGoose
             SelectDatabase(writer, database);
             foreach (var document in documents)
             {
-                // Console.WriteLine($"Append: {database}, Filename: {document.Filename}, Tenant: {document.Tenant ?? "@"}");
+                // Console.WriteLine($"({document.Operation}) PutAsync: {database}, Path: [{document.Path}], Tenant: [{document.Tenant}]");
                 var encodedTenant = Encoding.UTF8.GetBytes(document.Tenant);
                 var encodedPath = Encoding.UTF8.GetBytes(document.Path);
                 
