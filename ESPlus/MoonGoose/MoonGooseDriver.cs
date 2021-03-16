@@ -24,27 +24,27 @@ namespace ESPlus.MoonGoose
             _port = int.Parse(parts[1]);
         }
 
-        private async Task<TcpClient> Create()
+        private async Task<TcpClient> Create(CancellationToken cancellationToken)
         {
             var client = new TcpClient
             {
                 NoDelay = false
             };
 
-            await Retry.RetryAsync(() => client.ConnectAsync(_host, _port));
+            await Retry.RetryAsync(async () => await client.ConnectAsync(_host, _port, cancellationToken), default);
 
             return client;
         }
 
         public async Task PutAsync(string database, List<Document> documents,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             if (documents.Count == 0)
             {
                 return;
             }
             
-            using var client = await Create();
+            using var client = await Create(cancellationToken);
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
             var memoryStream = new MemoryStream();
@@ -110,12 +110,12 @@ namespace ESPlus.MoonGoose
             writer.Write(encoded);
         }
 
-        public async Task<byte[]> GetAsync(string database, string tenant, string path, CancellationToken cancellationToken = default)
+        public async Task<byte[]> GetAsync(string database, string tenant, string path, CancellationToken cancellationToken)
         {
             byte[] payload = null;
             var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "@");
             var encodedKey = Encoding.UTF8.GetBytes(path);
-            using var client = await Create();
+            using var client = await Create(cancellationToken);
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
 
@@ -153,10 +153,10 @@ namespace ESPlus.MoonGoose
             return payload;
         }
 
-        public async Task<byte[]> ChecksumAsync(string database, CancellationToken cancellationToken = default)
+        public async Task<byte[]> ChecksumAsync(string database, CancellationToken cancellationToken)
         {
             var payload = Position.Start.Binary;
-            using var client = await Create();
+            using var client = await Create(cancellationToken);
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
 
@@ -191,10 +191,10 @@ namespace ESPlus.MoonGoose
             return payload;
         }
 
-        public async Task<byte[]> SimulateExceptionThrow(CancellationToken cancellationToken = default)
+        public async Task<byte[]> SimulateExceptionThrow(CancellationToken cancellationToken)
         {
             var payload = Position.Start.Binary;
-            using var client = await Create();
+            using var client = await Create(cancellationToken);
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
 
@@ -220,10 +220,10 @@ namespace ESPlus.MoonGoose
         }
 
         public async IAsyncEnumerable<byte[]> SearchAsync(string database, string tenant, long[] parameters,
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+            [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "@");
-            using var client = await Create();
+            using var client = await Create(cancellationToken);
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
 

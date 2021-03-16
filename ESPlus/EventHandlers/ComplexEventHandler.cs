@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.FlushPolicies;
 using ESPlus.Subscribers;
@@ -21,7 +22,7 @@ namespace ESPlus.EventHandlers
             _pipeline.AddLast(eventHandler);
         }
 
-        public override async Task<bool> DispatchEventAsync(object @event)
+        public override async Task<bool> DispatchEventAsync(object @event, CancellationToken cancellationToken)
         {
             var payload = new List<object> { @event };
             var result = false;
@@ -30,7 +31,7 @@ namespace ESPlus.EventHandlers
             {
                 foreach (var item in payload)
                 {
-                    result |= await eventHandler.DispatchEventAsync(item);
+                    result |= await eventHandler.DispatchEventAsync(item, cancellationToken);
                 }
                 payload.AddRange(eventHandler.TakeEmittedEvents());
             }
@@ -47,17 +48,17 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override Task<object> Search(long[] parameters, string tenant)
+        public override Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public override Task<object> Get(string path, string tenant)
+        public override Task<object> Get(string path, string tenant, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public override async Task FlushAsync()
+        public override async Task FlushAsync(CancellationToken cancellationToken)
         {
             var payload = new List<object>();
 
@@ -65,14 +66,14 @@ namespace ESPlus.EventHandlers
             {
                 foreach (var item in payload)
                 {
-                    await eventHandler.DispatchEventAsync(item);
+                    await eventHandler.DispatchEventAsync(item, cancellationToken);
                 }
                 payload.AddRange(eventHandler.TakeEmittedOnSubmitEvents());
             }            
-            await base.FlushAsync();
+            await base.FlushAsync(cancellationToken);
         }
 
-        public override Task<bool> DispatchAsync(Event @event)
+        public override Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

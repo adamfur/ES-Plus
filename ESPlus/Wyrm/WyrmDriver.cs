@@ -49,7 +49,7 @@ namespace ESPlus.Wyrm
             var client = new TcpClient();
             client.NoDelay = false;
             
-            await Retry.RetryAsync(() => client.ConnectAsync(_host, _port));
+            await Retry.RetryAsync(() => client.ConnectAsync(_host, _port), default);
             return client;
         }
         

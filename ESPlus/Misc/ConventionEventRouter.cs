@@ -20,7 +20,6 @@ namespace ESPlus.Misc
                 throw new ArgumentNullException(nameof(aggregate));
             }
 
-            // Get instance methods named Apply with one parameter returning void
             var applyMethods = aggregate.GetType()
                 .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                 .Where(m => m.Name == route && m.GetParameters().Length == 1 && m.ReturnParameter.ParameterType == typeof(void))
@@ -32,10 +31,8 @@ namespace ESPlus.Misc
 
             foreach (var apply in applyMethods)
             {
-                // Console.WriteLine($"foreach (var apply in applyMethods) {apply.MessageType.Name}");
                 _handle.Add(apply.MessageType.FullName);
                 _handlers[apply.MessageType] = payload => apply.Method.Invoke(aggregate, new[] { payload });
-                // _handlers[apply.MessageType] = payload => { Console.WriteLine(payload); };
             }
         }
 
@@ -49,8 +46,7 @@ namespace ESPlus.Misc
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("--- Json --------------");
-                    Console.WriteLine(eventMessage.GetType().FullName);
+                    Console.WriteLine($"--- {eventMessage.GetType().FullName} --------------");
                     Console.WriteLine(JsonConvert.SerializeObject(eventMessage, Formatting.Indented));
                     throw;
                 }

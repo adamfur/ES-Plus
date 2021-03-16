@@ -4,7 +4,7 @@ namespace ESPlus
 {
     public class AmbientSystemTimeScope : AmbientSytemTimeBase, IDisposable
     {
-        private Func<DateTime> _previous;
+        private readonly Func<DateTime> _previous;
 
         public AmbientSystemTimeScope(Func<DateTime> method)
         {

@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.EventHandlers;
 using ESPlus.Subscribers;
@@ -11,22 +12,22 @@ namespace ESPlus.FlushPolicies
 
         public IEventHandler EventHandler { get; set; }
 
-        public virtual Task FlushWhenAheadAsync()
+        public virtual Task FlushWhenAheadAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
 
-        public async Task FlushOnEventAsync()
+        public async Task FlushOnEventAsync(CancellationToken cancellationToken)
         {
             if (++_events > EventThreshold)
             {
-                await FlushAsync();
+                await FlushAsync(cancellationToken);
             }
         }
 
-        protected async Task FlushAsync()
+        protected async Task FlushAsync(CancellationToken cancellationToken)
         {
-            await EventHandler.FlushAsync();
+            await EventHandler.FlushAsync(cancellationToken);
             _events = 0;
         }
     }

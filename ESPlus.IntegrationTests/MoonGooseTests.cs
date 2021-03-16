@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
 using ESPlus.MoonGoose;
@@ -38,13 +39,13 @@ namespace ESPlus.IntegrationTests
         [Fact]
         public async Task Checksum()
         {
-            _testOutputHelper.WriteLine((await _driver.ChecksumAsync(_database)).ToString());
+            _testOutputHelper.WriteLine((await _driver.ChecksumAsync(_database, CancellationToken.None)).ToString());
         }
         
         [Fact]
         public async Task Get_NonExistantFile_Empty() // Should throw
         {
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file"));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", CancellationToken.None));
         }
         
         [Fact]
@@ -52,7 +53,7 @@ namespace ESPlus.IntegrationTests
         {
             var any = false;
             
-            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {0L}))
+            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {0L}, CancellationToken.None))
             {
                 any = true;
             }
@@ -63,7 +64,7 @@ namespace ESPlus.IntegrationTests
         [Fact]
         public async Task Put_Nothing_Pass()
         {
-            await _driver.PutAsync(_database, new List<Document>());
+            await _driver.PutAsync(_database, new List<Document>(), CancellationToken.None);
         }     
         
         [Fact]
@@ -72,8 +73,8 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            });
-            var file = await _driver.GetAsync(_database, "Tenant", "file");
+            }, CancellationToken.None);
+            var file = await _driver.GetAsync(_database, "Tenant", "file", CancellationToken.None);
             
             Assert.NotEmpty(file);
         }    
@@ -84,9 +85,9 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            });
+            }, CancellationToken.None);
             
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant-2", "file"));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant-2", "file", CancellationToken.None));
         } 
         
         [Fact]
@@ -95,15 +96,15 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            });
+            }, CancellationToken.None);
 
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(Guid.NewGuid().ToString(), "Tenant-2", "file"));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(Guid.NewGuid().ToString(), "Tenant-2", "file", CancellationToken.None));
         }     
         
         [Fact]
         public async Task ThrowsAsync_DoThrow_Throws()
         {
-            var exception = await Assert.ThrowsAsync<MoonGooseException>(() => _driver.SimulateExceptionThrow());
+            var exception = await Assert.ThrowsAsync<MoonGooseException>(() => _driver.SimulateExceptionThrow(CancellationToken.None));
             
             Assert.Equal("I'm a teapot", exception.Message);
         }          
@@ -114,9 +115,9 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Delete),
-            });
+            }, CancellationToken.None);
             
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file"));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", CancellationToken.None));
         }    
         
         [Fact]
@@ -125,13 +126,13 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            });            
+            }, CancellationToken.None);            
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Delete),
-            });
+            }, CancellationToken.None);
         
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file"));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", CancellationToken.None));
         }
         
         [Fact]
@@ -151,9 +152,9 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new IndexDocument("Tenant", "file", new {}, Operation.Save, new[] {1337L}),
-            });
+            }, CancellationToken.None);
 
-            Assert.NotEmpty(await _driver.SearchAsync(_database, "Tenant", new[] {1337L}).ToListAsync());
+            Assert.NotEmpty(await _driver.SearchAsync(_database, "Tenant", new[] {1337L}, CancellationToken.None).ToListAsync());
         }    
         
         [Fact]
@@ -163,15 +164,15 @@ namespace ESPlus.IntegrationTests
             {
                 new("Tenant",
                     "file", null, Operation.Save),
-            });
+            }, CancellationToken.None);
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant",
                     "file", null, Operation.Delete),
-            });            
+            }, CancellationToken.None);            
             var any = false;
             
-            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {1337L}))
+            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {1337L}, CancellationToken.None))
             {
                 any = true;
             }

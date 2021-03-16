@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
 
@@ -16,11 +17,11 @@ namespace ESPlus.Storage
             _stageStorage = stageStorage;
         }
 
-        protected override async Task DoFlushAsync()
+        protected override async Task DoFlushAsync(CancellationToken cancellationToken)
         {
-            await WriteToAsync(_stageStorage, _dataStageCache, Deletes, "stage/");
-            await WriteJournalAsync(_map, Deletes);
-            await WriteToAsync(DataStorage, DataWriteCache, Deletes);
+            await WriteToAsync(_stageStorage, _dataStageCache, Deletes, "stage/", cancellationToken);
+            await WriteJournalAsync(_map, Deletes, cancellationToken);
+            await WriteToAsync(DataStorage, DataWriteCache, Deletes, "", cancellationToken);
         }
 
         public override void Put<T>(string tenant, string path, T item)
@@ -55,7 +56,7 @@ namespace ESPlus.Storage
                 {
                     var source = item.Key;
                     var destination = item.Value;
-                    var payload = await _stageStorage.GetAsync<JournalLog>(source.Tenant, source.Path);
+                    var payload = await _stageStorage.GetAsync<JournalLog>(source.Tenant, source.Path, CancellationToken.None);
 
                     DataStorage.Put(source.Tenant, destination, payload);
                 }
@@ -69,7 +70,7 @@ namespace ESPlus.Storage
                 }
             }
 
-            await DataStorage.FlushAsync();
+            await DataStorage.FlushAsync(CancellationToken.None);
         }
     }
 }

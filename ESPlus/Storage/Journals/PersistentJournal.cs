@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace ESPlus.Storage
 
             try
             {
-                journal = await _metadataStorage.GetAsync<JournalLog>("master", JournalPath) ?? new JournalLog();
+                journal = await _metadataStorage.GetAsync<JournalLog>("master", JournalPath, CancellationToken.None) ?? new JournalLog();
             }
             catch (StorageNotFoundException)
             {
@@ -69,14 +70,14 @@ namespace ESPlus.Storage
             return Task.CompletedTask;
         }
 
-        public async Task FlushAsync()
+        public async Task FlushAsync(CancellationToken cancellationToken)
         {
             if (_changed == false)
             {
                 return;
             }
 
-            await DoFlushAsync();
+            await DoFlushAsync(cancellationToken);
             Clean();
         }
 
@@ -89,7 +90,7 @@ namespace ESPlus.Storage
             _changed = true;
         }
 
-        public async Task<T> GetAsync<T>(string tenant, string path)
+        public async Task<T> GetAsync<T>(string tenant, string path, CancellationToken cancellationToken)
         {
             var key = new StringPair(tenant, path);
 
@@ -108,18 +109,20 @@ namespace ESPlus.Storage
                 // return default;
             }
 
-            return await DataStorage.GetAsync<T>(tenant, path);
+            return await DataStorage.GetAsync<T>(tenant, path, cancellationToken);
         }
 
-        public async Task UpdateAsync<T>(string path, string tenant, Action<T> action)
+        public async Task UpdateAsync<T>(string path, string tenant, Action<T> action,
+            CancellationToken cancellationToken)
         {
-            var model = await GetAsync<T>(tenant, path);
+            var model = await GetAsync<T>(tenant, path, cancellationToken);
 
             action(model);
             Put(tenant, path, model);
         }
 
-        protected async Task WriteJournalAsync(Dictionary<StringPair, string> map, HashSet<StringPair> deletes)
+        protected async Task WriteJournalAsync(Dictionary<StringPair, string> map, HashSet<StringPair> deletes,
+            CancellationToken cancellationToken)
         {
             var journal = new JournalLog
             {
@@ -132,12 +135,12 @@ namespace ESPlus.Storage
 
             if (_metadataStorage != DataStorage)
             {
-                await _metadataStorage.FlushAsync();
+                await _metadataStorage.FlushAsync(cancellationToken);
             }
         }
 
-        protected async Task WriteToAsync(IStorage storage, Dictionary<StringPair, object> cache, HashSet<StringPair> deletes,
-            string prefix = "")
+        protected async Task WriteToAsync(IStorage storage, Dictionary<StringPair, object> cache,
+            HashSet<StringPair> deletes, string prefix, CancellationToken cancellationToken)
         {
             foreach (var item in cache)
             {
@@ -151,7 +154,7 @@ namespace ESPlus.Storage
                 storage.Delete(item.Tenant, item.Path);
             }
             
-            await storage.FlushAsync();
+            await storage.FlushAsync(cancellationToken);
         }
 
         private void Clean()
@@ -166,7 +169,7 @@ namespace ESPlus.Storage
         {
         }
 
-        protected virtual Task DoFlushAsync()
+        protected virtual Task DoFlushAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
@@ -176,9 +179,10 @@ namespace ESPlus.Storage
             DataStorage.Reset();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters)
+        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters,
+            CancellationToken cancellationToken)
         {
-            return DataStorage.SearchAsync(tenant, parameters);
+            return DataStorage.SearchAsync(tenant, parameters, cancellationToken);
         }
 
         public virtual void Delete(string tenant, string path)

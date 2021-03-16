@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
 using ESPlus.MoonGoose;
@@ -20,7 +21,7 @@ namespace ESPlus.Storage
             _collection = collection;
         }
 
-        public async Task FlushAsync()
+        public async Task FlushAsync(CancellationToken cancellationToken)
         {
             var bulk = new List<Document>();
 
@@ -31,13 +32,11 @@ namespace ESPlus.Storage
                 return;
             }
 
-            await Task.Run(() => Retry.RetryAsync(() => _driver.PutAsync(_collection, bulk)));
-            // await Retry.RetryAsync(() => _driver.PutAsync(_collection, bulk));
-
+            await Task.Run(() => Retry.RetryAsync(() => _driver.PutAsync(_collection, bulk, cancellationToken), default), cancellationToken);
             Writes.Clear();
         }
 
-        public async Task<T> GetAsync<T>(string tenant, string path)
+        public async Task<T> GetAsync<T>(string tenant, string path, CancellationToken cancellationToken)
         {
             var key = new StringPair(tenant, path);
             
@@ -53,7 +52,7 @@ namespace ESPlus.Storage
 
             try
             {
-                var payload = await _driver.GetAsync(_collection, key.Tenant, key.Path);
+                var payload = await _driver.GetAsync(_collection, key.Tenant, key.Path, cancellationToken);
 
                 return JsonSerializer.Deserialize<T>(payload);
             }
@@ -81,9 +80,10 @@ namespace ESPlus.Storage
         {
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters)
+        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters,
+            CancellationToken cancellationToken)
         {
-            return _driver.SearchAsync(_collection, tenant, parameters);
+            return _driver.SearchAsync(_collection, tenant, parameters, cancellationToken);
         }
     }
 }      

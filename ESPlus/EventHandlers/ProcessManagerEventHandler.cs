@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
 using ESPlus.FlushPolicies;
@@ -26,7 +27,7 @@ namespace ESPlus.EventHandlers
             //router.Register(_processManager, "Transition");
         }
 
-        public override Task<bool> DispatchEventAsync(object @event)
+        public override Task<bool> DispatchEventAsync(object @event, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
             // System.Console.WriteLine($"ProcessManagerEventHandler {@event.GetType().Name}");

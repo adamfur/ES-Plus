@@ -1,11 +1,13 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ESPlus
 {
     public static class Retry
     {
-        public static async Task<T> RetryAsync<T>(Func<Task<T>> action, int tries = 3)
+        public static async Task<T> RetryAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken,
+            int tries = 3)
         {
             Exception exception = null;
             
@@ -19,14 +21,14 @@ namespace ESPlus
                 {
                     exception = ex;
 
-                    await Delay(iteration);
+                    await Delay(iteration, cancellationToken);
                 }
             }
 
             throw exception;
         }
 
-        public static async Task RetryAsync(Func<Task> action, int tries = 3)
+        public static async Task RetryAsync(Func<Task> action, CancellationToken cancellationToken, int tries = 3)
         {
             Exception exception = null;
             
@@ -41,21 +43,21 @@ namespace ESPlus
                 {
                     exception = ex;
 
-                    await Delay(iteration);
+                    await Delay(iteration, cancellationToken);
                 }
             }
 
             throw exception;
         }        
         
-        private static async Task Delay(int iteration)
+        private static async Task Delay(int iteration, CancellationToken cancellationToken)
         {
             if (iteration == 0)
             {
                 return;
             }
 
-            await Task.Delay(TimeSpan.FromMilliseconds(100 << (iteration - 1)));
+            await Task.Delay(TimeSpan.FromMilliseconds(100 << (iteration - 1)), cancellationToken);
         }
     }
 }

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using ESPlus.Aggregates;
 using ESPlus.Misc;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
-using Newtonsoft.Json;
 using Wyrm;
 
 namespace ESPlus.EventHandlers
@@ -36,10 +34,10 @@ namespace ESPlus.EventHandlers
             router.Register(this);
         }
 
-        public override async Task<bool> DispatchEventAsync(object @event)
+        public override async Task<bool> DispatchEventAsync(object @event, CancellationToken cancellationToken)
         {
             _once.Execute();
-            await _router.DispatchAsync(@event);
+            await _router.DispatchAsync(@event, cancellationToken);
             return true;
         }
 
@@ -69,17 +67,17 @@ namespace ESPlus.EventHandlers
             return result;
         }
 
-        public override Task<object> Search(long[] parameters, string tenant)
+        public override Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public override Task<object> Get(string path, string tenant)
+        public override Task<object> Get(string path, string tenant, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public override async Task<bool> DispatchAsync(Event @event)
+        public override async Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
         {
             if (@event.Offset == 1)
             {
@@ -106,7 +104,7 @@ namespace ESPlus.EventHandlers
                     {
                         var instance = CreateInstance(type, @event.StreamName);
                     
-                        await DispatchEventAsync(instance);
+                        await DispatchEventAsync(instance, cancellationToken);
                     }
                 }
                 catch (ArgumentException)
@@ -117,7 +115,7 @@ namespace ESPlus.EventHandlers
             }
             else if (_router.CanHandle(@event.EventType))
             {
-                await DispatchEventAsync(@event.DeserializedItem());
+                await DispatchEventAsync(@event.DeserializedItem(), cancellationToken);
                 status = true;
             }
             

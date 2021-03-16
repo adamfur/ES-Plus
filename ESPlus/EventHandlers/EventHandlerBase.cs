@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Subscribers;
 
@@ -33,36 +34,36 @@ namespace ESPlus.EventHandlers
         {
         }
 
-        public virtual async Task FlushAsync()
+        public virtual async Task FlushAsync(CancellationToken cancellationToken)
         {
-            await Context.FlushAsync();
+            await Context.FlushAsync(cancellationToken);
         }
 
-        public abstract Task<bool> DispatchEventAsync(object @event);
+        public abstract Task<bool> DispatchEventAsync(object @event, CancellationToken cancellationToken);
         public abstract IEnumerable<object> TakeEmittedEvents();
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
-        public abstract Task<object> Search(long[] parameters, string tenant);
-        public abstract Task<object> Get(string path, string tenant);
+        public abstract Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken);
+        public abstract Task<object> Get(string path, string tenant, CancellationToken cancellationToken);
         
         public virtual Task StartupAsync()
         {
             return Task.CompletedTask;
         }
 
-        public abstract Task<bool> DispatchAsync(Event @event);
+        public abstract Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken);
 
         public virtual void Ahead()
         {
         }
 
-        public async Task FlushWhenAheadAsync()
+        public async Task FlushWhenAheadAsync(CancellationToken cancellationToken)
         {
-            await _flushPolicy.FlushWhenAheadAsync();
+            await _flushPolicy.FlushWhenAheadAsync(cancellationToken);
         }
 
-        public async Task FlushOnEventAsync()
+        public async Task FlushOnEventAsync(CancellationToken cancellationToken)
         {
-            await _flushPolicy.FlushOnEventAsync();
+            await _flushPolicy.FlushOnEventAsync(cancellationToken);
         }
     }
 }

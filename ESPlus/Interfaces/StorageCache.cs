@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ESPlus.Interfaces
@@ -14,9 +15,9 @@ namespace ESPlus.Interfaces
             _storage = storage;
         }
         
-        public async Task FlushAsync()
+        public async Task FlushAsync(CancellationToken cancellationToken)
         {
-            await _storage.FlushAsync();
+            await _storage.FlushAsync(cancellationToken);
         }
 
         public void Put<T>(string tenant, string path, T item)
@@ -31,7 +32,7 @@ namespace ESPlus.Interfaces
             _storage.Delete(tenant, path);
         }
 
-        public async Task<T> GetAsync<T>(string tenant, string path)
+        public async Task<T> GetAsync<T>(string tenant, string path, CancellationToken cancellationToken)
         {
             var key = new StringPair(tenant, path);
             
@@ -40,7 +41,7 @@ namespace ESPlus.Interfaces
                 return (T) resolved;
             }
 
-            var item = await _storage.GetAsync<T>(tenant, path);
+            var item = await _storage.GetAsync<T>(tenant, path, cancellationToken);
             
             _cache.AddOrUpdate(key, item);
             
@@ -52,9 +53,10 @@ namespace ESPlus.Interfaces
             _storage.Reset();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters)
+        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters,
+            CancellationToken cancellationToken)
         {
-            return _storage.SearchAsync(tenant, parameters);
+            return _storage.SearchAsync(tenant, parameters, cancellationToken);
         }
     }
 }

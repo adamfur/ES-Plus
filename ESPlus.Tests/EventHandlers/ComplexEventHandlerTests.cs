@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.EventHandlers;
 using ESPlus.FlushPolicies;
@@ -79,10 +80,10 @@ namespace ESPlus.Tests.EventHandlers
             complexHandler.Add(eventHandler2);
             DummyEvent dummyEvent = new DummyEvent();
 
-            await complexHandler.DispatchEventAsync(dummyEvent);
+            await complexHandler.DispatchEventAsync(dummyEvent, CancellationToken.None);
 
-            await eventHandler1.Received().DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent));
-            await eventHandler2.Received().DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent));
+            await eventHandler1.Received().DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent), CancellationToken.None);
+            await eventHandler2.Received().DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent), CancellationToken.None);
         }
 
         [Fact]
@@ -96,10 +97,10 @@ namespace ESPlus.Tests.EventHandlers
             complexHandler.Add(eventHandler2);
             var dummyEvent = new DummyEvent();
 
-            await complexHandler.DispatchEventAsync(dummyEvent);
+            await complexHandler.DispatchEventAsync(dummyEvent, CancellationToken.None);
 
-            await eventHandler2.Received(1).DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent));
-            await eventHandler2.Received(1).DispatchEventAsync(Arg.Any<DummyEmitEvent>());
+            await eventHandler2.Received(1).DispatchEventAsync(Arg.Is<DummyEvent>(p => p == dummyEvent), CancellationToken.None);
+            await eventHandler2.Received(1).DispatchEventAsync(Arg.Any<DummyEmitEvent>(), CancellationToken.None);
         }     
 
         [Fact]
@@ -107,9 +108,9 @@ namespace ESPlus.Tests.EventHandlers
         {
             var complexHandler = new ComplexEventHandler<IEventHandlerContext>(_context);
 
-            complexHandler.FlushAsync();
+            complexHandler.FlushAsync(CancellationToken.None);
 
-            _context.Received(1).FlushAsync();
+            _context.Received(1).FlushAsync(CancellationToken.None);
         }           
 
         [Fact]
@@ -126,14 +127,14 @@ namespace ESPlus.Tests.EventHandlers
             var payload2 = new object();
             var payload3 = new object();
 
-            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "1", Payload = payload1 });
-            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "2", Payload = payload2 });
-            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "2", Payload = payload3 });
-            await complexHandler.FlushAsync(); 
+            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "1", Payload = payload1 }, CancellationToken.None);
+            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "2", Payload = payload2 }, CancellationToken.None);
+            await complexHandler.DispatchEventAsync(new DummyEmitOnSubmit() { Key = "2", Payload = payload3 }, CancellationToken.None);
+            await complexHandler.FlushAsync(CancellationToken.None); 
 
-            await eventHandler2.Received().DispatchEventAsync(Arg.Is<object>(p => p == payload1));
-            await eventHandler2.DidNotReceive().DispatchEventAsync(Arg.Is<object>(p => p == payload2));
-            await eventHandler2.Received(1).DispatchEventAsync(Arg.Is<object>(p => p == payload3));
+            await eventHandler2.Received().DispatchEventAsync(Arg.Is<object>(p => p == payload1), CancellationToken.None);
+            await eventHandler2.DidNotReceive().DispatchEventAsync(Arg.Is<object>(p => p == payload2), CancellationToken.None);
+            await eventHandler2.Received(1).DispatchEventAsync(Arg.Is<object>(p => p == payload3), CancellationToken.None);
         }          
     }
 }

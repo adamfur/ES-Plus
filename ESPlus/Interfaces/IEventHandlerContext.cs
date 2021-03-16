@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ESPlus.EventHandlers
@@ -11,6 +12,6 @@ namespace ESPlus.EventHandlers
         long TotalOffset { get; set; }
         string StreamName { get; set; }
         MetaData Metadata { get; set; }
-        Task FlushAsync();
+        Task FlushAsync(CancellationToken cancellationToken);
     }
 }

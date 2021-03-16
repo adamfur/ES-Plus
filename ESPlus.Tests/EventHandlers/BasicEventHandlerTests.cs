@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.EventHandlers;
 using ESPlus.FlushPolicies;
@@ -70,9 +71,9 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new BasicEventHandler<IEventHandlerContext>(_context, null, new NullFlushPolicy());
 
-            eventHandler.FlushAsync();
+            eventHandler.FlushAsync(CancellationToken.None);
 
-            _context.Received(1).FlushAsync();
+            _context.Received(1).FlushAsync(CancellationToken.None);
         }
 
         [Fact]
@@ -80,7 +81,7 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            await eventHandler.DispatchEventAsync(new DummyEvent());
+            await eventHandler.DispatchEventAsync(new DummyEvent(), CancellationToken.None);
 
             Assert.True(eventHandler.Called);
         }
@@ -90,7 +91,7 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            await eventHandler.DispatchEventAsync(new DummyEvent());
+            await eventHandler.DispatchEventAsync(new DummyEvent(), CancellationToken.None);
         }
 
         [Fact]
@@ -98,7 +99,7 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            await eventHandler.DispatchEventAsync(new DummyEmitEvent());
+            await eventHandler.DispatchEventAsync(new DummyEmitEvent(), CancellationToken.None);
             var pass1 = eventHandler.TakeEmittedEvents().ToList();
             var pass2 = eventHandler.TakeEmittedEvents().ToList();
 
@@ -111,7 +112,7 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            await eventHandler.DispatchEventAsync(new DummyEmitSubmitEvent());
+            await eventHandler.DispatchEventAsync(new DummyEmitSubmitEvent(), CancellationToken.None);
 
             var pass1 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
             var pass2 = eventHandler.TakeEmittedOnSubmitEvents().ToList();

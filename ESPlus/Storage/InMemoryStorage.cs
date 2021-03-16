@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
 
@@ -17,12 +18,12 @@ namespace ESPlus.Storage
             _data.Remove(key);
         }
 
-        public Task FlushAsync()
+        public Task FlushAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
 
-        public Task<T> GetAsync<T>(string tenant, string path)
+        public Task<T> GetAsync<T>(string tenant, string path, CancellationToken cancellationToken)
         {
             var key = new StringPair(tenant, path);
             
@@ -45,7 +46,8 @@ namespace ESPlus.Storage
             _data.Clear();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters)
+        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters,
+            CancellationToken cancellationToken)
         {
             return null;
         }
