@@ -192,6 +192,7 @@ namespace ESPlus.Wyrm
             var stream = default(string);
             var applyAggregate = default(IAggregate);
             var tenant = default(string);
+            var changed = false;
 
             await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(CancellationToken.None, filters))
             {
@@ -215,16 +216,24 @@ namespace ESPlus.Wyrm
 
                 if (type != null)
                 {
-                    applyAggregate.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
+                    applyAggregate!.ApplyChange(_eventSerializer.Deserialize(type, evnt.Data));
                 }
 
-                applyAggregate.Version = evnt.Version;
+                applyAggregate!.Version = evnt.Version;
+                changed = true;
 
                 if (evnt.IsAhead)
                 {
-                    aggregate.TakeUncommittedEvents();
+                    aggregate!.TakeUncommittedEvents();
+                    changed = false;
                     yield return (aggregate, tenant);
                 }
+            }
+
+            if (changed)
+            {
+                aggregate!.TakeUncommittedEvents();
+                yield return (aggregate, tenant);
             }
         }
         
