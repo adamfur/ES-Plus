@@ -83,7 +83,7 @@ namespace ESPlus.Storage
         public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters,
             CancellationToken cancellationToken)
         {
-            return _driver.SearchAsync(_collection, tenant, parameters, cancellationToken);
+            return _driver.SearchAsync(_collection, tenant, parameters, 0, 100, cancellationToken);
         }
     }
 }      

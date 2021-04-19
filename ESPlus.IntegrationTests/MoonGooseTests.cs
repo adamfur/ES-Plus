@@ -53,7 +53,7 @@ namespace ESPlus.IntegrationTests
         {
             var any = false;
             
-            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {0L}, CancellationToken.None))
+            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {0L}, 0, 100, CancellationToken.None))
             {
                 any = true;
             }
@@ -154,7 +154,7 @@ namespace ESPlus.IntegrationTests
                 new IndexDocument("Tenant", "file", new {}, Operation.Save, new[] {1337L}),
             }, CancellationToken.None);
 
-            Assert.NotEmpty(await _driver.SearchAsync(_database, "Tenant", new[] {1337L}, CancellationToken.None).ToListAsync());
+            Assert.NotEmpty(await _driver.SearchAsync(_database, "Tenant", new[] {1337L}, 0, 100, CancellationToken.None).ToListAsync());
         }    
         
         [Fact]
@@ -162,22 +162,14 @@ namespace ESPlus.IntegrationTests
         {
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("Tenant",
-                    "file", null, Operation.Save),
+                new("Tenant", "file", null, Operation.Save),
             }, CancellationToken.None);
             await _driver.PutAsync(_database, new List<Document>
             {
-                new("Tenant",
-                    "file", null, Operation.Delete),
+                new("Tenant", "file", null, Operation.Delete),
             }, CancellationToken.None);            
-            var any = false;
             
-            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {1337L}, CancellationToken.None))
-            {
-                any = true;
-            }
-        
-            Assert.False(any);
+            Assert.False((await _driver.SearchAsync(_database, "Tenant", new[] {1337L}, 0, 100, CancellationToken.None).ToListAsync()).Any());
         }          
     }
 }

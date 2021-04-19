@@ -220,7 +220,7 @@ namespace ESPlus.MoonGoose
         }
 
         public async IAsyncEnumerable<byte[]> SearchAsync(string database, string tenant, long[] parameters,
-            [EnumeratorCancellation] CancellationToken cancellationToken)
+            int skip, int take, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "@");
             using var client = await Create(cancellationToken);
@@ -228,8 +228,8 @@ namespace ESPlus.MoonGoose
             await using var writer = new BinaryWriter(stream);
 
             SelectDatabase(writer, database);
-            Skip(writer, 0);
-            Take(writer, 100);
+            Skip(writer, skip);
+            Take(writer, take);
             writer.Write((int) 16 + encodedTenant.Length + parameters.Length * sizeof(long));
             writer.Write((int) Commands.Search);
             writer.Write((int) encodedTenant.Length);
