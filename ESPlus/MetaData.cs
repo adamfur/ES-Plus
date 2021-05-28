@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using MessagePack;
 using Newtonsoft.Json;
@@ -63,5 +64,6 @@ namespace ESPlus
         public string GivenName => _lazyMetaObject.Value?.GivenName;
         public DateTime TimestampUtc => _lazyMetaObject.Value?.TimestampUtc ?? DateTime.MinValue;
         public string Tenant => _lazyMetaObject.Value?.Tenant;
+        public string RequestId => _lazyMetaObject.Value?.RequestId;
     }
 }
