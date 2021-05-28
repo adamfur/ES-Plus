@@ -46,7 +46,7 @@ namespace ESPlus.Tests.Repositories
 
             await Repository.SaveAsync(aggregate);
 
-            aggregate = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
+            aggregate = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id, default);
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
             Assert.Equal(2, aggregate.Count);
@@ -105,7 +105,7 @@ namespace ESPlus.Tests.Repositories
 
             Assert.Equal(1, aggregate.Count);
             await Repository.SaveAsync(aggregate);
-            var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
+            var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id, default);
 
             Assert.Equal(1, copy.Count);
             Assert.Equal(aggregate.Version, copy.Version);
@@ -120,7 +120,7 @@ namespace ESPlus.Tests.Repositories
             aggregate.Poke();
             await Repository.SaveAsync(aggregate);
             Assert.Equal(2, aggregate.Count);
-            var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
+            var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id, default);
 
             Assert.Equal(2, copy.Count);
             Assert.Equal(aggregate.Version, copy.Version);
@@ -135,7 +135,7 @@ namespace ESPlus.Tests.Repositories
             aggregate.AttachFile();
             await Repository.SaveAsync(aggregate);
             // Assert.Equal(3, aggregate.Count);
-            var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
+            var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id, default);
 
             // Assert.Equal(2, copy.Count);
             Assert.Equal(aggregate.Version, copy.Version);
@@ -151,7 +151,7 @@ namespace ESPlus.Tests.Repositories
             aggregate.AddGuid(data);
             await Repository.SaveAsync(aggregate);
             Assert.Equal(2, aggregate.Count);
-            var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id);
+            var copy = await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id, default);
 
             Assert.Equal(2, copy.Count);
             Assert.Equal(data, copy.Guid);
@@ -167,7 +167,7 @@ namespace ESPlus.Tests.Repositories
             Assert.Equal(3, aggregate.Count);
             await Repository.SaveAsync(aggregate);
             await Repository.DeleteAsync(id, aggregate.Version);
-            await Assert.ThrowsAsync<AggregateNotFoundException>(async () => await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id));
+            await Assert.ThrowsAsync<AggregateNotFoundException>(async () => await Repository.GetByIdAsync<Aggregates.DummyAggregate>(id, default));
         }        
     }
 }

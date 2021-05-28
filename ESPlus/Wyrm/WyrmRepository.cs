@@ -136,7 +136,8 @@ namespace ESPlus.Wyrm
             return await _wyrmConnection.Append(eventsToSave, cancellationToken);
         }
 
-        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = long.MaxValue) where TAggregate : IAggregate
+        public async Task<TAggregate> GetByIdAsync<TAggregate>(string id, CancellationToken cancellationToken = default,
+            long version = long.MaxValue) where TAggregate : IAggregate
         {
             var streamName = _aggregateRenamer.Name(id);
             var aggregate = ConstructAggregate<TAggregate>(id);
@@ -148,7 +149,7 @@ namespace ESPlus.Wyrm
                 throw new ArgumentException("Cannot get version < 0");
             }
 
-            await foreach (var evnt in _wyrmConnection.EnumerateStream(streamName))
+            await foreach (var evnt in _wyrmConnection.EnumerateStream(streamName, cancellationToken))
             {
                 if (applyAggregate.Version == -1)
                 {

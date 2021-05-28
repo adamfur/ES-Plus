@@ -75,7 +75,8 @@ namespace ESPlus.Repositories
             return Task.WhenAll();
         }
 
-        public Task<TAggregate> GetByIdAsync<TAggregate>(string id, long version = int.MaxValue) where TAggregate : IAggregate
+        public Task<TAggregate> GetByIdAsync<TAggregate>(string id, CancellationToken cancellationToken,
+            long version = long.MaxValue) where TAggregate : IAggregate
         {
             var instance = (TAggregate)Activator.CreateInstance(typeof(TAggregate), id);
             var aggregate = (IAggregate)instance;
