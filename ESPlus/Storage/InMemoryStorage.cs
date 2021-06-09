@@ -18,7 +18,7 @@ namespace ESPlus.Storage
             _data.Remove(key);
         }
 
-        public Task FlushAsync(CancellationToken cancellationToken)
+        public Task FlushAsync(Position previousCheckpoint, Position checkpoint, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
@@ -50,6 +50,11 @@ namespace ESPlus.Storage
             CancellationToken cancellationToken)
         {
             return null;
+        }
+
+        public Task<Position> ChecksumAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Position.Start);
         }
     }
 }

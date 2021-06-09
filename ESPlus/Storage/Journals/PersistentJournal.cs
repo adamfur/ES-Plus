@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
@@ -8,16 +7,15 @@ using System.Threading.Tasks;
 
 namespace ESPlus.Storage
 {
-    public abstract class PersistentJournal : IJournaled
+    public class PersistentJournal : IJournaled
     {
         private bool _changed = false;
-        private Position _checkpoint;        
-        public const string JournalPath = "000Journal/000Journal.json";
-        private readonly IStorage _metadataStorage;
-        protected readonly IStorage DataStorage;
-        public SubscriptionMode SubscriptionMode { get; private set; } = SubscriptionMode.RealTime;
-        protected readonly Dictionary<StringPair, object> DataWriteCache = new Dictionary<StringPair, object>();
-        protected HashSet<StringPair> Deletes { get; set; } = new HashSet<StringPair>();
+        private Position _checkpoint = Position.Start;        
+        private readonly IStorage _storage;
+        public SubscriptionMode SubscriptionMode { get; set; } = SubscriptionMode.RealTime;
+        private readonly Dictionary<StringPair, object> _writeCache = new Dictionary<StringPair, object>();
+        private readonly HashSet<StringPair> _deletes = new HashSet<StringPair>();
+        private Position _previousCheckpoint = Position.Start;
         
         public Position Checkpoint
         {
@@ -29,45 +27,26 @@ namespace ESPlus.Storage
             }
         }
 
-        protected PersistentJournal(IStorage metadataStorage, IStorage dataStorage)
+        public PersistentJournal(IStorage storage)
         {
-            _metadataStorage = metadataStorage;
-            DataStorage = dataStorage;
+            _storage = storage;
         }
 
-        public async Task InitializeAsync()
+        public async Task InitializeAsync(CancellationToken cancellationToken = default)
         {
-            await LoadJournal();
+            await LoadJournal(cancellationToken);
         }
 
-        private async Task LoadJournal()
+        private async Task LoadJournal(CancellationToken cancellationToken)
         {
-            var journal = new JournalLog();
+            _previousCheckpoint = Checkpoint = await _storage.ChecksumAsync(cancellationToken);
 
-            try
-            {
-                journal = await _metadataStorage.GetAsync<JournalLog>("master", JournalPath, CancellationToken.None) ?? new JournalLog();
-            }
-            catch (StorageNotFoundException)
-            {
-                // ignored
-            }
+            Console.WriteLine($"Journal Checkpoint: {Checkpoint.AsHexString()}");
 
-            Console.WriteLine($"Journal Checkpoint: {journal.Checkpoint.AsHexString()}");
-
-            Checkpoint = journal.Checkpoint;
-
-            if (journal.Checkpoint.Equals(Position.Start))
+            if (Checkpoint.Equals(Position.Start))
             {
                 SubscriptionMode = SubscriptionMode.Replay;
             }
-            
-            await PlayJournal(journal);
-        }
-
-        protected virtual Task PlayJournal(JournalLog journal)
-        {
-            return Task.CompletedTask;
         }
 
         public async Task FlushAsync(CancellationToken cancellationToken)
@@ -77,7 +56,20 @@ namespace ESPlus.Storage
                 return;
             }
 
-            await DoFlushAsync(cancellationToken);
+            foreach (var item in _writeCache)
+            {
+                var destination = item.Key.Path;
+
+                _storage.Put(item.Key.Tenant, destination, item.Value);
+            }
+
+            foreach (var item in _deletes)
+            {
+                _storage.Delete(item.Tenant, item.Path);
+            }
+            
+            await _storage.FlushAsync(_previousCheckpoint, Checkpoint, cancellationToken);
+            _previousCheckpoint = Checkpoint;
             Clean();
         }
 
@@ -85,8 +77,8 @@ namespace ESPlus.Storage
         {
             var key = new StringPair(tenant, path);
 
-            DataWriteCache[key] = item;
-            Deletes.Remove(key);
+            _writeCache[key] = item;
+            _deletes.Remove(key);
             _changed = true;
         }
 
@@ -94,12 +86,12 @@ namespace ESPlus.Storage
         {
             var key = new StringPair(tenant, path);
 
-            if (Deletes.Contains(key))
+            if (_deletes.Contains(key))
             {
                 throw new StorageNotFoundException();
             }
 
-            if (DataWriteCache.TryGetValue(key, out object item1))
+            if (_writeCache.TryGetValue(key, out object item1))
             {
                 return (T) item1;
             }
@@ -109,11 +101,10 @@ namespace ESPlus.Storage
                 // return default;
             }
 
-            return await DataStorage.GetAsync<T>(tenant, path, cancellationToken);
+            return await _storage.GetAsync<T>(tenant, path, cancellationToken);
         }
 
-        public async Task UpdateAsync<T>(string path, string tenant, Action<T> action,
-            CancellationToken cancellationToken)
+        public async Task UpdateAsync<T>(string tenant, string path, Action<T> action, CancellationToken cancellationToken)
         {
             var model = await GetAsync<T>(tenant, path, cancellationToken);
 
@@ -121,68 +112,26 @@ namespace ESPlus.Storage
             Put(tenant, path, model);
         }
 
-        protected async Task WriteJournalAsync(Dictionary<StringPair, string> map, HashSet<StringPair> deletes,
-            CancellationToken cancellationToken)
-        {
-            var journal = new JournalLog
-            {
-                Checkpoint = Checkpoint,
-                Map = new Dictionary<StringPair, string>(map),
-                Deletes = new HashSet<StringPair>(deletes),
-            };
-            
-            _metadataStorage.Put("master", JournalPath, journal);
-
-            if (_metadataStorage != DataStorage)
-            {
-                await _metadataStorage.FlushAsync(cancellationToken);
-            }
-        }
-
-        protected async Task WriteToAsync(IStorage storage, Dictionary<StringPair, object> cache,
-            HashSet<StringPair> deletes, string prefix, CancellationToken cancellationToken)
-        {
-            foreach (var item in cache)
-            {
-                var destination = $"{prefix}{item.Key.Path}";
-
-                storage.Put(item.Key.Tenant, destination, item.Value);
-            }
-
-            foreach (var item in deletes)
-            {
-                storage.Delete(item.Tenant, item.Path);
-            }
-            
-            await storage.FlushAsync(cancellationToken);
-        }
-
         private void Clean()
         {
-            DataWriteCache.Clear();
-            Deletes.Clear();
+            _writeCache.Clear();
+            _deletes.Clear();
             _changed = false;
-            DoClean();
-        }
-
-        protected virtual void DoClean()
-        {
-        }
-
-        protected virtual Task DoFlushAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
         }
 
         public void Reset()
         {
-            DataStorage.Reset();
+            _storage.Reset();
         }
 
-        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters,
-            CancellationToken cancellationToken)
+        public IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters, CancellationToken cancellationToken)
         {
-            return DataStorage.SearchAsync(tenant, parameters, cancellationToken);
+            return _storage.SearchAsync(tenant, parameters, cancellationToken);
+        }
+
+        public Task<Position> ChecksumAsync(CancellationToken cancellationToken)
+        {
+            return _storage.ChecksumAsync(cancellationToken);
         }
 
         public virtual void Delete(string tenant, string path)
@@ -190,8 +139,8 @@ namespace ESPlus.Storage
             var key = new StringPair(tenant, path);
 
             _changed = true;
-            DataWriteCache.Remove(key);
-            Deletes.Add(key);
+            _writeCache.Remove(key);
+            _deletes.Add(key);
         }
     }
 }

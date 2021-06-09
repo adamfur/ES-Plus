@@ -11,16 +11,13 @@ namespace ESPlus.Tests.Storage
     public abstract class JournalTests
     {
         protected readonly IJournaled _journal;
-        protected readonly IStorage _metadataStorage;
-        protected readonly IStorage _stageStorage;
-        protected readonly IStorage _dataStorage;
+        protected readonly IStorage _storage;
         protected readonly object _payload;
 
         public JournalTests()
         {
-            _metadataStorage = Substitute.For<IStorage>();
-            _stageStorage = Substitute.For<IStorage>();
-            _dataStorage = Substitute.For<IStorage>();
+            _storage = Substitute.For<IStorage>();
+            _storage.ChecksumAsync(default).Returns(Task.FromResult(Position.Start));
             _journal = Create();
             _payload = new object();
         }
@@ -37,40 +34,33 @@ namespace ESPlus.Tests.Storage
         [Fact]
         public async Task Create_HasJournalWithCheckpoint_RealTimeMode()
         {
-            _metadataStorage.GetAsync<JournalLog>("master", PersistentJournal.JournalPath, CancellationToken.None)
-                .Returns(new JournalLog {Checkpoint = Position.Gen(57)});
-
+            _storage.ChecksumAsync(default).Returns(Task.FromResult(Position.Gen(57)));
+        
             await _journal.InitializeAsync();
-
+        
             Assert.Equal(Position.Gen(57), _journal.Checkpoint);
             Assert.Equal(SubscriptionMode.RealTime, _journal.SubscriptionMode);
         }
-
+        
         [Fact]
         public async Task Create_HasJournalWithCheckpoint_ReplayMode()
         {
-            _metadataStorage.GetAsync<JournalLog>(null, PersistentJournal.JournalPath, CancellationToken.None)
-                .Returns(new JournalLog {Checkpoint = Position.Start});
-
+            _storage.ChecksumAsync(default).Returns(Task.FromResult(Position.Start));
+        
             await _journal.InitializeAsync();
-
+        
             Assert.Equal(Position.Start, _journal.Checkpoint);
             Assert.Equal(SubscriptionMode.Replay, _journal.SubscriptionMode);
         }
-
+        
         [Fact]
         public async Task Flush_WriteJournal_JournalSaved()
         {
             await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Gen(13);
-            await _journal.FlushAsync(CancellationToken.None);
-
-            Received.InOrder(() =>
-            {
-                _metadataStorage.Received().Put("master",
-                    PersistentJournal.JournalPath, Arg.Is<JournalLog>(p => p.Checkpoint.Equals(Position.Gen(13))));
-                _metadataStorage.Received().FlushAsync(CancellationToken.None);
-            });
+            await _journal.FlushAsync(default);
+        
+            await _storage.Received().FlushAsync(Arg.Is<Position>(p => Position.Start.Equals(p)), Arg.Is<Position>(p => Position.Gen(13).Equals(p)), default);
         }
         
         [Fact]
@@ -94,7 +84,7 @@ namespace ESPlus.Tests.Storage
             _journal.Put(null, "path", _payload);
             await _journal.FlushAsync(CancellationToken.None);
 
-            _dataStorage.GetAsync<object>(null, "path", CancellationToken.None).Returns(_payload);
+            _storage.GetAsync<object>(null, "path", CancellationToken.None).Returns(_payload);
             Assert.Equal(_payload, await _journal.GetAsync<object>(null, "path", CancellationToken.None));
         }         
         

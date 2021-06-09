@@ -31,19 +31,13 @@ namespace ESPlus.MoonGoose
                 NoDelay = false
             };
 
-            await Retry.RetryAsync(async () => await client.ConnectAsync(_host, _port, cancellationToken), default);
+            await Retry.RetryAsync(async () => await client.ConnectAsync(_host, _port, cancellationToken), cancellationToken);
 
             return client;
         }
 
-        public async Task PutAsync(string database, List<Document> documents,
-            CancellationToken cancellationToken)
+        public async Task PutAsync(string database, List<Document> documents, Position previous, Position checkpoint, CancellationToken cancellationToken)
         {
-            if (documents.Count == 0)
-            {
-                return;
-            }
-            
             using var client = await Create(cancellationToken);
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
@@ -76,8 +70,8 @@ namespace ESPlus.MoonGoose
             var payload = memoryStream.ToArray();
             writer.Write((int) 76 + payload.Length);
             writer.Write((int) Commands.Put);
-            writer.Write(Position.Start.Binary); // previousChecksum
-            writer.Write(Position.Start.Binary); // checksum
+            writer.Write(previous.Binary);
+            writer.Write(checkpoint.Binary);
             writer.Write((int) documents.Count);
             writer.Write(payload);
             await stream.FlushAsync(cancellationToken);
@@ -153,7 +147,7 @@ namespace ESPlus.MoonGoose
             return payload;
         }
 
-        public async Task<byte[]> ChecksumAsync(string database, CancellationToken cancellationToken)
+        public async Task<Position> ChecksumAsync(string database, CancellationToken cancellationToken)
         {
             var payload = Position.Start.Binary;
             using var client = await Create(cancellationToken);
@@ -188,7 +182,7 @@ namespace ESPlus.MoonGoose
                 }
             }
 
-            return payload;
+            return new Position(payload);
         }
 
         public async Task<byte[]> SimulateExceptionThrow(CancellationToken cancellationToken)

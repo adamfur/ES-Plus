@@ -11,7 +11,7 @@ namespace ESPlus.Tests.Storage
     {
         protected override IJournaled Create()
         {
-            return new CheckpointJournal(_metadataStorage, _dataStorage);
+            return new PersistentJournal(_storage);
         }
 
         [Fact]
@@ -22,21 +22,17 @@ namespace ESPlus.Tests.Storage
             var destination = "prod/file1";
             var payload = new object();
 
-            _stageStorage.GetAsync<object>(null, source, CancellationToken.None).Returns(_payload);
-
             // Act
             await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Gen(12);
             _journal.Put(null, destination, payload);
-            await _journal.FlushAsync(CancellationToken.None);
+            await _journal.FlushAsync(default);
 
             // Assert
             Received.InOrder(() =>
             {
-                _dataStorage.Received().Put(null, destination, payload);
-                _dataStorage.Received().FlushAsync(CancellationToken.None);
-                _metadataStorage.Received().Put("master", PersistentJournal.JournalPath, Arg.Any<JournalLog>());
-                _metadataStorage.Received().FlushAsync(CancellationToken.None);
+                _storage.Received().Put(null, destination, payload);
+                _storage.Received().FlushAsync(Arg.Is<Position>(p => Position.Start.Equals(p)), Arg.Is<Position>(p => Position.Gen(12).Equals(p)), default);
             });
         }
     }

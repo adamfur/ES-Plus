@@ -12,5 +12,6 @@ namespace ESPlus.Interfaces
         Task<T> GetAsync<T>(string tenant, string path, CancellationToken cancellationToken);
         void Reset();
         IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters, CancellationToken cancellationToken);
+        Task<Position> ChecksumAsync(CancellationToken cancellationToken);
     }
 }

@@ -5,6 +5,6 @@ namespace ESPlus.Storage
 {
     public interface IFlushable
     {
-        Task FlushAsync(CancellationToken cancellationToken);
+        Task FlushAsync(Position previousCheckpoint, Position checkpoint, CancellationToken cancellationToken);
     }
 }

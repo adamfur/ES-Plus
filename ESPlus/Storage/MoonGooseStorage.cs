@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -21,18 +20,9 @@ namespace ESPlus.Storage
             _collection = collection;
         }
 
-        public async Task FlushAsync(CancellationToken cancellationToken)
+        public async Task FlushAsync(Position previousCheckpoint, Position checkpoint, CancellationToken cancellationToken)
         {
-            var bulk = new List<Document>();
-
-            bulk.AddRange(Writes.Values);
-
-            if (!bulk.Any())
-            {
-                return;
-            }
-
-            await Task.Run(() => Retry.RetryAsync(() => _driver.PutAsync(_collection, bulk, cancellationToken), default), cancellationToken);
+            await Task.Run(() => Retry.RetryAsync(() => _driver.PutAsync(_collection, Writes.Values.ToList(), previousCheckpoint, checkpoint, cancellationToken), cancellationToken), cancellationToken);
             Writes.Clear();
         }
 
@@ -84,6 +74,11 @@ namespace ESPlus.Storage
             CancellationToken cancellationToken)
         {
             return _driver.SearchAsync(_collection, tenant, parameters, 0, 100, cancellationToken);
+        }
+        
+        public Task<Position> ChecksumAsync(CancellationToken cancellationToken)
+        {
+            return _driver.ChecksumAsync(_collection, cancellationToken);
         }
     }
 }      

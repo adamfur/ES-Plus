@@ -15,9 +15,9 @@ namespace ESPlus.Interfaces
             _storage = storage;
         }
         
-        public async Task FlushAsync(CancellationToken cancellationToken)
+        public async Task FlushAsync(Position previousCheckpoint, Position checkpoint, CancellationToken cancellationToken)
         {
-            await _storage.FlushAsync(cancellationToken);
+            await _storage.FlushAsync(previousCheckpoint, checkpoint, cancellationToken);
         }
 
         public void Put<T>(string tenant, string path, T item)
@@ -57,6 +57,11 @@ namespace ESPlus.Interfaces
             CancellationToken cancellationToken)
         {
             return _storage.SearchAsync(tenant, parameters, cancellationToken);
+        }
+
+        public Task<Position> ChecksumAsync(CancellationToken cancellationToken)
+        {
+            return _storage.ChecksumAsync(cancellationToken);
         }
     }
 }
