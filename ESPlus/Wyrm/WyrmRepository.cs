@@ -166,8 +166,7 @@ namespace ESPlus.Wyrm
                 any = true;
                 if (type == null)
                 {
-                    applyAggregate.Version = evnt.Version;
-                    continue;
+                    throw new Exception($"Unknown event type: {evnt.EventType}");
                 }
 
                 var @event = _eventSerializer.Deserialize(type, evnt.Data);
