@@ -17,5 +17,6 @@ namespace ESPlus.EventHandlers
         Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken);
         Task<object> Get(string path, string tenant, CancellationToken cancellationToken);
         Task StartupAsync();
+        Task Poke(CancellationToken cancellationToken);
     }
 }

@@ -50,6 +50,11 @@ namespace ESPlus.EventHandlers
             return Task.CompletedTask;
         }
 
+        public virtual Task Poke(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
         public abstract Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken);
 
         public virtual void Ahead()
