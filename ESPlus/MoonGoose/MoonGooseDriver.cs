@@ -283,9 +283,9 @@ namespace ESPlus.MoonGoose
 
             switch (code)
             {
-                case ErrorCode.NotFound: throw new MoonGooseNotFoundException($"Not found: {tenant}/{path}");
+                case ErrorCode.MDB_NOTFOUND: throw new MoonGooseNotFoundException($"Not found: {tenant}/{path}");
                 default: throw new MoonGooseException(message);
-            }
+            }            
         }
     }
 }
