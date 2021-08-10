@@ -209,7 +209,7 @@ namespace ESPlus.Wyrm
                     stream = evnt.StreamName;
                     aggregate = ConstructAggregate<TAggregate>(evnt.StreamName);
                     applyAggregate = aggregate;
-                    tenant = metadata.Tenant;
+                    tenant = metadata?.Tenant;
                 }
 
                 var type = Types.Values.FirstOrDefault(x => x.FullName == evnt.EventType);
