@@ -80,6 +80,68 @@ namespace ESPlus.IntegrationTests
         }    
         
         [Fact]
+        public async Task Put_SaveManyDocument_Read()
+        {
+            await _driver.PutAsync(_database, new List<Document>
+            {
+                new("Tenant", "file1", new { Hello = "World" }, Operation.Save),
+                new("Tenant", "file2", new { Hello = "Dad" }, Operation.Save),
+            }, Position.Start, Position.Start, CancellationToken.None);
+            var file1 = await _driver.GetAsync(_database, "Tenant", "file1", CancellationToken.None);
+            var file2 = await _driver.GetAsync(_database, "Tenant", "file2", CancellationToken.None);
+
+            var str1 = Encoding.UTF8.GetString(file1);
+            var str2 = Encoding.UTF8.GetString(file2);
+            
+            Assert.NotEmpty(file1);
+            Assert.NotEmpty(file2);
+        }  
+        
+        [Fact]
+        public async Task Put_SaveManyDocument_Read2()
+        {
+            await _driver.PutAsync(_database, new List<Document>
+            {
+                new IndexDocument("Tenant", "file1", new { Hello = "World" }, Operation.Save, new[] { 1L, 3L, }),
+            }, Position.Start, Position.Start, CancellationToken.None);
+            
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            
+            await _driver.PutAsync(_database, new List<Document>
+            {
+                new IndexDocument("Tenant", "file1", new { Hello = "World" }, Operation.Save, new[] { 2L, 3L, }),
+            }, Position.Start, Position.Start, CancellationToken.None);
+            
+            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+        } 
+        
+        [Fact]
+        public async Task Put_SaveManyDocument_Read3()
+        {
+            await _driver.PutAsync(_database, new List<Document>
+            {
+                new IndexDocument("Tenant", "file1", new { Hello = "World" }, Operation.Save, new[] { 1L, 3L, 4L }),
+            }, Position.Start, Position.Start, CancellationToken.None);
+            
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            
+            await _driver.PutAsync(_database, new List<Document>
+            {
+                new IndexDocument("Tenant", "file1", new { Hello = "World" }, Operation.Save, new[] { 2L, 3L }),
+            }, Position.Start, Position.Start, CancellationToken.None);
+            
+            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+        } 
+        
+        [Fact]
         public async Task Put_SaveOneDocumentOtherTenant_Nothing()
         {
             await _driver.PutAsync(_database, new List<Document>
