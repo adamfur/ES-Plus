@@ -121,7 +121,7 @@ namespace ESPlus.EventHandlers
             
             if (@event.IsAhead)
             {
-                Ahead();
+                await FlushWhenAheadAsync(cancellationToken);
             }
 
             return status;
