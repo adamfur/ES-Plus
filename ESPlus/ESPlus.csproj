@@ -7,8 +7,8 @@
 
   <ItemGroup>
     <PackageReference Include="lz4net" Version="1.0.15.93" />
-    <PackageReference Include="MessagePack" Version="2.1.90" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="MessagePack" Version="2.3.85" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Data.HashFunction.xxHash" Version="2.0.0" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
   </ItemGroup>
