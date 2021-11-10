@@ -29,7 +29,7 @@ namespace ESPlus.Wyrm
             {
                 aggregate.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
                     .Where(x => x.Name == "Apply" && x.ReturnType == typeof(void))
-                    .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
+                    // .Where(x => x.GetCustomAttribute(typeof(NoReplayAttribute)) == null)
                     .Select(x => x.GetParameters().First().ParameterType)
                     .ToList()
                     .ForEach(t =>
