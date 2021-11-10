@@ -32,7 +32,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
 
             await Repository.SaveAsync(aggregate);
 
-            Assert.Empty(await driver.EnumerateAll(DateTime.Now.AddDays(1), DateTime.Now.AddDays(2), CancellationToken.None).ToListAsync());
+            Assert.Empty(await driver.EnumerateAll(DateTime.Now.AddDays(1), DateTime.Now.AddDays(2), default).ToListAsync());
         }
         
         [Fact]
@@ -43,7 +43,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
 
             await Repository.SaveAsync(aggregate);
 
-            Assert.NotEmpty(await driver.EnumerateAll(DateTime.Now.AddDays(-1), DateTime.Now, CancellationToken.None).ToListAsync());
+            Assert.NotEmpty(await driver.EnumerateAll(DateTime.Now.AddDays(-1), DateTime.Now, default).ToListAsync());
         }
     }        
 }

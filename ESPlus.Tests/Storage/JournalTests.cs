@@ -73,7 +73,7 @@ namespace ESPlus.Tests.Storage
             var stringPair1 = new StringPair(null, "path").GetHashCode();
             var stringPair2 = new StringPair(null, "path").GetHashCode();
 
-            Assert.Equal(_payload, await _journal.GetAsync<object>(null, "path", CancellationToken.None));
+            Assert.Equal(_payload, await _journal.GetAsync<object>(null, "path", default));
         }
         
         [Fact]
@@ -82,10 +82,10 @@ namespace ESPlus.Tests.Storage
             await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Start;
             _journal.Put(null, "path", _payload);
-            await _journal.FlushAsync(CancellationToken.None);
+            await _journal.FlushAsync(default);
 
-            _storage.GetAsync<object>(null, "path", CancellationToken.None).Returns(_payload);
-            Assert.Equal(_payload, await _journal.GetAsync<object>(null, "path", CancellationToken.None));
+            _storage.GetAsync<object>(null, "path", default).Returns(_payload);
+            Assert.Equal(_payload, await _journal.GetAsync<object>(null, "path", default));
         }         
         
         [Fact]
@@ -96,7 +96,7 @@ namespace ESPlus.Tests.Storage
             _journal.Put(null, "path", _payload);
             _journal.Delete(null, "path");
 
-            Assert.Null(await _journal.GetAsync<object>(null, "path", CancellationToken.None));
+            await Assert.ThrowsAsync<StorageNotFoundException>(() => _journal.GetAsync<object>(null, "path", default));
         }
         
         [Fact]
@@ -105,11 +105,11 @@ namespace ESPlus.Tests.Storage
             await _journal.InitializeAsync();
             _journal.Checkpoint = Position.Start;
             _journal.Put(null, "path", _payload);
-            await _journal.FlushAsync(CancellationToken.None);
+            await _journal.FlushAsync(default);
             _journal.Delete(null, "path");
-            await _journal.FlushAsync(CancellationToken.None);
+            await _journal.FlushAsync(default);
 
-            Assert.Null(await _journal.GetAsync<object>(null, "path", CancellationToken.None));
+            Assert.Null(await _journal.GetAsync<object>(null, "path", default));
         }            
     }
 }

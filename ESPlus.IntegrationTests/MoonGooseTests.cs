@@ -39,13 +39,13 @@ namespace ESPlus.IntegrationTests
         [Fact]
         public async Task Checksum()
         {
-            _testOutputHelper.WriteLine((await _driver.ChecksumAsync(_database, CancellationToken.None)).ToString());
+            _testOutputHelper.WriteLine((await _driver.ChecksumAsync(_database, default)).ToString());
         }
         
         [Fact]
         public async Task Get_NonExistantFile_Empty() // Should throw
         {
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", CancellationToken.None));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", default));
         }
         
         [Fact]
@@ -53,7 +53,7 @@ namespace ESPlus.IntegrationTests
         {
             var any = false;
             
-            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {0L}, 0, 100, CancellationToken.None))
+            await foreach (var item in _driver.SearchAsync(_database, "Tenant", new[] {0L}, 0, 100, default))
             {
                 any = true;
             }
@@ -64,7 +64,7 @@ namespace ESPlus.IntegrationTests
         [Fact]
         public async Task Put_Nothing_Pass()
         {
-            await _driver.PutAsync(_database, new List<Document>(), Position.Start, Position.Start, CancellationToken.None);
+            await _driver.PutAsync(_database, new List<Document>(), Position.Start, Position.Start, default);
         }     
         
         [Fact]
@@ -73,8 +73,8 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            }, Position.Start, Position.Start, CancellationToken.None);
-            var file = await _driver.GetAsync(_database, "Tenant", "file", CancellationToken.None);
+            }, Position.Start, Position.Start, default);
+            var file = await _driver.GetAsync(_database, "Tenant", "file", default);
             
             Assert.NotEmpty(file);
         }    
@@ -86,9 +86,9 @@ namespace ESPlus.IntegrationTests
             {
                 new("Tenant", "file1", new { Hello = "World" }, Operation.Save),
                 new("Tenant", "file2", new { Hello = "Dad" }, Operation.Save),
-            }, Position.Start, Position.Start, CancellationToken.None);
-            var file1 = await _driver.GetAsync(_database, "Tenant", "file1", CancellationToken.None);
-            var file2 = await _driver.GetAsync(_database, "Tenant", "file2", CancellationToken.None);
+            }, Position.Start, Position.Start, default);
+            var file1 = await _driver.GetAsync(_database, "Tenant", "file1", default);
+            var file2 = await _driver.GetAsync(_database, "Tenant", "file2", default);
 
             var str1 = Encoding.UTF8.GetString(file1);
             var str2 = Encoding.UTF8.GetString(file2);
@@ -103,20 +103,20 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new IndexDocument("Tenant", "file1", new { Hello = "World" }, Operation.Save, new[] { 1L, 3L, }),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
             
-            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
-            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
-            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, default).ToListAsync().Result.Any());
+            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, default).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, default).ToListAsync().Result.Any());
             
             await _driver.PutAsync(_database, new List<Document>
             {
                 new IndexDocument("Tenant", "file1", new { Hello = "World" }, Operation.Save, new[] { 2L, 3L, }),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
             
-            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
-            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
-            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, default).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, default).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, default).ToListAsync().Result.Any());
         } 
         
         [Fact]
@@ -125,20 +125,20 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new IndexDocument("Tenant", "file1", new { Hello = "World" }, Operation.Save, new[] { 1L, 3L, 4L }),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
             
-            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
-            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
-            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, default).ToListAsync().Result.Any());
+            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, default).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, default).ToListAsync().Result.Any());
             
             await _driver.PutAsync(_database, new List<Document>
             {
                 new IndexDocument("Tenant", "file1", new { Hello = "World" }, Operation.Save, new[] { 2L, 3L }),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
             
-            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
-            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
-            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, CancellationToken.None).ToListAsync().Result.Any());
+            Assert.False(_driver.SearchAsync(_database, "Tenant", new []{1L}, 0, 100, default).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{2L}, 0, 100, default).ToListAsync().Result.Any());
+            Assert.True(_driver.SearchAsync(_database, "Tenant", new []{3L}, 0, 100, default).ToListAsync().Result.Any());
         } 
         
         [Fact]
@@ -147,9 +147,9 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
             
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant-2", "file", CancellationToken.None));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant-2", "file", default));
         } 
         
         [Fact]
@@ -158,15 +158,15 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
 
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(Guid.NewGuid().ToString(), "Tenant-2", "file", CancellationToken.None));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(Guid.NewGuid().ToString(), "Tenant-2", "file", default));
         }     
         
         [Fact]
         public async Task ThrowsAsync_DoThrow_Throws()
         {
-            var exception = await Assert.ThrowsAsync<MoonGooseException>(() => _driver.SimulateExceptionThrow(CancellationToken.None));
+            var exception = await Assert.ThrowsAsync<MoonGooseException>(() => _driver.SimulateExceptionThrow(default));
             
             Assert.Equal("I'm a teapot", exception.Message);
         }          
@@ -177,9 +177,9 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Delete),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
             
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", CancellationToken.None));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", default));
         }    
         
         [Fact]
@@ -188,13 +188,13 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            }, Position.Start, Position.Start, CancellationToken.None);            
+            }, Position.Start, Position.Start, default);            
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Delete),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
         
-            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", CancellationToken.None));
+            await Assert.ThrowsAsync<MoonGooseNotFoundException>(() => _driver.GetAsync(_database, "Tenant", "file", default));
         }
         
         [Fact]
@@ -214,9 +214,9 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new IndexDocument("Tenant", "file", new {}, Operation.Save, new[] {1337L}),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
 
-            Assert.NotEmpty(await _driver.SearchAsync(_database, "Tenant", new[] {1337L}, 0, 100, CancellationToken.None).ToListAsync());
+            Assert.NotEmpty(await _driver.SearchAsync(_database, "Tenant", new[] {1337L}, 0, 100, default).ToListAsync());
         }    
         
         [Fact]
@@ -225,13 +225,13 @@ namespace ESPlus.IntegrationTests
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Save),
-            }, Position.Start, Position.Start, CancellationToken.None);
+            }, Position.Start, Position.Start, default);
             await _driver.PutAsync(_database, new List<Document>
             {
                 new("Tenant", "file", null, Operation.Delete),
-            }, Position.Start, Position.Start, CancellationToken.None);            
+            }, Position.Start, Position.Start, default);            
             
-            Assert.False((await _driver.SearchAsync(_database, "Tenant", new[] {1337L}, 0, 100, CancellationToken.None).ToListAsync()).Any());
+            Assert.False((await _driver.SearchAsync(_database, "Tenant", new[] {1337L}, 0, 100, default).ToListAsync()).Any());
         }          
     }
 }

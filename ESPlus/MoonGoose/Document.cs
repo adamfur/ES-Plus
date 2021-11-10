@@ -19,7 +19,7 @@ namespace ESPlus.MoonGoose
             }
         }
         public object Item { get; }
-        public virtual long[] Keywords => new long[0];
+        public virtual long[] Keywords => Array.Empty<long>();
         public string Tenant { get; private set; }
         public Flags Flags { get; set; } = Flags.None;
         public Operation Operation { get; }

@@ -35,19 +35,19 @@ namespace ESPlus.Tests.EventHandlers
             {
             }
 
-            public Task Apply(DummyEvent @event)
+            public Task Apply(DummyEvent @event, CancellationToken cancellationToken)
             {
                 Called = true;
                 return Task.CompletedTask;
             }
 
-            public Task Apply(DummyEmitEvent @event)
+            public Task Apply(DummyEmitEvent @event, CancellationToken cancellationToken)
             {
                 Emit(new object());
                 return Task.CompletedTask;
             }
 
-            public Task Apply(DummyEmitSubmitEvent @event)
+            public Task Apply(DummyEmitSubmitEvent @event, CancellationToken cancellationToken)
             {
                 EmitOnSubmit("abc", "def");
                 return Task.CompletedTask;
@@ -71,9 +71,9 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new BasicEventHandler<IEventHandlerContext>(_context, null, new NullFlushPolicy());
 
-            eventHandler.FlushAsync(CancellationToken.None);
+            eventHandler.FlushAsync(default);
 
-            _context.Received(1).FlushAsync(CancellationToken.None);
+            _context.Received(1).FlushAsync(default);
         }
 
         [Fact]
@@ -81,7 +81,7 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            await eventHandler.DispatchEventAsync(new DummyEvent(), CancellationToken.None);
+            await eventHandler.DispatchEventAsync(new DummyEvent(), default);
 
             Assert.True(eventHandler.Called);
         }
@@ -91,7 +91,7 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            await eventHandler.DispatchEventAsync(new DummyEvent(), CancellationToken.None);
+            await eventHandler.DispatchEventAsync(new DummyEvent(), default);
         }
 
         [Fact]
@@ -99,7 +99,7 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            await eventHandler.DispatchEventAsync(new DummyEmitEvent(), CancellationToken.None);
+            await eventHandler.DispatchEventAsync(new DummyEmitEvent(), default);
             var pass1 = eventHandler.TakeEmittedEvents().ToList();
             var pass2 = eventHandler.TakeEmittedEvents().ToList();
 
@@ -112,7 +112,7 @@ namespace ESPlus.Tests.EventHandlers
         {
             var eventHandler = new DummyEventHandler(_context);
 
-            await eventHandler.DispatchEventAsync(new DummyEmitSubmitEvent(), CancellationToken.None);
+            await eventHandler.DispatchEventAsync(new DummyEmitSubmitEvent(), default);
 
             var pass1 = eventHandler.TakeEmittedOnSubmitEvents().ToList();
             var pass2 = eventHandler.TakeEmittedOnSubmitEvents().ToList();

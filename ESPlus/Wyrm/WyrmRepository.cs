@@ -194,7 +194,7 @@ namespace ESPlus.Wyrm
             var tenant = default(string);
             var changed = false;
 
-            await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(CancellationToken.None, filters))
+            await foreach (var evnt in _wyrmConnection.EnumerateAllByStreamsAsync(default, filters))
             {
                 if (evnt.StreamName != stream)
                 {
