@@ -22,6 +22,14 @@ namespace ESPlus.Wyrm
         
         public async IAsyncEnumerable<Event> Events([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            if (_subscriptionContext.Position.Equals(Position.Start))
+            {
+                yield return new Event(_eventTypeResolver, null)
+                {
+                    InitEvent = true,
+                };
+            }
+            
             await foreach (var @event in _wyrmConnection.SubscribeAsync(_subscriptionContext.Position, cancellationToken))
             {
                 yield return new Event(_eventTypeResolver, @event.Serializer)

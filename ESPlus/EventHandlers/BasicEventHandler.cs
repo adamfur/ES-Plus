@@ -79,12 +79,13 @@ namespace ESPlus.EventHandlers
 
         public override async Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
         {
-            if (@event.Offset == 1)
+            var status = false;
+
+            if (@event.InitEvent)
             {
                 Initialize();
+                return status;
             }
-
-            var status = false;
 
             Context.TimestampUtc = @event.TimestampUtc;
             Context.Checkpoint = @event.Position;

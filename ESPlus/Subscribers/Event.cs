@@ -18,6 +18,7 @@ namespace ESPlus.Subscribers
         public long TotalOffset { get; set; }
         public string CreateEvent { get; set; }
         public DateTime TimestampUtc { get; set; }
+        public bool InitEvent { get; set; }
 
         public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {
