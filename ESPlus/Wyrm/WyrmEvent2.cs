@@ -17,5 +17,6 @@ namespace ESPlus.Wyrm
         public IEventSerializer Serializer { get; set; }
         public bool IsAhead { get; set; }
         public string CreateEvent { get; set; }
+        public string DeleteEvent { get; set; }
     }
 }

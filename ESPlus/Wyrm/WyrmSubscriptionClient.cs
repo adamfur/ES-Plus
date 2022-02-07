@@ -43,6 +43,7 @@ namespace ESPlus.Wyrm
                     Offset = @event.Offset,
                     TotalOffset = @event.TotalOffset,
                     CreateEvent = @event.CreateEvent,
+                    DeleteEvent = @event.DeleteEvent,
                     TimestampUtc = @event.TimestampUtc,
                 };
             }

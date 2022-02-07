@@ -94,8 +94,8 @@ namespace ESPlus.EventHandlers
             Context.StreamName = @event.StreamName;
             Context.Metadata = new MetaData(@event.Meta, new EventMessagePackSerializer());
             _once.Execute();
-   
-            if (@event.EventType == typeof(StreamDeleted).FullName)
+            
+            if (@event.EventType == typeof(StreamCreated).FullName)
             {
                 try
                 {
@@ -103,7 +103,26 @@ namespace ESPlus.EventHandlers
                 
                     if (type != null)
                     {
-                        var instance = CreateInstance(type, @event.StreamName);
+                        var instance = BuildCreatedStream(type, @event.StreamName);
+                    
+                        await DispatchEventAsync(instance, cancellationToken);
+                    }
+                }
+                catch (ArgumentException)
+                {
+                }
+            
+                status = true;
+            }
+            else if (@event.EventType == typeof(StreamDeleted).FullName)
+            {
+                try
+                {
+                    var type = _eventTypeResolver.ResolveType(@event.DeleteEvent);
+                
+                    if (type != null)
+                    {
+                        var instance = BuildDeletedStream(type, @event.StreamName);
                     
                         await DispatchEventAsync(instance, cancellationToken);
                     }
@@ -128,7 +147,15 @@ namespace ESPlus.EventHandlers
             return status;
         }
         
-        private StreamDeleted CreateInstance(Type type, string createEventType)
+        private StreamCreated BuildCreatedStream(Type type, string createEventType)
+        {
+            var make = typeof(StreamCreated<>).MakeGenericType(type);
+            var result = (StreamCreated) Activator.CreateInstance(make, createEventType);
+
+            return result;
+        }  
+        
+        private StreamDeleted BuildDeletedStream(Type type, string createEventType)
         {
             var make = typeof(StreamDeleted<>).MakeGenericType(type);
             var result = (StreamDeleted) Activator.CreateInstance(make, createEventType);

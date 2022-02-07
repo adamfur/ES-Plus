@@ -86,6 +86,7 @@ namespace ESPlus.Wyrm
         {
             ReadOnlyMemory<byte> payload = await reader.ReadBinaryAsync(length, cancellationToken);
             var createEvent = "";
+            var deleteEvent = "";
 
             int disp = 0;
             var position = payload.Slice(disp, 32).ToArray();
@@ -135,6 +136,12 @@ namespace ESPlus.Wyrm
             {
                 var createEventLength = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
                 disp += 4;
+                deleteEvent = Encoding.UTF8.GetString(payload.Slice(disp, createEventLength).ToArray());
+            }
+            else if (eventType == "Wyrm.StreamCreated" && disp < payload.Length)
+            {
+                var createEventLength = BitConverter.ToInt32(payload.Slice(disp, 4).ToArray());
+                disp += 4;
                 createEvent = Encoding.UTF8.GetString(payload.Slice(disp, createEventLength).ToArray());
             }
 
@@ -156,6 +163,7 @@ namespace ESPlus.Wyrm
                 Serializer = Serializer,
                 IsAhead = ahead,
                 CreateEvent = createEvent,
+                DeleteEvent = deleteEvent,
             };
         }
 

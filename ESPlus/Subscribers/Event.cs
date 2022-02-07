@@ -19,6 +19,7 @@ namespace ESPlus.Subscribers
         public string CreateEvent { get; set; }
         public DateTime TimestampUtc { get; set; }
         public bool InitEvent { get; set; }
+        public string DeleteEvent { get; set; }
 
         public Event(IEventTypeResolver eventTypeResolver, IEventSerializer eventSerializer)
         {
