@@ -11,5 +11,6 @@ namespace ESPlus.MoonGoose
         Skip = 6,
         Take = 7,
         ThrowException = 8,
+        List = 9,
     }
 }

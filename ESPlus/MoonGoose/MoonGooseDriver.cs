@@ -261,6 +261,43 @@ namespace ESPlus.MoonGoose
                 }
             }
         }
+        
+        public async IAsyncEnumerable<byte[]> ListAsync(string database, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            using var client = await Create(cancellationToken);
+            await using var stream = client.GetStream();
+            await using var writer = new BinaryWriter(stream);
+
+            SelectDatabase(writer, database);
+            writer.Write((int) 8);
+            writer.Write((int) Commands.List);
+            
+            await stream.FlushAsync(cancellationToken);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var (query, tokenizer) = await stream.QueryAsync(cancellationToken);
+
+                if (query == Queries.SearchResult)
+                {
+                    var payload = tokenizer.ReadBinary().ToArray();
+
+                    yield return payload;
+                }
+                else if (query == Queries.Success)
+                {
+                    break;
+                }
+                else if (query == Queries.Exception)
+                {
+                    ParseException(tokenizer);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+        }
 
         private void Take(BinaryWriter writer, int amount)
         {
