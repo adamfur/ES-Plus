@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Wyrm;
@@ -12,5 +13,6 @@ namespace ESPlus.MoonGoose
         IAsyncEnumerable<byte[]> SearchAsync(string database, string tenant, long[] parameters,
             int skip, int take, CancellationToken cancellationToken = default);
         Task<Position> ChecksumAsync(string database, CancellationToken cancellationToken);
+        IAsyncEnumerable<byte[]> ListAsync(string database, string tenant, int size, int no, CancellationToken cancellationToken = default);
     }
 }

@@ -262,15 +262,22 @@ namespace ESPlus.MoonGoose
             }
         }
         
-        public async IAsyncEnumerable<byte[]> ListAsync(string database, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<byte[]> ListAsync(string database, string tenant, int size, int no, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            var take = size;
+            var skip = size * no;
+            var encodedTenant = Encoding.UTF8.GetBytes(tenant ?? "@");
             using var client = await Create(cancellationToken);
             await using var stream = client.GetStream();
             await using var writer = new BinaryWriter(stream);
 
             SelectDatabase(writer, database);
-            writer.Write((int) 8);
+            Skip(writer, skip);
+            Take(writer, take);
+            writer.Write((int) 12 + encodedTenant.Length);
             writer.Write((int) Commands.List);
+            writer.Write((int) encodedTenant.Length);
+            writer.Write(encodedTenant);
             
             await stream.FlushAsync(cancellationToken);
 
@@ -301,6 +308,15 @@ namespace ESPlus.MoonGoose
 
         private void Take(BinaryWriter writer, int amount)
         {
+            if (amount < 0)
+            {
+                amount = 0;
+            }
+            else if (amount > 1024)
+            {
+                amount = 1024;
+            }
+            
             writer.Write((int) 12);
             writer.Write((int) Commands.Take);
             writer.Write((int) amount);
@@ -308,6 +324,11 @@ namespace ESPlus.MoonGoose
 
         private void Skip(BinaryWriter writer, int amount)
         {
+            if (amount < 0)
+            {
+                amount = 0;
+            }
+            
             writer.Write((int) 12);
             writer.Write((int) Commands.Skip);
             writer.Write((int) amount);

@@ -55,6 +55,8 @@ namespace ESPlus.EventHandlers
             return Task.CompletedTask;
         }
 
+        public abstract Task<List<string>> List(string tenant, int size, int no, CancellationToken cancellationToken);
+
         public abstract Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken);
 
         public virtual async Task FlushWhenAheadAsync(CancellationToken cancellationToken)

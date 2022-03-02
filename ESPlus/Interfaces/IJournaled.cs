@@ -20,5 +20,6 @@ namespace ESPlus.Storage
         void Reset();
         IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters, CancellationToken cancellationToken);
         Task<Position> ChecksumAsync(CancellationToken cancellationToken);
+        IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken);
     }
 }

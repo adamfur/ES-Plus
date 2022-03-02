@@ -63,5 +63,10 @@ namespace ESPlus.Interfaces
         {
             return _storage.ChecksumAsync(cancellationToken);
         }
+
+        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        {
+            return _storage.List(tenant, size, no, cancellationToken);
+        }
     }
 }

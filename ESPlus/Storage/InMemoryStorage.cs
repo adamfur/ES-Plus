@@ -56,5 +56,10 @@ namespace ESPlus.Storage
         {
             return Task.FromResult(Position.Start);
         }
+
+        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

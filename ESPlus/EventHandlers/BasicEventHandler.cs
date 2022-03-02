@@ -77,6 +77,11 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
+        public override Task<List<string>> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public override async Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
         {
             var status = false;

@@ -73,14 +73,14 @@ namespace ESPlus.EventHandlers
             await base.FlushAsync(cancellationToken);
         }
 
-        public override Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
+        public override Task<List<string>> List(string tenant, int size, int no, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        // public override Task<bool> DispatchEventAsync(object @event)
-        // {
-        //     throw new NotImplementedException();
-        // }
+        public override Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

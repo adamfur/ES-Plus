@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
@@ -132,6 +133,11 @@ namespace ESPlus.Storage
         public Task<Position> ChecksumAsync(CancellationToken cancellationToken)
         {
             return _storage.ChecksumAsync(cancellationToken);
+        }
+
+        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        {
+            return _storage.List(tenant, size, no, cancellationToken);
         }
 
         public virtual void Delete(string tenant, string path)
