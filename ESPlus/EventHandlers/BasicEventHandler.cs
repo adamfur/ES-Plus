@@ -77,7 +77,7 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override Task<List<string>> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        public override Task<List<object>> List(string tenant, int size, int no, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
