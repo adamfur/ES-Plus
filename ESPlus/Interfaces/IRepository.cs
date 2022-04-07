@@ -29,8 +29,12 @@ namespace ESPlus.Interfaces
         Task<WyrmResult> SaveAsync<T>(AggregateBase<T> aggregate, object headers = null,
             CancellationToken cancellationToken = default);
 
+        Task<WyrmResult> AppendAsync<T>(IAggregate<T> aggregate, object headers = null, CancellationToken cancellationToken = default);
+
         Task<TAggregate> GetByIdAsync<TAggregate, T>(T id, CancellationToken cancellationToken = default,
             long version = long.MaxValue) where TAggregate : IAggregate<T>;
+
+        Task DeleteAsync(string id, long version = -1, CancellationToken cancellationToken = default);
     }
 
 }

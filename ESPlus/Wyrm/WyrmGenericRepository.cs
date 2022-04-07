@@ -11,46 +11,6 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Wyrm
 {
-    public abstract class WyrmRepositoryBase
-    {
-        private readonly IWyrmDriver _wyrmConnection;
-        private readonly IWyrmAggregateRenamer _aggregateRenamer;
-        private readonly IEventSerializer _eventSerializer;
-
-        protected WyrmAppendEvent ToEventData(Guid eventId, object evnt, string streamName, long version, object headers)
-        {
-            var data = _eventSerializer.Serialize(evnt);
-            var metadata = _eventSerializer.Serialize(headers);
-            var typeName = evnt.GetType().FullName;
-
-            return new WyrmAppendEvent(eventId, typeName, data, metadata, streamName, version);
-        }
-
-        protected int Version(long first, int index)
-        {
-            if (first == ExpectedVersion.Any)
-            {
-                return (int)ExpectedVersion.Any;
-            }
-            else if (first == ExpectedVersion.EmptyStream || first == ExpectedVersion.NoStream)
-            {
-                if (index == 0)
-                {
-                    return (int)first;
-                }
-                else
-                {
-                    return index;
-                }
-            }
-            else
-            {
-                return (int)first + index;
-            }
-        }
-
-    }
-
     public class WyrmGenericRepository : IGenericRepository
     {
         private readonly IWyrmDriver _wyrmConnection;
@@ -184,14 +144,6 @@ namespace ESPlus.Wyrm
             var streamName = _aggregateRenamer.Name(id);
 
             await _wyrmConnection.DeleteAsync(streamName, version, cancellationToken);
-        }
-
-        public Task<WyrmResult> AppendAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
-        {
-            var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
-            var expectedVersion = ExpectedVersion.Any;
-
-            return SaveAggregate(aggregate, newEvents, expectedVersion, headers, cancellationToken);
         }
 
         private int Version(long first, int index)

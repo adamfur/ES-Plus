@@ -6,7 +6,7 @@ using ESPlus.Misc;
 
 namespace ESPlus.Aggregates
 {
-    public abstract class AggregateBase : AggregateBase<string>
+    public abstract class AggregateBase : AggregateBase<string>, IAggregate
     {
         protected AggregateBase(string id, Type initialType = null) : base(id, initialType)
         {

@@ -4,13 +4,8 @@ using System.Collections.Generic;
 
 namespace ESPlus.Interfaces
 {
-    public interface IAggregate
+    public interface IAggregate : IAggregate<string>
     {
-        Type InitialType();
-        long Version { get; set; }
-        string Id { get; }
-        void ApplyChange(object @event);
-        IEnumerable<object> TakeUncommittedEvents();
     }
 
     public interface IAggregate<T>

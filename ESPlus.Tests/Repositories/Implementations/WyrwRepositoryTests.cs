@@ -34,7 +34,7 @@ namespace ESPlus.Tests.Repositories.Implementations
         [Fact]
         public async Task Save_Generic()
         {
-            var aggregate = new TestAggregate(new TestId());
+            var aggregate = new TestAggregate(new TestId("Test"));
             aggregate.Test();
             await _repository.SaveAsync(aggregate);
 
@@ -44,7 +44,7 @@ namespace ESPlus.Tests.Repositories.Implementations
         [Fact]
         public async Task Save()
         {
-            var aggregate = new TestAggregate1("eee");
+            var aggregate = new StringTestAggregate("Test");
             aggregate.Test();
             await _repository.SaveAsync(aggregate);
 
@@ -66,11 +66,40 @@ namespace ESPlus.Tests.Repositories.Implementations
 
             _driver.EnumerateStream(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(GetEvents);
 
-            var aggregate = await _repository.GetByIdAsync<TestAggregate, TestId>(new TestId());
+            var aggregate = await _repository.GetByIdAsync<TestAggregate, TestId>(new TestId("Test"));
 
             Assert.Equal(10, aggregate.Value);
         }
+
+        [Fact]
+        public async Task GetById()
+        {
+            async IAsyncEnumerable<WyrmEvent2> GetEvents(CallInfo arg)
+            {
+                var testEvent = new TestEvent(10);
+                yield return await Task.FromResult(new WyrmEvent2
+                {
+                    Data = _testEventSerializer.Serialize(testEvent),
+                    EventType = testEvent.GetType().FullName
+                });
+            }
+
+            _driver.EnumerateStream(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(GetEvents);
+
+            var aggregate = await _repository.GetByIdAsync<StringTestAggregate, String>("e");
+
+            Assert.Equal(10, aggregate.Value);
+        }
+
+        [Fact]
+        public void TestId()
+        {
+            var id = new TestId("e");
+
+            var s = id.ToString();
+        }
     }
+
 
     public class TestEventSerializer : IEventSerializer
     {
@@ -106,10 +135,10 @@ namespace ESPlus.Tests.Repositories.Implementations
         }
     }
 
-    public class TestAggregate1 : AggregateBase
+    public class StringTestAggregate : AggregateBase
     {
         public int Value { get; set; }
-        public TestAggregate1(string id) : base(id, typeof(TestEvent))
+        public StringTestAggregate(string id) : base(id, typeof(TestEvent))
         {
         }
 
@@ -126,8 +155,11 @@ namespace ESPlus.Tests.Repositories.Implementations
 
     public record TestEvent(int Value);
 
-    public class TestId : IIdObject
+    public record TestId(string Identifier)
     {
-        public string Value { get; }
+        public override string ToString()
+        {
+            return Identifier;
+        }
     }
 }
