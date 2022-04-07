@@ -79,7 +79,7 @@ namespace ESPlus.Wyrm
         public Task<WyrmResult> SaveAsync(AggregateBase aggregate, object headers = null,
             CancellationToken cancellationToken = default)
         {
-            var newEvents = ((IAggregate) aggregate).TakeUncommittedEvents().ToList();
+            var newEvents = ((IAggregate<>) aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
             var expectedVersion = originalVersion == -1 ? ExpectedVersion.NoStream : originalVersion;
 

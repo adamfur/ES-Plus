@@ -11,6 +11,46 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Wyrm
 {
+    public abstract class WyrmRepositoryBase
+    {
+        private readonly IWyrmDriver _wyrmConnection;
+        private readonly IWyrmAggregateRenamer _aggregateRenamer;
+        private readonly IEventSerializer _eventSerializer;
+
+        protected WyrmAppendEvent ToEventData(Guid eventId, object evnt, string streamName, long version, object headers)
+        {
+            var data = _eventSerializer.Serialize(evnt);
+            var metadata = _eventSerializer.Serialize(headers);
+            var typeName = evnt.GetType().FullName;
+
+            return new WyrmAppendEvent(eventId, typeName, data, metadata, streamName, version);
+        }
+
+        protected int Version(long first, int index)
+        {
+            if (first == ExpectedVersion.Any)
+            {
+                return (int)ExpectedVersion.Any;
+            }
+            else if (first == ExpectedVersion.EmptyStream || first == ExpectedVersion.NoStream)
+            {
+                if (index == 0)
+                {
+                    return (int)first;
+                }
+                else
+                {
+                    return index;
+                }
+            }
+            else
+            {
+                return (int)first + index;
+            }
+        }
+
+    }
+
     public class WyrmGenericRepository : IGenericRepository
     {
         private readonly IWyrmDriver _wyrmConnection;
@@ -48,7 +88,7 @@ namespace ESPlus.Wyrm
             _eventSerializer = wyrmConnection.Serializer;
         }
         public Task<WyrmResult> SaveAsync<T>(AggregateBase<T> aggregate, object headers = null,
-            CancellationToken cancellationToken = default) where T : IIdObject
+            CancellationToken cancellationToken = default)
         {
             var newEvents = ((IAggregate<T>)aggregate).TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count();
@@ -57,8 +97,16 @@ namespace ESPlus.Wyrm
             return SaveAggregate(aggregate, newEvents, expectedVersion + 1, headers, cancellationToken);
         }
 
+        public Task<WyrmResult> AppendAsync<T>(IAggregate<T> aggregate, object headers = null, CancellationToken cancellationToken = default)
+        {
+            var newEvents = ((IAggregate<T>)aggregate).TakeUncommittedEvents();
+            var expectedVersion = ExpectedVersion.Any;
+
+            return SaveAggregate(aggregate, newEvents, expectedVersion, headers, cancellationToken);
+        }
+
         private async Task<WyrmResult> SaveAggregate<T>(IAggregate<T> aggregate, IEnumerable<object> newEvents,
-            long expectedVersion, object headers, CancellationToken cancellationToken) where T : IIdObject
+            long expectedVersion, object headers, CancellationToken cancellationToken)
         {
             var copy = newEvents.ToList();
 
@@ -67,7 +115,7 @@ namespace ESPlus.Wyrm
                 return new WyrmResult(Position.Start, 0);
             }
 
-            var streamName = _aggregateRenamer.Name(aggregate.Id.Value);
+            var streamName = _aggregateRenamer.Name(aggregate.Id.ToString());
             var eventsToSave = copy.Select((e, ix) =>
                 ToEventData(Guid.NewGuid(), e, streamName, Version(expectedVersion, ix), headers)).ToList();
 
@@ -79,10 +127,12 @@ namespace ESPlus.Wyrm
             return await _wyrmConnection.Append(eventsToSave, cancellationToken);
         }
 
+
+
         public async Task<TAggregate> GetByIdAsync<TAggregate, T>(T id, CancellationToken cancellationToken = default,
-            long version = long.MaxValue) where TAggregate : IAggregate<T> where T : IIdObject
+            long version = long.MaxValue) where TAggregate : IAggregate<T>
         {
-            var streamName = _aggregateRenamer.Name(id.Value);
+            var streamName = _aggregateRenamer.Name(id.ToString());
             var aggregate = ConstructAggregate<TAggregate, T>(id);
             var applyAggregate = (IAggregate<T>) aggregate;
             bool any = false;
@@ -129,6 +179,21 @@ namespace ESPlus.Wyrm
             return aggregate;
         }
 
+        public async Task DeleteAsync(string id, long version = -1, CancellationToken cancellationToken = default)
+        {
+            var streamName = _aggregateRenamer.Name(id);
+
+            await _wyrmConnection.DeleteAsync(streamName, version, cancellationToken);
+        }
+
+        public Task<WyrmResult> AppendAsync(AggregateBase aggregate, object headers = null, CancellationToken cancellationToken = default)
+        {
+            var newEvents = ((IAggregate)aggregate).TakeUncommittedEvents();
+            var expectedVersion = ExpectedVersion.Any;
+
+            return SaveAggregate(aggregate, newEvents, expectedVersion, headers, cancellationToken);
+        }
+
         private int Version(long first, int index)
         {
             if (first == ExpectedVersion.Any)
@@ -162,7 +227,7 @@ namespace ESPlus.Wyrm
         }
 
         private static TAggregate ConstructAggregate<TAggregate, T>(T id)
-            where TAggregate : IAggregate<T> where T : IIdObject
+            where TAggregate : IAggregate<T>
         {
             return (TAggregate) Activator.CreateInstance(typeof(TAggregate), id);
         }

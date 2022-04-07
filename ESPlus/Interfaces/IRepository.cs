@@ -27,10 +27,10 @@ namespace ESPlus.Interfaces
     public interface IGenericRepository
     {
         Task<WyrmResult> SaveAsync<T>(AggregateBase<T> aggregate, object headers = null,
-            CancellationToken cancellationToken = default) where T : IIdObject;
+            CancellationToken cancellationToken = default);
 
         Task<TAggregate> GetByIdAsync<TAggregate, T>(T id, CancellationToken cancellationToken = default,
-            long version = long.MaxValue) where TAggregate : IAggregate<T> where T : IIdObject;
+            long version = long.MaxValue) where TAggregate : IAggregate<T>;
     }
 
 }

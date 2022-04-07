@@ -13,7 +13,7 @@ namespace ESPlus.Interfaces
         IEnumerable<object> TakeUncommittedEvents();
     }
 
-    public interface IAggregate<T> where T : IIdObject
+    public interface IAggregate<T>
     {
         Type InitialType();
         long Version { get; set; }

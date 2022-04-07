@@ -32,7 +32,7 @@ namespace ESPlus.Tests.Repositories.Implementations
         }
 
         [Fact]
-        public async Task Save()
+        public async Task Save_Generic()
         {
             var aggregate = new TestAggregate(new TestId());
             aggregate.Test();
@@ -42,7 +42,17 @@ namespace ESPlus.Tests.Repositories.Implementations
         }
 
         [Fact]
-        public async Task GetById()
+        public async Task Save()
+        {
+            var aggregate = new TestAggregate1("eee");
+            aggregate.Test();
+            await _repository.SaveAsync(aggregate);
+
+            await _driver.Received().Append(Arg.Any<List<WyrmAppendEvent>>(), Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task GetById_Generic()
         {
             async IAsyncEnumerable<WyrmEvent2> GetEvents(CallInfo arg)
             {
@@ -82,6 +92,24 @@ namespace ESPlus.Tests.Repositories.Implementations
     {
         public int Value { get; set; }
         public TestAggregate(TestId id) : base(id, typeof(TestEvent))
+        {
+        }
+
+        public void Test()
+        {
+            ApplyChange(new TestEvent(10));
+        }
+
+        protected void Apply(TestEvent @event)
+        {
+            Value = @event.Value;
+        }
+    }
+
+    public class TestAggregate1 : AggregateBase
+    {
+        public int Value { get; set; }
+        public TestAggregate1(string id) : base(id, typeof(TestEvent))
         {
         }
 
