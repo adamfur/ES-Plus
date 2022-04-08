@@ -12,7 +12,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
 {
     public class WyrmRepositoryTests : RepositoryTests
     {
-        protected override IRepository Create()
+        protected override IWyrmRepository Create()
         {
             var connection = CreateDriver();
 
@@ -30,7 +30,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
             var driver = CreateDriver();
             var aggregate = new ESPlus.Tests.Repositories.Aggregates.DummyAggregate(Guid.NewGuid().ToString(), 0);
 
-            await Repository.SaveAsync(aggregate);
+            await Repository.SaveAsync(aggregate, null);
 
             Assert.Empty(await driver.EnumerateAll(DateTime.Now.AddDays(1), DateTime.Now.AddDays(2), default).ToListAsync());
         }
@@ -41,7 +41,7 @@ namespace ESPlus.IntegrationTests.Repositories.Implementations
             var driver = CreateDriver();
             var aggregate = new ESPlus.Tests.Repositories.Aggregates.DummyAggregate(Guid.NewGuid().ToString(), 0);
 
-            await Repository.SaveAsync(aggregate);
+            await Repository.SaveAsync(aggregate, null);
 
             Assert.NotEmpty(await driver.EnumerateAll(DateTime.Now.AddDays(-1), DateTime.Now, default).ToListAsync());
         }

@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Aggregates;
-using ESPlus.Extensions;
-using ESPlus.Interfaces;
 using ESPlus.Wyrm;
 using Newtonsoft.Json;
 using NSubstitute;
@@ -18,7 +14,7 @@ namespace ESPlus.Tests.Repositories.Implementations
 {
     public class WyrwRepositoryTests
     {
-        private WyrmGenericRepository _repository;
+        private WyrmRepository _repository;
         private IWyrmDriver _driver;
         private TestEventSerializer _testEventSerializer;
 
@@ -28,7 +24,7 @@ namespace ESPlus.Tests.Repositories.Implementations
 
             _testEventSerializer = new TestEventSerializer();
             _driver.Serializer.Returns(_testEventSerializer);
-            _repository = new WyrmGenericRepository(_driver, new WyrmAggregateZeroRenamer());
+            _repository = new WyrmRepository(_driver, new WyrmAggregateZeroRenamer());
         }
 
         [Fact]
@@ -36,7 +32,7 @@ namespace ESPlus.Tests.Repositories.Implementations
         {
             var aggregate = new TestAggregate(new TestId("Test"));
             aggregate.Test();
-            await _repository.SaveAsync(aggregate);
+            await _repository.SaveAsync<TestAggregate, TestId>(aggregate, null);
 
             await _driver.Received().Append(Arg.Any<List<WyrmAppendEvent>>(), Arg.Any<CancellationToken>());
         }
@@ -46,7 +42,7 @@ namespace ESPlus.Tests.Repositories.Implementations
         {
             var aggregate = new StringTestAggregate("Test");
             aggregate.Test();
-            await _repository.SaveAsync(aggregate);
+            await _repository.SaveAsync(aggregate, null);
 
             await _driver.Received().Append(Arg.Any<List<WyrmAppendEvent>>(), Arg.Any<CancellationToken>());
         }
@@ -66,7 +62,7 @@ namespace ESPlus.Tests.Repositories.Implementations
 
             _driver.EnumerateStream(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(GetEvents);
 
-            var aggregate = await _repository.GetByIdAsync<TestAggregate, TestId>(new TestId("Test"));
+            var aggregate = await _repository.GetByIdAsync<TestAggregate, TestId>(new TestId("Test"), default);
 
             Assert.Equal(10, aggregate.Value);
         }
@@ -86,7 +82,7 @@ namespace ESPlus.Tests.Repositories.Implementations
 
             _driver.EnumerateStream(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(GetEvents);
 
-            var aggregate = await _repository.GetByIdAsync<StringTestAggregate, String>("e");
+            var aggregate = await _repository.GetByIdAsync<StringTestAggregate>("e");
 
             Assert.Equal(10, aggregate.Value);
         }

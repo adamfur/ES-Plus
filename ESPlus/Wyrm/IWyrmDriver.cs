@@ -14,8 +14,7 @@ namespace ESPlus.Wyrm
         Task<WyrmResult> Append(List<WyrmAppendEvent> events, CancellationToken cancellationToken);
         IAsyncEnumerable<string> EnumerateStreams(CancellationToken cancellationToken, params Type[] filters);
         Task<Position> LastCheckpointAsync(CancellationToken cancellationToken = default);
-        IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken = default,
-            params Type[] filters);
+        IAsyncEnumerable<WyrmEvent2> EnumerateAllByStreamsAsync(CancellationToken cancellationToken = default, params Type[] filters);
         Task PingAsync();
         IAsyncEnumerable<WyrmEvent2> SubscribeAsync(Position from, CancellationToken cancellationToken = default);
         IAsyncEnumerable<WyrmEvent2> EnumerateAll(Position from, CancellationToken cancellationToken = default);

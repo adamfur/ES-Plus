@@ -1,13 +1,8 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace ESPlus.Interfaces
 {
-    public interface IAggregate : IAggregate<string>
-    {
-    }
-
     public interface IAggregate<T>
     {
         Type InitialType();
@@ -17,24 +12,7 @@ namespace ESPlus.Interfaces
         IEnumerable<object> TakeUncommittedEvents();
     }
 
-    public interface IIdObject
+    public interface IAggregate : IAggregate<string>
     {
-        string Value { get; }
     }
-
-    // public interface ICopyable<T>
-    // {
-    //     T Copy();
-    // }
-
-    // public interface ISnapshot
-    // {
-    //     int Version { get; }
-    // }
-
-    // public interface ISnapshotable<T>
-    //     where T : ISnapshot
-    // {
-    //     T Snapshot();
-    // }
 }

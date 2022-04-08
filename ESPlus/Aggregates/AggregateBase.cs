@@ -1,18 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using ESPlus.Interfaces;
 using ESPlus.Misc;
 
 namespace ESPlus.Aggregates
 {
-    public abstract class AggregateBase : AggregateBase<string>, IAggregate
-    {
-        protected AggregateBase(string id, Type initialType = null) : base(id, initialType)
-        {
-        }
-    }
-
     public abstract class AggregateBase<T> : IAggregate<T>
     {
         private readonly Type _initialType;
@@ -77,6 +69,13 @@ namespace ESPlus.Aggregates
             }
 
             yield break;
+        }
+    }
+
+    public abstract class AggregateBase : AggregateBase<string>, IAggregate
+    {
+        protected AggregateBase(string id, Type initialType = null) : base(id, initialType)
+        {
         }
     }
 }
