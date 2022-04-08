@@ -32,7 +32,7 @@ namespace ESPlus.Tests.Repositories.Implementations
         {
             var aggregate = new TestAggregate(new TestId("Test"));
             aggregate.Test();
-            await _repository.SaveAsync<TestAggregate, TestId>(aggregate, null);
+            await _repository.SaveAsync(aggregate, null);
 
             await _driver.Received().Append(Arg.Any<List<WyrmAppendEvent>>(), Arg.Any<CancellationToken>());
         }

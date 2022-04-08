@@ -130,11 +130,10 @@ namespace ESPlus.Wyrm
         public async Task<WyrmResult> SaveAsync<TAggregate>(TAggregate aggregate, object headers, CancellationToken cancellationToken = default)
             where TAggregate : IAggregate<string>
         {
-            return await SaveAsync<TAggregate, string>(aggregate, headers, cancellationToken);
+            return await SaveAsync<string>(aggregate, headers, cancellationToken);
         }
 
-        public Task<WyrmResult> SaveAsync<TAggregate, T>(TAggregate aggregate, object headers, CancellationToken cancellationToken = default)
-            where TAggregate : IAggregate<T>
+        public Task<WyrmResult> SaveAsync<T>(IAggregate<T> aggregate, object headers, CancellationToken cancellationToken = default)
         {
             var newEvents = aggregate.TakeUncommittedEvents().ToList();
             var originalVersion = aggregate.Version - newEvents.Count;
