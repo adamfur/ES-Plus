@@ -5,7 +5,7 @@ namespace ESPlus.Tests.Repositories.Implementations
 {
     public class InMemoryRepositoryTests : RepositoryTests
     {
-        protected override IRepository Create()
+        protected override IWyrmRepository Create()
         {
             return new InMemoryRepository();
         }
