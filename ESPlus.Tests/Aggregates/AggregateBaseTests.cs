@@ -13,11 +13,11 @@ namespace ESPlus.Tests.Aggregates
             public string Text { get; set; }
         }
 
-        public class DummyAggreagate : AggregateBase
+        public class DummyAggregate : AggregateBase
         {
             public string Text { get; set; }
 
-            public DummyAggreagate(string id)
+            public DummyAggregate(string id)
                 : base(id)
             {
             }
@@ -44,9 +44,9 @@ namespace ESPlus.Tests.Aggregates
         }
 
         [Fact]
-        public void Version_Initialized_VerionIs0()
+        public void Version_Initialized_VersionIs0()
         {
-            var aggregate = new DummyAggreagate(_id);
+            var aggregate = new DummyAggregate(_id);
 
             Assert.Equal(-1, aggregate.Version);
         }
@@ -54,7 +54,7 @@ namespace ESPlus.Tests.Aggregates
         [Fact]
         public void Id_Initialized_IdIsExpected()
         {
-            var aggregate = new DummyAggreagate(_id);
+            var aggregate = new DummyAggregate(_id);
 
             Assert.Equal(_id, aggregate.Id);
         }
@@ -62,22 +62,22 @@ namespace ESPlus.Tests.Aggregates
         [Fact]
         public void ApplyChange_NewEvent_VersionIsIncreased()
         {
-            var aggregate = new DummyAggreagate(_id);
+            var aggregate = new DummyAggregate(_id) as IAggregate;
 
-            ((IAggregate)aggregate).ApplyChange(new object());
+            aggregate.ApplyChange(new object());
             Assert.Equal(0, aggregate.Version);
         }
 
         [Fact]
-        public void TakeUncommitedEvents_TakeNewEvents_ContainsChangedEvents()
+        public void TakeUncommittedEvents_TakeNewEvents_ContainsChangedEvents()
         {
-            var aggregate = new DummyAggreagate(_id);
+            var aggregate = new DummyAggregate(_id) as IAggregate;
             var event1 = new object();
             var event2 = new object();
 
-            ((IAggregate)aggregate).ApplyChange(event1);
-            ((IAggregate)aggregate).ApplyChange(event2);
-            var events = ((IAggregate)aggregate).TakeUncommittedEvents().ToList();
+            aggregate.ApplyChange(event1);
+            aggregate.ApplyChange(event2);
+            var events = aggregate.TakeUncommittedEvents().ToList();
 
             Assert.Equal(2, events.Count);
             Assert.Equal(event1, events[0]);
@@ -85,14 +85,14 @@ namespace ESPlus.Tests.Aggregates
         }
 
         [Fact]
-        public void TakeUncommitedEvents_TakeTwice_EventListIsEmpty()
+        public void TakeUncommittedEvents_TakeTwice_EventListIsEmpty()
         {
-            var aggregate = new DummyAggreagate(_id);
+            var aggregate = new DummyAggregate(_id) as IAggregate;
             var @event = new object();
 
-            ((IAggregate)aggregate).ApplyChange(@event);
-            ((IAggregate)aggregate).TakeUncommittedEvents();
-            var events = ((IAggregate)aggregate).TakeUncommittedEvents();
+            aggregate.ApplyChange(@event);
+            aggregate.TakeUncommittedEvents();
+            var events = aggregate.TakeUncommittedEvents();
 
             Assert.Empty(events);
         }
@@ -100,7 +100,7 @@ namespace ESPlus.Tests.Aggregates
         [Fact]
         public void ApplyChange_TriggerEvent_DoSomething()
         {
-            var aggregate = new DummyAggreagate(_id);
+            var aggregate = new DummyAggregate(_id);
             var text = Guid.NewGuid().ToString();
 
             aggregate.Trigger(text);
