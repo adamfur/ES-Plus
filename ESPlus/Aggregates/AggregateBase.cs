@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESPlus.Interfaces;
 using ESPlus.Misc;
 
@@ -63,12 +64,10 @@ namespace ESPlus.Aggregates
 
         IEnumerable<object> IAggregate<T>.TakeUncommittedEvents()
         {
-            if (_uncommittedEvents.TryDequeue(out var @event))
-            {
-                yield return @event;
-            }
-
-            yield break;
+            var result = _uncommittedEvents.ToList();
+            
+            _uncommittedEvents.Clear();
+            return result;
         }
     }
 
