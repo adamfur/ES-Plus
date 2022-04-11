@@ -9,7 +9,7 @@ namespace ESPlus.Interfaces
         long Version { get; set; }
         T Id { get; }
         void ApplyChange(object @event);
-        IEnumerable<object> TakeUncommittedEvents();
+        List<object> TakeUncommittedEvents();
     }
 
     public interface IAggregate : IAggregate<string>
