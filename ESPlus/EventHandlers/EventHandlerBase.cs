@@ -59,6 +59,11 @@ namespace ESPlus.EventHandlers
 
         public abstract Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken);
 
+        public async Task EvictCache()
+        {
+            await Context.EvictCache();
+        }
+
         public virtual async Task FlushWhenAheadAsync(CancellationToken cancellationToken)
         {
             await _flushPolicy.FlushWhenAheadAsync(cancellationToken);

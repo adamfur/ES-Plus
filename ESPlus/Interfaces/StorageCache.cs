@@ -68,5 +68,12 @@ namespace ESPlus.Interfaces
         {
             return _storage.List(tenant, size, no, cancellationToken);
         }
+
+        public Task EvictCache()
+        {
+            _cache.Clear();
+            _storage.EvictCache();
+            return Task.CompletedTask;
+        }
     }
 }

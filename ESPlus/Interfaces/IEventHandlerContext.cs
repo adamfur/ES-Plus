@@ -13,5 +13,6 @@ namespace ESPlus.EventHandlers
         string StreamName { get; set; }
         MetaData Metadata { get; set; }
         Task FlushAsync(CancellationToken cancellationToken);
+        Task EvictCache();
     }
 }

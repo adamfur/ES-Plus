@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
@@ -138,6 +137,12 @@ namespace ESPlus.Storage
         public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken)
         {
             return _storage.List(tenant, size, no, cancellationToken);
+        }
+
+        public async Task EvictCache()
+        {
+            await _storage.EvictCache();
+            await InitializeAsync();
         }
 
         public virtual void Delete(string tenant, string path)

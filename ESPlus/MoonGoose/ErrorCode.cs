@@ -2,6 +2,7 @@ namespace ESPlus.MoonGoose
 {
     public enum ErrorCode
     {
+        ConcurrencyError = 7,
         MDB_SUCCESS = 0,
         MDB_KEYEXIST = -30799,
         MDB_NOTFOUND = -30798,

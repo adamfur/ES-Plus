@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.EventHandlers;
-using ESPlus.Interfaces;
 
 namespace ESPlus.Storage
 {
@@ -21,5 +20,6 @@ namespace ESPlus.Storage
         IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters, CancellationToken cancellationToken);
         Task<Position> ChecksumAsync(CancellationToken cancellationToken);
         IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken);
+        Task EvictCache();
     }
 }

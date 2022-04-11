@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -85,6 +84,12 @@ namespace ESPlus.Storage
         public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken)
         {
             return _driver.ListAsync(_collection, tenant, size, no, cancellationToken);
+        }
+
+        public Task EvictCache()
+        {
+            Writes.Clear();
+            return Task.CompletedTask;
         }
     }
 }      

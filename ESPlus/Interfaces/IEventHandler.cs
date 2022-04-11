@@ -19,5 +19,6 @@ namespace ESPlus.EventHandlers
         Task StartupAsync();
         Task Poke(int pokeType, string tenant, CancellationToken cancellationToken);
         Task<List<object>> List(string tenant, int size, int no, CancellationToken cancellationToken);
+        Task EvictCache();
     }
 }

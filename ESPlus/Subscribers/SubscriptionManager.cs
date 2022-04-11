@@ -24,7 +24,7 @@ namespace ESPlus.Subscribers
                 Manager = this,
                 Future = position
             };
-                
+            
             return new WyrmSubscriptionClient(context, _driver, _eventTypeResolver);
         }
     }

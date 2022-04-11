@@ -61,5 +61,10 @@ namespace ESPlus.Storage
         {
             throw new NotImplementedException();
         }
+
+        public Task EvictCache()
+        {
+            return Task.CompletedTask;
+        }
     }
 }

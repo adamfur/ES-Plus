@@ -75,6 +75,7 @@ namespace ESPlus.MoonGoose
             writer.Write((int) documents.Count);
             writer.Write(payload);
             await stream.FlushAsync(cancellationToken);
+            
             while (!cancellationToken.IsCancellationRequested)
             {
                 var (query, tokenizer) = await stream.QueryAsync(cancellationToken); 
@@ -341,6 +342,7 @@ namespace ESPlus.MoonGoose
 
             switch (code)
             {
+                case ErrorCode.ConcurrencyError: throw new MoonGooseConcurrencyException();
                 case ErrorCode.MDB_NOTFOUND: throw new MoonGooseNotFoundException($"Not found: {tenant}/{path}");
                 default: throw new MoonGooseException(message);
             }            

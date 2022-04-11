@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
 using ESPlus.MoonGoose;
+using ESPlus.Storage;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -243,6 +244,15 @@ namespace ESPlus.IntegrationTests
             }, Position.Start, Position.Start, default);
 
             Assert.NotEmpty(_driver.ListAsync(_database, "Tenant", 100, 0, default).ToListAsync().Result);
+        }
+        
+        [Fact]
+        public async Task ConcurrencyException()
+        {
+            var document = new Document("Tenant", "file", null, Operation.Save);
+            await _driver.PutAsync(_database, document.AsList(), Position.Start, Position.Gen(2), default);
+
+            await Assert.ThrowsAsync<MoonGooseConcurrencyException>(() => _driver.PutAsync(_database, document.AsList(), Position.Gen(3), Position.Gen(5), default));
         }
     }
 }
