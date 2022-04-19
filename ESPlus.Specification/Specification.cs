@@ -7,8 +7,8 @@ using ESPlus.Interfaces;
 
 namespace ESPlus.Specification
 {
-    public abstract class Specification<TAggregate> : IDisposable
-        where TAggregate : IAggregate
+    public abstract class Specification<TAggregate, T> : IDisposable
+        where TAggregate : IAggregate<T>
     {
         private readonly List<object> _emittedEvents = new List<object>();
         protected TAggregate Aggregate = default;
@@ -212,4 +212,10 @@ namespace ESPlus.Specification
             }
         }
     }
+
+    public abstract class Specification<TAggregate> : Specification<TAggregate, string> where TAggregate : IAggregate
+    {
+
+    }
+
 }
