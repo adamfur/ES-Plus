@@ -7,5 +7,6 @@ namespace ESPlus.MoonGoose
         Item = 2,
         SearchResult = 3,
         Checksum = 4,
+        Count = 5,
     }
 }

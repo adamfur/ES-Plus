@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Misc;
+using ESPlus.MoonGoose;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
 using Wyrm;
@@ -77,7 +78,7 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override Task<List<object>> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        public override Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

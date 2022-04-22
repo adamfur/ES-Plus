@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using ESPlus.MoonGoose;
 using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
@@ -18,7 +19,7 @@ namespace ESPlus.EventHandlers
         Task<object> Get(string path, string tenant, CancellationToken cancellationToken);
         Task StartupAsync();
         Task Poke(int pokeType, string tenant, CancellationToken cancellationToken);
-        Task<List<object>> List(string tenant, int size, int no, CancellationToken cancellationToken);
+        Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
         Task EvictCache();
     }
 }

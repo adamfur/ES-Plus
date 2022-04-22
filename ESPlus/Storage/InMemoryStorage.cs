@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
+using ESPlus.MoonGoose;
 
 namespace ESPlus.Storage
 {
@@ -57,7 +58,7 @@ namespace ESPlus.Storage
             return Task.FromResult(Position.Start);
         }
 
-        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

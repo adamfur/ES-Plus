@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.FlushPolicies;
+using ESPlus.MoonGoose;
 using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
@@ -73,7 +74,7 @@ namespace ESPlus.EventHandlers
             await base.FlushAsync(cancellationToken);
         }
 
-        public override Task<List<object>> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        public override Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

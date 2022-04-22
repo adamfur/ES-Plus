@@ -81,9 +81,9 @@ namespace ESPlus.Storage
             return _driver.ChecksumAsync(_collection, cancellationToken);
         }
 
-        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
         {
-            return _driver.ListAsync(_collection, tenant, size, no, cancellationToken);
+            return _driver.ListAsync(_collection, tenant, size, no, total, cancellationToken);
         }
 
         public Task EvictCache()

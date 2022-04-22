@@ -11,6 +11,11 @@ using ESPlus.Extensions;
 
 namespace ESPlus.MoonGoose
 {
+    public class Box<T>
+    {
+        public T Value { get; set; }
+    }
+    
     public class MoonGooseDriver : IMoonGooseDriver
     {
         private readonly string _host;
@@ -263,7 +268,7 @@ namespace ESPlus.MoonGoose
             }
         }
         
-        public async IAsyncEnumerable<byte[]> ListAsync(string database, string tenant, int size, int no, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<byte[]> ListAsync(string database, string tenant, int size, int no, Box<int> total = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             var take = size;
             var skip = size * no;
@@ -295,6 +300,13 @@ namespace ESPlus.MoonGoose
                 else if (query == Queries.Success)
                 {
                     break;
+                }
+                else if (query == Queries.Count)
+                {
+                    if (total != null)
+                    {
+                        total.Value = tokenizer.ReadI32();
+                    }
                 }
                 else if (query == Queries.Exception)
                 {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using ESPlus.MoonGoose;
 using ESPlus.Subscribers;
 
 namespace ESPlus.EventHandlers
@@ -55,7 +56,7 @@ namespace ESPlus.EventHandlers
             return Task.CompletedTask;
         }
 
-        public abstract Task<List<object>> List(string tenant, int size, int no, CancellationToken cancellationToken);
+        public abstract Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
 
         public abstract Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken);
 

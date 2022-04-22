@@ -243,7 +243,7 @@ namespace ESPlus.IntegrationTests
                 new("Tenant", "file", null, Operation.Save),
             }, Position.Start, Position.Start, default);
 
-            Assert.NotEmpty(_driver.ListAsync(_database, "Tenant", 100, 0, default).ToListAsync().Result);
+            Assert.NotEmpty(_driver.ListAsync(_database, "Tenant", 100, 0, null, default).ToListAsync().Result);
         }
         
         [Fact]

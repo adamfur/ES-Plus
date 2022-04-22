@@ -4,6 +4,7 @@ using System.Threading;
 using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using System.Threading.Tasks;
+using ESPlus.MoonGoose;
 
 namespace ESPlus.Storage
 {
@@ -134,9 +135,9 @@ namespace ESPlus.Storage
             return _storage.ChecksumAsync(cancellationToken);
         }
 
-        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken)
+        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
         {
-            return _storage.List(tenant, size, no, cancellationToken);
+            return _storage.List(tenant, size, no, total, cancellationToken);
         }
 
         public async Task EvictCache()

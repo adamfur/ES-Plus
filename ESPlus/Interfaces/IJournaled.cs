@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.EventHandlers;
+using ESPlus.MoonGoose;
 
 namespace ESPlus.Storage
 {
@@ -19,7 +20,7 @@ namespace ESPlus.Storage
         void Reset();
         IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters, CancellationToken cancellationToken);
         Task<Position> ChecksumAsync(CancellationToken cancellationToken);
-        IAsyncEnumerable<byte[]> List(string tenant, int size, int no, CancellationToken cancellationToken);
+        IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
         Task EvictCache();
     }
 }
