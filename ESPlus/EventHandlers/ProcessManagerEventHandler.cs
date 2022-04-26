@@ -16,8 +16,8 @@ namespace ESPlus.EventHandlers
         private readonly IRepository _repository;
         private readonly Dictionary<Type, Func<object, string>> _map = new Dictionary<Type, Func<object, string>>();
 
-        public ProcessManagerEventHandler(TContext context, IEventTypeResolver eventTypeResolver, IRepository repository)
-            : base(context, eventTypeResolver, new NullFlushPolicy())
+        public ProcessManagerEventHandler(TContext context, IEventTypeResolver eventTypeResolver, IRepository repository, IEventSerializer eventSerializer)
+            : base(context, eventTypeResolver, new NullFlushPolicy(), eventSerializer)
         {
             _repository = repository;
         }

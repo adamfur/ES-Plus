@@ -18,9 +18,10 @@ namespace ESPlus.EventHandlers
         private readonly LinkedList<object> _emitQueue = new LinkedList<object>();
         private readonly Dictionary<string, object> _emitOnSubmit = new Dictionary<string, object>();
         private readonly IEventTypeResolver _eventTypeResolver;
+        private readonly IEventSerializer _eventSerializer;
         private readonly Once _once;
 
-        public BasicEventHandler(TContext context, IEventTypeResolver eventTypeResolver, IFlushPolicy flushPolicy)
+        public BasicEventHandler(TContext context, IEventTypeResolver eventTypeResolver, IFlushPolicy flushPolicy, IEventSerializer eventSerializer)
             : base(context, flushPolicy)
         {
             _once = new Once(() =>
@@ -28,6 +29,7 @@ namespace ESPlus.EventHandlers
                 RegisterRouter(_router);
             });
             _eventTypeResolver = eventTypeResolver;
+            _eventSerializer = eventSerializer;
         }
 
         protected virtual void RegisterRouter(ConventionEventRouterAsync router)
@@ -85,20 +87,20 @@ namespace ESPlus.EventHandlers
 
         public override async Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
         {
-            var status = false;
-
             if (@event.InitEvent)
             {
                 Initialize();
-                return status;
+                return false;
             }
+
+            var status = false;
 
             Context.TimestampUtc = @event.TimestampUtc;
             Context.Checkpoint = @event.Position;
             Context.Offset = @event.Offset;
             Context.TotalOffset = @event.TotalOffset;
             Context.StreamName = @event.StreamName;
-            Context.Metadata = new MetaData(@event.Meta, new EventMessagePackSerializer());
+            Context.Metadata = new MetaData(@event.Meta, _eventSerializer);
             _once.Execute();
             
             if (@event.EventType == typeof(StreamCreated).FullName)

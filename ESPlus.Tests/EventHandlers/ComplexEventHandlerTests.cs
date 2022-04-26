@@ -29,12 +29,12 @@ namespace ESPlus.Tests.EventHandlers
             IHandleEvent<DummyEmitOnSubmit>
         {
             public DummyEventHandler(IEventHandlerContext context)
-                : base(context, null, new NullFlushPolicy())
+                : base(context, null, new NullFlushPolicy(), new EventJsonSerializer())
             {
             }
 
             public DummyEventHandler(IEventHandlerContext context, IEventTypeResolver eventTypeResolver)
-                : base(context, eventTypeResolver, new NullFlushPolicy())
+                : base(context, eventTypeResolver, new NullFlushPolicy(), new EventJsonSerializer())
             {
             }
 
