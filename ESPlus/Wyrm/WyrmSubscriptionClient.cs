@@ -9,28 +9,29 @@ namespace ESPlus.Wyrm
 {
     public class WyrmSubscriptionClient : ISubscriptionClient
     {
-        private readonly SubscriptionContext _subscriptionContext;
+        public SubscriptionContext SubscriptionContext { get; }
         private readonly IWyrmDriver _wyrmConnection;
         private readonly IEventTypeResolver _eventTypeResolver;
 
         public WyrmSubscriptionClient(SubscriptionContext subscriptionContext, IWyrmDriver wyrmConnection, IEventTypeResolver eventTypeResolver)
         {
-            _subscriptionContext = subscriptionContext;
+            SubscriptionContext = subscriptionContext;
             _wyrmConnection = wyrmConnection;
             _eventTypeResolver = eventTypeResolver;
         }
         
         public async IAsyncEnumerable<Event> Events([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            if (_subscriptionContext.Position.Equals(Position.Start))
+            if (SubscriptionContext.Position.Equals(Position.Start))
             {
                 yield return new Event(_eventTypeResolver, null)
                 {
                     InitEvent = true,
+                    Position = Position.Start,
                 };
             }
             
-            await foreach (var @event in _wyrmConnection.SubscribeAsync(_subscriptionContext.Position, cancellationToken))
+            await foreach (var @event in _wyrmConnection.SubscribeAsync(SubscriptionContext.Position, cancellationToken))
             {
                 yield return new Event(_eventTypeResolver, @event.Serializer)
                 {

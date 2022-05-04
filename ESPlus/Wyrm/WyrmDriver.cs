@@ -325,7 +325,6 @@ namespace ESPlus.Wyrm
             await using var writer = new BinaryWriter(stream);
 
             writer.Write(OperationType.SUBSCRIBE_V2);
-            // writer.Write(OperationType.SUBSCRIBE);
             writer.Write(from.Binary);
             writer.Flush();
 
