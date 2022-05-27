@@ -4,19 +4,19 @@ using System.Threading.Tasks;
 using ESPlus.Storage;
 using System.Threading;
 using Raven.Client.Documents.Operations;
-using System.Collections.Generic;
+using ESPlus.Interfaces;
 
 namespace ESPlus.IntegrationTests
 {
-    // ! docker run -p 8080:8080 -e RAVEN_ARGS='--Setup.Mode=None --log-to-console' -e RAVEN_Security_UnsecuredAccessAllowed='PrivateNetwork' ravendb/ravendb:ubuntu-latest 
-    public class RavenDBStorageTests
+	// ! docker run -p 8081:8080 -e RAVEN_ARGS='--Security.UnsecuredAccessAllowed=PublicNetwork --log-to-console' -e "RAVEN_Setup_Mode=None" -e "RAVEN_ServerUrl=http://0.0.0.0:8080" -e "RAVEN_License_Eula_Accepted=true" ravendb/ravendb:ubuntu-latest
+	public class RavenDBStorageTests
     {
 		private readonly IDocumentStore _store;
 		private readonly RavenDBStorage _storage;
 
 		public RavenDBStorageTests()
 		{
-			_store = RavenDBStorage.CreateDocumentStore("http://localhost:8080", "pliance");
+			_store = RavenDBStorage.CreateDocumentStore("http://localhost:8081", "pliance");
 			_storage = new(_store);
 		}
 
@@ -55,7 +55,7 @@ namespace ESPlus.IntegrationTests
 			// Arrange
 			// Act
 			//Assert
-			await Assert.ThrowsAsync<KeyNotFoundException>(() => _storage.GetAsync<Document>("tenant", "missing", CancellationToken.None));
+			await Assert.ThrowsAsync<StorageNotFoundException>(() => _storage.GetAsync<Document>("tenant", "missing", CancellationToken.None));
 		}
 
 		[Fact]
@@ -80,7 +80,7 @@ namespace ESPlus.IntegrationTests
 
 			// Act
 			//Assert
-			await Assert.ThrowsAsync<KeyNotFoundException>(() => _storage.GetAsync<Document>("tenant", "id", CancellationToken.None));
+			await Assert.ThrowsAsync<StorageNotFoundException>(() => _storage.GetAsync<Document>("tenant", "id", CancellationToken.None));
 		}
 	}
 }

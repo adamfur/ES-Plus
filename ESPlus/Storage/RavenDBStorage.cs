@@ -22,12 +22,12 @@ namespace ESPlus.Storage
 			_store = store;
 		}
 
-        public static IDocumentStore CreateDocumentStore(string url, string database)
+        public static IDocumentStore CreateDocumentStore(string url, string database = "pliance")
         {
 			var store = new DocumentStore()
 			{
-				Urls = new[] { "http://localhost:8080" },
-				Database = "pliance",
+				Urls = new[] { url },
+				Database = database,
 			}.Initialize();
 
 			try
@@ -76,7 +76,7 @@ namespace ESPlus.Storage
 			var value = await session.LoadAsync<T>(id: $"{tenant}:{path}", cancellationToken);
             if (value is null)
             {
-				throw new KeyNotFoundException();
+				throw new StorageNotFoundException();
 			}
 
 			return value;
