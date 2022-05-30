@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using ESPlus.Interfaces;
 using ESPlus.MoonGoose;
+using Newtonsoft.Json;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Operations;
+using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
 using Raven.Client.Exceptions.Database;
 using Raven.Client.ServerWide;
@@ -44,6 +49,9 @@ namespace ESPlus.Storage
 				{
 				}
 			}
+			
+			using var session = store.OpenSession();
+			session.Load<object>("hello");
 
 			return store;
 		}
@@ -92,9 +100,17 @@ namespace ESPlus.Storage
 		public Task<Position> ChecksumAsync(CancellationToken cancellationToken)
             => Task.FromResult(Position.Start);
 
-		public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
+		public async IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			using var session = _store.OpenAsyncSession();
+			var list = await session.Query<dynamic>().Take(size).Skip(size * no).ToListAsync(cancellationToken);
+			var count = await session.Query<dynamic>().CountAsync(cancellationToken);
+
+			total.Value = count;
+			foreach (var item in list)
+			{
+				yield return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(item));
+			}
 		}
 
 		public Task EvictCache() => Task.CompletedTask;
