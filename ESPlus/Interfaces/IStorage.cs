@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.MoonGoose;
@@ -15,6 +16,7 @@ namespace ESPlus.Interfaces
         IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters, CancellationToken cancellationToken);
         Task<Position> ChecksumAsync(CancellationToken cancellationToken);
         IAsyncEnumerable<byte[]> List<T>(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
+		Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken);
         Task EvictCache();
     }
 }

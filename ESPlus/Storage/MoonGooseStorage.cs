@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -85,6 +86,11 @@ namespace ESPlus.Storage
         {
             return _driver.ListAsync(_collection, tenant, size, no, total, cancellationToken);
         }
+
+		public Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken)
+        {
+			throw new NotImplementedException();
+		}
 
         public Task EvictCache()
         {

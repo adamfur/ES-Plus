@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,6 +69,11 @@ namespace ESPlus.Interfaces
         public IAsyncEnumerable<byte[]> List<T>(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
         {
             return _storage.List<T>(tenant, size, no, total, cancellationToken);
+        }
+
+		public Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken)
+        {
+            return _storage.QueryAsync<T>(tenant, cancellationToken);
         }
 
         public Task EvictCache()

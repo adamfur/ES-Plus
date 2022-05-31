@@ -9,6 +9,7 @@ using ESPlus.Interfaces;
 using ESPlus.MoonGoose;
 using Newtonsoft.Json;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Linq;
 using Raven.Client.Documents.Operations;
 using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
@@ -155,6 +156,13 @@ namespace ESPlus.Storage
 		        yield return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(item));
 	        }
         }
+
+		public Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken)
+		{
+			using var session = _store.OpenAsyncSession();
+
+			return Task.FromResult(session.Query<T>().AsQueryable());
+		}
 
         public Task EvictCache()
         {

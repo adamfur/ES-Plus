@@ -63,6 +63,11 @@ namespace ESPlus.Storage
             throw new NotImplementedException();
         }
 
+		public Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken)
+		{
+			return Task.FromResult(_data.Values.OfType<T>().AsQueryable());
+		}
+
         public Task EvictCache()
         {
             return Task.CompletedTask;

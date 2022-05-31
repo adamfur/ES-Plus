@@ -5,6 +5,7 @@ using ESPlus.EventHandlers;
 using ESPlus.Interfaces;
 using System.Threading.Tasks;
 using ESPlus.MoonGoose;
+using System.Linq;
 
 namespace ESPlus.Storage
 {
@@ -140,6 +141,11 @@ namespace ESPlus.Storage
             return _storage.List<T>(tenant, size, no, total, cancellationToken);
         }
 
+		public Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken)
+		{
+			return _storage.QueryAsync<T>(tenant, cancellationToken);
+		}
+
         public async Task EvictCache()
         {
             await _storage.EvictCache();
@@ -154,5 +160,5 @@ namespace ESPlus.Storage
             _writeCache.Remove(key);
             _deletes.Add(key);
         }
-    }
+	}
 }
