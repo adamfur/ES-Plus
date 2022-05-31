@@ -14,7 +14,7 @@ namespace ESPlus.Interfaces
         void Reset();
         IAsyncEnumerable<byte[]> SearchAsync(string tenant, long[] parameters, CancellationToken cancellationToken);
         Task<Position> ChecksumAsync(CancellationToken cancellationToken);
-        IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
+        IAsyncEnumerable<byte[]> List<T>(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
         Task EvictCache();
     }
 }
