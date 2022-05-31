@@ -87,7 +87,7 @@ namespace ESPlus.Storage
             return _driver.ListAsync(_collection, tenant, size, no, total, cancellationToken);
         }
 
-		public Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken)
+		public IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken)
         {
 			throw new NotImplementedException();
 		}

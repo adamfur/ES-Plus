@@ -157,11 +157,11 @@ namespace ESPlus.Storage
 	        }
         }
 
-		public Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken)
+		public IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken)
 		{
-			using var session = _store.OpenAsyncSession();
+			var session = _store.OpenSession();
 
-			return Task.FromResult(session.Query<T>().AsQueryable());
+			return session.Query<T>();
 		}
 
         public Task EvictCache()

@@ -141,9 +141,9 @@ namespace ESPlus.Storage
             return _storage.List<T>(tenant, size, no, total, cancellationToken);
         }
 
-		public Task<IQueryable<T>> QueryAsync<T>(string tenant, CancellationToken cancellationToken)
+		public IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken)
 		{
-			return _storage.QueryAsync<T>(tenant, cancellationToken);
+			return _storage.Query<T>(tenant, cancellationToken);
 		}
 
         public async Task EvictCache()

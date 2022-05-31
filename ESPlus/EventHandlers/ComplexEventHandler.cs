@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.FlushPolicies;
@@ -75,6 +76,11 @@ namespace ESPlus.EventHandlers
         }
 
         public override Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
