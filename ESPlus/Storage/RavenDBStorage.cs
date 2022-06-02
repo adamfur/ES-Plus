@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 using ESPlus.Interfaces;
+using ESPlus.Misc;
 using ESPlus.MoonGoose;
 using Newtonsoft.Json;
 using Raven.Client.Documents;
@@ -143,7 +145,7 @@ namespace ESPlus.Storage
 	        }
         }
 
-        public async IAsyncEnumerable<byte[]> List<T>(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<byte[]> List<T>(string tenant, int size, int no, Box<int> total, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
 	        using var session = _store.OpenAsyncSession();
 			
@@ -153,13 +155,17 @@ namespace ESPlus.Storage
 	        total.Value = count;
 	        foreach (var item in list)
 	        {
-		        yield return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(item));
+				cancellationToken.ThrowIfCancellationRequested();
+
+				yield return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(item));
 	        }
         }
 
 		public IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken)
 		{
 			var session = _store.OpenSession();
+
+			SessionScope.Set(session);
 
 			return session.Query<T>();
 		}

@@ -58,7 +58,7 @@ namespace ESPlus.EventHandlers
         }
 
         public abstract Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
-        public abstract IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken);
+        public abstract IQueryable Query(string tenant, CancellationToken cancellationToken);
 
         public abstract Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken);
 

@@ -85,7 +85,7 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken)
+        public override IQueryable Query(string tenant, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
