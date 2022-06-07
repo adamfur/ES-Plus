@@ -22,6 +22,8 @@ namespace ESPlus.Misc
 			AsyncLocal.Value = new AmbientData();
 		}
 
+		public static IDisposable? Get() => AsyncLocal.Value?.Session;
+
 		public static void Set(IDisposable value)
 		{
 			if (AsyncLocal.Value is AmbientData data)
