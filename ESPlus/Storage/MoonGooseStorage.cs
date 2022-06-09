@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Interfaces;
 using ESPlus.MoonGoose;
+using Newtonsoft.Json;
 
 namespace ESPlus.Storage
 {
@@ -43,8 +45,12 @@ namespace ESPlus.Storage
             try
             {
                 var payload = await _driver.GetAsync(_collection, key.Tenant, key.Path, cancellationToken);
+                var json = Encoding.UTF8.GetString(payload);
 
-                return JsonSerializer.Deserialize<T>(payload);
+                return JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings 
+                {
+                    TypeNameHandling = TypeNameHandling.Auto,
+                });
             }
             catch (MoonGooseNotFoundException ex)
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace ESPlus.MoonGoose
 {
@@ -12,7 +13,10 @@ namespace ESPlus.MoonGoose
         {
             get
             {
-                var json = JsonSerializer.Serialize(Item);
+                var json = JsonConvert.SerializeObject(Item, new JsonSerializerSettings 
+                {
+                    TypeNameHandling = TypeNameHandling.Auto,
+                });
                 var encoded = Encoding.UTF8.GetBytes(json);
 
                 return encoded;
