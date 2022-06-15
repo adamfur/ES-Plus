@@ -58,10 +58,15 @@ namespace ESPlus.Storage
             return Task.FromResult(Position.Start);
         }
 
-        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
+        public IAsyncEnumerable<byte[]> List<T>(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
+
+		public IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken)
+		{
+			return _data.Values.OfType<T>().AsQueryable();
+		}
 
         public Task EvictCache()
         {

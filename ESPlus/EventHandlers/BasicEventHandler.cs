@@ -85,6 +85,11 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
+        public override IQueryable Query(string tenant, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public override async Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
         {
             if (@event.InitEvent)

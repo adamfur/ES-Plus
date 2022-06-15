@@ -8,7 +8,7 @@ namespace ESPlus
 {
     public class Position : IEquatable<Position>
     {
-        public static Position Start => new Position(new byte[32]);
+        public static Position Start { get; } = new Position(new byte[32]);
         private byte[] _binary = new byte[32];
 
         public Position(byte[] input)

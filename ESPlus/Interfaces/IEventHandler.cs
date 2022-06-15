@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.MoonGoose;
@@ -20,6 +21,7 @@ namespace ESPlus.EventHandlers
         Task StartupAsync();
         Task Poke(int pokeType, string tenant, CancellationToken cancellationToken);
         Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
+        IQueryable Query(string tenant, CancellationToken cancellationToken);
         Task EvictCache();
     }
 }

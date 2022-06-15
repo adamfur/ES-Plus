@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -87,10 +88,15 @@ namespace ESPlus.Storage
             return _driver.ChecksumAsync(_collection, cancellationToken);
         }
 
-        public IAsyncEnumerable<byte[]> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
+        public IAsyncEnumerable<byte[]> List<T>(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
         {
             return _driver.ListAsync(_collection, tenant, size, no, total, cancellationToken);
         }
+
+		public IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken)
+        {
+			throw new NotImplementedException();
+		}
 
         public Task EvictCache()
         {
