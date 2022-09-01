@@ -9,6 +9,7 @@ namespace ESPlus.Subscribers
     {
         Task FlushWhenAheadAsync(CancellationToken cancellationToken);
         Task FlushOnEventAsync(CancellationToken cancellationToken);
+        void ScheduleFlush();
         IEventHandler EventHandler { get; set; }
     }
 }

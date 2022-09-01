@@ -9,8 +9,13 @@ namespace ESPlus.EventHandlers
     public abstract class EventHandlerBase<TContext> : IEventHandler
         where TContext : class, IEventHandlerContext
     {
-        private readonly IFlushPolicy _flushPolicy;
+        protected readonly IFlushPolicy FlushPolicy;
         protected TContext Context { get; private set; }
+
+        public void ScheduleFlush()
+        {
+            FlushPolicy.ScheduleFlush();
+        }
 
         IEventHandler IFlushPolicy.EventHandler
         {
@@ -22,7 +27,7 @@ namespace ESPlus.EventHandlers
         {
             Context = context;
             flushPolicy.EventHandler = this;
-            _flushPolicy = flushPolicy;
+            FlushPolicy = flushPolicy;
         }
 
         public Position Checkpoint
@@ -67,12 +72,12 @@ namespace ESPlus.EventHandlers
 
         public virtual async Task FlushWhenAheadAsync(CancellationToken cancellationToken)
         {
-            await _flushPolicy.FlushWhenAheadAsync(cancellationToken);
+            await FlushPolicy.FlushWhenAheadAsync(cancellationToken);
         }
 
         public async Task FlushOnEventAsync(CancellationToken cancellationToken)
         {
-            await _flushPolicy.FlushOnEventAsync(cancellationToken);
+            await FlushPolicy.FlushOnEventAsync(cancellationToken);
         }
     }
 }
