@@ -7,6 +7,10 @@ namespace ESPlus.FlushPolicies
 {
     public class AlwaysFlushPolicy : IFlushPolicy
     {
+        public void ScheduleFlush()
+        {
+        }
+
         public IEventHandler EventHandler { get; set; }
 
         public async Task FlushOnEventAsync(CancellationToken cancellationToken)

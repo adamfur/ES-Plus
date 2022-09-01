@@ -7,8 +7,13 @@ namespace ESPlus.FlushPolicies
 {
     public class FlushOnThresholdPolicy : IFlushPolicy
     {
-        private const int EventThreshold = 100;
+        private const int EventThreshold = 1_000;
         private int _events = 0;
+
+        public void ScheduleFlush()
+        {
+            _events = EventThreshold;
+        }
 
         public IEventHandler EventHandler { get; set; }
 
@@ -19,7 +24,7 @@ namespace ESPlus.FlushPolicies
 
         public async Task FlushOnEventAsync(CancellationToken cancellationToken)
         {
-            if (++_events > EventThreshold)
+            if (++_events >= EventThreshold)
             {
                 await FlushAsync(cancellationToken);
             }
