@@ -50,7 +50,7 @@ namespace ESPlus.EventHandlers
         public abstract IEnumerable<object> TakeEmittedEvents();
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
         public abstract Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken);
-        public abstract Task<object> Get(string path, string tenant, CancellationToken cancellationToken);
+        public abstract Task<object> Get(string tenant, string path, CancellationToken cancellationToken);
         
         public virtual Task StartupAsync()
         {
