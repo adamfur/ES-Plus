@@ -54,7 +54,7 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override Task<object> Get(string path, string tenant, CancellationToken cancellationToken)
+        public override Task<object> Get(string tenant, string path, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
