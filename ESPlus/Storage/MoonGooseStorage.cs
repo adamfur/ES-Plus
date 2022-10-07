@@ -97,5 +97,10 @@ namespace ESPlus.Storage
             Writes.Clear();
             return Task.CompletedTask;
         }
+
+        public void DropDatabase()
+        {
+            throw new NotImplementedException();
+        }
     }
 }      

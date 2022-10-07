@@ -72,5 +72,9 @@ namespace ESPlus.Storage
         {
             return Task.CompletedTask;
         }
+
+        public void DropDatabase()
+        {
+        }
     }
 }

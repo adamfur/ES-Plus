@@ -82,5 +82,10 @@ namespace ESPlus.Interfaces
             _storage.EvictCache();
             return Task.CompletedTask;
         }
+
+        public void DropDatabase()
+        {
+            _storage.DropDatabase();
+        }
     }
 }

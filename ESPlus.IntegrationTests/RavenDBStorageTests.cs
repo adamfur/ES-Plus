@@ -11,13 +11,13 @@ namespace ESPlus.IntegrationTests
 	// ! docker run -p 8081:8080 -e RAVEN_ARGS='--Security.UnsecuredAccessAllowed=PublicNetwork --log-to-console' -e "RAVEN_Setup_Mode=None" -e "RAVEN_ServerUrl=http://0.0.0.0:8080" -e "RAVEN_License_Eula_Accepted=true" ravendb/ravendb:ubuntu-latest
 	public class RavenDBStorageTests
     {
+		private readonly RavenStorage _storage;
 		private readonly IDocumentStore _store;
-		private readonly RavenDBStorage _storage;
 
 		public RavenDBStorageTests()
 		{
-			_store = RavenDBStorage.CreateDocumentStore("http://localhost:8081", "pliance");
-			_storage = new(_store);
+			_storage = new RavenStorage("http://localhost:9000", "pliance");
+			_store = _storage.Store;
 		}
 
 		private class Document
@@ -29,6 +29,12 @@ namespace ESPlus.IntegrationTests
 		public void Ensure_Database_Exists()
 		{
 			_store.Maintenance.ForDatabase(_store.Database).Send(new GetStatisticsOperation());
+		}
+		
+		[Fact]
+		public void Drop()
+		{
+			_storage.DropDatabase();
 		}
 
 		[Fact]
