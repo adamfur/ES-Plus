@@ -23,7 +23,7 @@ namespace ESPlus.Storage
 	public class RavenStorage : IStorage
 	{
 		public IDocumentStore Store { get; }
-		private readonly Dictionary<StringPair, Document> Writes = new Dictionary<StringPair, Document>();
+		private Dictionary<StringPair, Document> Writes = new Dictionary<StringPair, Document>();
 		private bool _dropped = false;
 
 		public RavenStorage(string url, string database = "pliance")
@@ -72,7 +72,7 @@ namespace ESPlus.Storage
 			}
 
 			await session.SaveChangesAsync(cancellationToken);
-			Writes.Clear();
+			Writes = new Dictionary<StringPair, Document>();
 		}
 
 		public async Task<T> GetAsync<T>(string tenant, string path, CancellationToken cancellationToken)
@@ -168,7 +168,7 @@ namespace ESPlus.Storage
 
 		public Task EvictCache()
 		{
-			Writes.Clear();
+			Writes = new Dictionary<StringPair, Document>();
 			return Task.CompletedTask;
 		}
 

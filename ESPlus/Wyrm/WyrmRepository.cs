@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ESPlus.Exceptions;
 using ESPlus.Extensions;
 using ESPlus.Interfaces;
+using AggregateException = ESPlus.Exceptions.AggregateException;
 
 namespace ESPlus.Wyrm
 {
@@ -163,7 +164,7 @@ namespace ESPlus.Wyrm
 
                     if (initialType != null && evnt.EventType != initialType.FullName)
                     {
-                        throw new Exception("Invalid Aggregate");
+                        throw new AggregateException($"Invalid Aggregate: {id.ToString()}");
                     }
                 }
                 
