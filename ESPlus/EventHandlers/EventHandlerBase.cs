@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,7 +13,8 @@ namespace ESPlus.EventHandlers
     {
         protected readonly IFlushPolicy FlushPolicy;
         protected TContext Context { get; private set; }
-
+        protected readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
+        
         public void ScheduleFlush()
         {
             FlushPolicy.ScheduleFlush();
@@ -49,8 +51,6 @@ namespace ESPlus.EventHandlers
         public abstract Task<bool> DispatchEventAsync(object @event, CancellationToken cancellationToken);
         public abstract IEnumerable<object> TakeEmittedEvents();
         public abstract IEnumerable<object> TakeEmittedOnSubmitEvents();
-        public abstract Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken);
-        public abstract Task<object> Get(string tenant, string path, CancellationToken cancellationToken);
         
         public virtual Task StartupAsync()
         {
@@ -61,9 +61,6 @@ namespace ESPlus.EventHandlers
         {
             return Task.CompletedTask;
         }
-
-        public abstract Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
-        public abstract IQueryable Query(string tenant, CancellationToken cancellationToken);
 
         public abstract Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken);
 
@@ -80,6 +77,49 @@ namespace ESPlus.EventHandlers
         public async Task FlushOnEventAsync(CancellationToken cancellationToken)
         {
             await FlushPolicy.FlushOnEventAsync(cancellationToken);
+        }
+        
+        public async Task<object> Search(string tenant, long[] parameters, CancellationToken cancellationToken)
+        {
+            await using var guard = await SemaphoreGuard.Build(Semaphore);
+            return await DoSearch(tenant, parameters, cancellationToken);
+        }
+
+        public async Task<object> Get(string tenant, string path, CancellationToken cancellationToken)
+        {
+            await using var guard = await SemaphoreGuard.Build(Semaphore);
+            return await DoGet(tenant, path, cancellationToken);
+        }
+
+        public async Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
+        {
+            await using var guard = await SemaphoreGuard.Build(Semaphore);
+            return await DoList(tenant, size, no, total, cancellationToken);
+        }
+
+        public IQueryable Query(string tenant, CancellationToken cancellationToken)
+        {
+            return DoQuery(tenant, cancellationToken);
+        }
+        
+        protected virtual Task<object> DoSearch(string tenant, long[] parameters, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual Task<object> DoGet(string tenant, string path, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual Task<List<object>> DoList(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual IQueryable DoQuery(string tenant, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

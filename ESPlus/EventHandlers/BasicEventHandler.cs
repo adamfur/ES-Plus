@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ESPlus.Misc;
-using ESPlus.MoonGoose;
 using ESPlus.Storage;
 using ESPlus.Subscribers;
 using Wyrm;
@@ -20,7 +19,6 @@ namespace ESPlus.EventHandlers
         private readonly IEventTypeResolver _eventTypeResolver;
         private readonly IEventSerializer _eventSerializer;
         private readonly Once _once;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
         public BasicEventHandler(TContext context, IEventTypeResolver eventTypeResolver, IFlushPolicy flushPolicy, IEventSerializer eventSerializer)
             : base(context, flushPolicy)
@@ -40,7 +38,7 @@ namespace ESPlus.EventHandlers
 
         public override async Task<bool> DispatchEventAsync(object @event, CancellationToken cancellationToken)
         {
-            await using var guard = await SemaphoreGuard.Build(_semaphore);
+            await using var guard = await SemaphoreGuard.Build(Semaphore);
             _once.Execute();
             await _router.DispatchAsync(@event, cancellationToken);
             return true;
@@ -70,49 +68,6 @@ namespace ESPlus.EventHandlers
 
             _emitOnSubmit.Clear();
             return result;
-        }
-
-        public override async Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken)
-        {
-            await using var guard = await SemaphoreGuard.Build(_semaphore);
-            return DoSearch(parameters, tenant, cancellationToken);
-        }
-
-        public override async Task<object> Get(string tenant, string path, CancellationToken cancellationToken)
-        {
-            await using var guard = await SemaphoreGuard.Build(_semaphore);
-            return DoGet(tenant, path, cancellationToken);
-        }
-
-        public override async Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
-        {
-            await using var guard = await SemaphoreGuard.Build(_semaphore);
-            return await DoList(tenant, size, no, total, cancellationToken);
-        }
-
-        public override IQueryable Query(string tenant, CancellationToken cancellationToken)
-        {
-            return DoQuery(tenant, cancellationToken);
-        }
-
-        protected virtual Task<object> DoSearch(long[] parameters, string tenant, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual Task<object> DoGet(string tenant, string path, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual Task<List<object>> DoList(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual IQueryable DoQuery(string tenant, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
         }
 
         public override async Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)

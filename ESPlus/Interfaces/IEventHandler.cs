@@ -16,7 +16,7 @@ namespace ESPlus.EventHandlers
         Position Checkpoint { get; set; }
         IEnumerable<object> TakeEmittedEvents();
         IEnumerable<object> TakeEmittedOnSubmitEvents();
-        Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken);
+        Task<object> Search(string tenant, long[] parameters, CancellationToken cancellationToken);
         Task<object> Get(string tenant, string path, CancellationToken cancellationToken);
         Task StartupAsync();
         Task Poke(int pokeType, string tenant, CancellationToken cancellationToken);

@@ -50,16 +50,6 @@ namespace ESPlus.EventHandlers
             throw new NotImplementedException();
         }
 
-        public override Task<object> Search(long[] parameters, string tenant, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task<object> Get(string tenant, string path, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
         public override async Task FlushAsync(CancellationToken cancellationToken)
         {
             var payload = new List<object>();
@@ -73,16 +63,6 @@ namespace ESPlus.EventHandlers
                 payload.AddRange(eventHandler.TakeEmittedOnSubmitEvents());
             }            
             await base.FlushAsync(cancellationToken);
-        }
-
-        public override Task<List<object>> List(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override IQueryable Query(string tenant, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
         }
 
         public override Task<bool> DispatchAsync(Event @event, CancellationToken cancellationToken)
