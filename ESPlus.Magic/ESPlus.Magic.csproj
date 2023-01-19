@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Lightning.NET\src\LightningDB\LightningDB.csproj" />
+      <PackageReference Include="LightningDB" Version="0.14.1" />
     </ItemGroup>
 
 </Project>
