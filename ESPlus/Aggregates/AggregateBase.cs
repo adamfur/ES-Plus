@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ESPlus.Exceptions;
 using ESPlus.Interfaces;
 using ESPlus.Misc;
 
@@ -47,7 +48,7 @@ namespace ESPlus.Aggregates
                 {
                     if (@event.GetType() != _initialType)
                     {
-                        throw new Exception("Invalid Aggregate");
+                        throw new AggregateInvalidException("Tried to mutate an instance of another type.");
                     }
                 }
             }

@@ -163,7 +163,7 @@ namespace ESPlus.Wyrm
 
                     if (initialType != null && evnt.EventType != initialType.FullName)
                     {
-                        throw new Exception("Invalid Aggregate");
+                        throw new AggregateInvalidException("Tried to mutate an instance of another type.");
                     }
                 }
                 
