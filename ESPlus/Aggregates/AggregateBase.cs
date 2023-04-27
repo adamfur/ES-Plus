@@ -48,7 +48,7 @@ namespace ESPlus.Aggregates
                 {
                     if (@event.GetType() != _initialType)
                     {
-                        throw new AggregateInvalidException("Tried to mutate an instance of another type.");
+                        throw new AggregateInvalidException($"Tried to load {Id} which is of another type.");
                     }
                 }
             }
