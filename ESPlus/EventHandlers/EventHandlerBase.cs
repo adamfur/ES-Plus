@@ -57,7 +57,7 @@ namespace ESPlus.EventHandlers
             return Task.CompletedTask;
         }
 
-        public virtual Task Poke(int pokeType, string tenant, CancellationToken cancellationToken)
+        public virtual Task Poke(int pokeType, string referenceId, string tenant, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
