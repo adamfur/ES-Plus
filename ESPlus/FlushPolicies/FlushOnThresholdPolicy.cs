@@ -7,7 +7,7 @@ namespace ESPlus.FlushPolicies
 {
     public class FlushOnThresholdPolicy : IFlushPolicy
     {
-        private const int EventThreshold = 1_000;
+        private const int EventThreshold = 100;
         private int _events = 0;
 
         public void ScheduleFlush()
