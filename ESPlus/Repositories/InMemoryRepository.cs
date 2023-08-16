@@ -187,5 +187,10 @@ namespace ESPlus.Repositories
             _streams.Remove(id);
             return Task.CompletedTask;
         }
+
+        public WyrmTransaction BeginTransaction()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

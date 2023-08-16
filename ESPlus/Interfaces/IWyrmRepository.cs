@@ -11,5 +11,6 @@ namespace ESPlus.Interfaces
         Task<TAggregate> GetByIdAsync<TAggregate>(string id, CancellationToken cancellationToken = default, long version = long.MaxValue)
             where TAggregate : IAggregate<string>;
         Task DeleteAsync(string id, long version = -1, CancellationToken cancellationToken = default);
+        WyrmTransaction BeginTransaction();
     }
 }
