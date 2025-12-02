@@ -1,3 +1,4 @@
+using ESPlus.Storage;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace ESPlus.EventHandlers
         long TotalOffset { get; set; }
         string StreamName { get; set; }
         MetaData Metadata { get; set; }
+        IJournaled Journal { get; }
         Task FlushAsync(CancellationToken cancellationToken);
         Task EvictCache();
     }

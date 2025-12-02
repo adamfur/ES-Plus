@@ -157,6 +157,14 @@ namespace ESPlus.EventHandlers
                 await FlushWhenAheadAsync(cancellationToken);
             }
 
+            var state = Context.Journal.State;
+            
+            if (state.Sum >= Constants.SyncThreshold && state.Count > 1)
+            {
+                Console.WriteLine($"Threshold reached!");
+                await FlushAsync(cancellationToken);
+            }
+
             return status;
         }
         

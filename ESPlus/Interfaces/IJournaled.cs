@@ -24,5 +24,6 @@ namespace ESPlus.Storage
         IAsyncEnumerable<byte[]> List<T>(string tenant, int size, int no, Box<int> total, CancellationToken cancellationToken);
 		IQueryable<T> Query<T>(string tenant, CancellationToken cancellationToken);
         Task EvictCache();
+        JournalState State { get; }
     }
 }

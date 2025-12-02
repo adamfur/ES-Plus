@@ -9,6 +9,12 @@ using System.Linq;
 
 namespace ESPlus.Storage
 {
+    public struct JournalState
+    {
+        public int Sum { get; set; }
+        public int Count { get; set; }
+    }
+    
     public class PersistentJournal : IJournaled
     {
         private bool _changed = false;
@@ -18,6 +24,8 @@ namespace ESPlus.Storage
         private readonly Dictionary<StringPair, object> _writeCache = new Dictionary<StringPair, object>();
         private readonly HashSet<StringPair> _deletes = new HashSet<StringPair>();
         private Position _previousCheckpoint = Position.Start;
+        private JournalState _state = new();
+        public JournalState State => _state;
         
         public Position Checkpoint
         {
@@ -57,6 +65,8 @@ namespace ESPlus.Storage
             {
                 return;
             }
+            
+            _state = new();
 
             foreach (var item in _writeCache)
             {
@@ -74,11 +84,21 @@ namespace ESPlus.Storage
             _previousCheckpoint = Checkpoint;
             Clean();
         }
-
+        
         public virtual void Put<T>(string tenant, string path, T item)
         {
             var key = new StringPair(tenant, path);
 
+            if (item is IHasSize sizeable)
+            {
+                _state.Sum += sizeable.Size;
+            }
+            else
+            {
+                _state.Sum += 512;
+            }
+
+            _state.Count = _writeCache.Count;
             _writeCache[key] = item;
             _deletes.Remove(key);
             _changed = true;
@@ -123,6 +143,7 @@ namespace ESPlus.Storage
 
         public void Reset()
         {
+            _state = new();
             _storage.Reset();
         }
 
