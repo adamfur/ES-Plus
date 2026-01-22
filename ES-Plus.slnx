@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="ESPlus.IntegrationTests/ESPlus.IntegrationTests.csproj" />
+  <Project Path="ESPlus.Specification/ESPlus.Specification.csproj" />
+  <Project Path="ESPlus.SpecificationTests/ESPlus.SpecificationTests.csproj" />
+  <Project Path="ESPlus.Tests/ESPlus.Tests.csproj" />
+  <Project Path="ESPlus/ESPlus.csproj" />
+</Solution>
